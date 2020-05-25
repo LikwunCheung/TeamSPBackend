@@ -54,8 +54,7 @@ ROOT_URLCONF = 'TeamSPBackend.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates')]
-        ,
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -73,11 +72,15 @@ WSGI_APPLICATION = 'TeamSPBackend.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
-
+# TODO: Use django-environ for this instead of putting sensitive information here
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'sp90013',
+        'USER': 'sp90013',
+        'PASSWORD': 'sp90013',
+        'HOST': '172.26.88.107',
+        'PORT': '3306'
     }
 }
 
