@@ -27,5 +27,5 @@ from django.urls import path, include
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('TeamSPBackend.api.urls')),
-    path('api/version/', include('account.urls'))
+    # path('api/version/', include('account.urls'))
 ]

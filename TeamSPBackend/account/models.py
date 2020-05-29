@@ -9,8 +9,7 @@ class Account(models.Model):
 
     class Meta:
         db_table = 'account'
-    def __str__(self):
-        return self.username
+
 
 class User(models.Model):
     # id = models.OneToOneField(Account, to_field='id', on_delete= models.CASCADE,primary_key=True)
@@ -22,5 +21,4 @@ class User(models.Model):
 
     class Meta:
         db_table = 'user'
-    def __str__(self):
-        return self.username
+
