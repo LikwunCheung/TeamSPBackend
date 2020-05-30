@@ -17,3 +17,21 @@ class InvitationStatus(Enum):
         (rejected, 'invitation rejected'),
         (expired, 'invitation expired')
     )
+
+class AccountStatus(Enum):
+    invalid = 0
+    valid = 1
+
+    AccountStatusChoice = (
+        (invalid, 'account is invalid'),
+        (valid, 'account is valid'),
+    )
+
+class Roles(Enum):
+    supervisor = 1
+    coordinator = 2
+
+    RolesChoice = (
+        (supervisor, 'supervisor'),
+        (coordinator, 'coordinator'),
+    )
