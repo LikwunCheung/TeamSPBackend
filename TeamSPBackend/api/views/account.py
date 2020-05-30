@@ -14,7 +14,7 @@ from TeamSPBackend.account.models import Account, User
 
 """
 Account APIs
-url: api/version/account/...
+url: api/v1/account/...
 """
 
 
@@ -31,12 +31,12 @@ def login(request):
         name_email = request.POST.get('username')
         password = request.POST.get('password')
         if Account.objects.filter(username=name_email).exists()|Account.objects.filter(email=name_email).exists():
-            user = Account.objects.get(Q(username = name_email)| Q(email = name_email) )
-            if (password == user.password):
-                request.session['username'] = user.username
-                request.session['accountId'] = user.accountId
-                role = User.objects.get(accountId= user.accountId).role
-                data = {'id':user.accountId,'name':user.username,'role':role}
+            account = Account.objects.get(Q(username = name_email)| Q(email = name_email) )
+            if (password == account.password):
+                request.session['username'] = account.username
+                request.session['accountId'] = account.accountId
+                role = User.objects.get(username= account.username).role
+                data = {'id':account.accountId,'name':account.username,'role':role}
                 resp = {'code' : 0, 'msg': 'login successfully','data':data}
                 return HttpResponse(json.dumps(resp), content_type="application/json")
             else:
@@ -53,6 +53,7 @@ Method: Post
 Request: username, email, password, role, first_name, last_name
 """
 def add(request):
+
     try:
         username = request.POST.get('username')
         email = request.POST.get('email')
@@ -67,19 +68,14 @@ def add(request):
             resp = {'code': -2, 'msg': 'email has been registered'}
             return HttpResponse(json.dumps(resp), content_type="application/json")
         else:
-            nowTime = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-            randomNum = random.randint(0, 100)
-            if randomNum <= 10:
-                randomNum = str(0) + str(randomNum)
-            id = str(nowTime) + str(randomNum)
-            account = Account(accountId = id, username = username, email = email, password = password)
+            account = Account(username=username, email=email, password=password, status=1)
+            user = User(username=username, first_name=first_name, last_name=last_name, role=role, status=1)
             account.save()
-            user = User(accountId = id,username = username,first_name = first_name, last_name = last_name, role = role)
             user.save()
             resp = {'code': 0, 'msg': 'add ok'}
             return HttpResponse(json.dumps(resp), content_type="application/json")
     except:
-        resp = {'code': -3, 'msg': 'error'}
+        resp = {'code': -3, 'msg': 'Unknown error'}
         return HttpResponse(json.dumps(resp), content_type="application/json")
 
 """
@@ -89,7 +85,7 @@ Request: first_name,last_name,old_password,password
 """
 
 def update(request):
-    if request.method == 'POST':
+    try:
         fname = request.POST.get('first_name')
         lname = request.POST.get('last_name')
         old_psw = request.POST.get('old_password')
@@ -112,28 +108,37 @@ def update(request):
                 return HttpResponse(json.dumps(resp), content_type="application/json")
         resp = {'code': 0, 'msg': 'account updated'}
         return HttpResponse(json.dumps(resp), content_type="application/json")
+    except:
+        resp = {'code': -3, 'msg': 'Unknown Error'}
+        return HttpResponse(json.dumps(resp), content_type="application/json")
 """
 Get Account
 Method: Get
 Request: accountId
 """
 def account(request):
-    if request.method == 'GET':
-        id =  request.GET.get('accountId')
-        print(id)
-        try:
-            user = User.objects.get(accountId=id)
+    try:
+        id = request.GET.get('accountId')
+        if Account.objects.filter(accountId=id).exists():
             account = Account.objects.get(accountId=id)
-            email = account.email
-            firstname = user.first_name
-            lastname = user.last_name
-            username = user.username
-            data = {'email': email, 'first_name': firstname, 'last_name': lastname, 'username': username}
-            resp = {'code': 0, 'msg': 'ok', 'data': data}
+            if account.status == 1:
+                user = User.objects.get(username=account.username)
+                email = account.email
+                firstname = user.first_name
+                lastname = user.last_name
+                username = user.username
+                data = {'email': email, 'first_name': firstname, 'last_name': lastname, 'username': username}
+                resp = {'code': 0, 'msg': 'ok', 'data': data}
+                return HttpResponse(json.dumps(resp), content_type="application/json")
+            else:
+                resp = {'code': -1, 'msg': 'account has been deleted'}
+                return HttpResponse(json.dumps(resp), content_type="application/json")
+        else:
+            resp = {'code': -2, 'msg': 'account does not exist'}
             return HttpResponse(json.dumps(resp), content_type="application/json")
-        except:
-            resp = {'code': -1, 'msg': 'fail'}
-            return HttpResponse(json.dumps(resp), content_type="application/json")
+    except:
+        resp = {'code': -3, 'msg': 'Unknown Error'}
+        return HttpResponse(json.dumps(resp), content_type="application/json")
 
 """
 Delete Account
@@ -144,15 +149,21 @@ def delete(request):
         try:
             id = request.POST.get('accountId')
             if Account.objects.filter(accountId=id).exists():
-                Account.objects.get(accountId=id).delete()
-                User.objects.get(accountId=id).delete()
+                # Account.objects.get(accountId=id).delete()
+                # User.objects.get(accountId=id).delete()
+                account = Account.objects.get(accountId=id)
+                account.status = 0
+                user = User.objects.get(username=account.username)
+                user.status = 0
+                account.save()
+                user.save()
                 resp = {'code': 0, 'msg': 'account delete'}
                 return HttpResponse(json.dumps(resp), content_type="application/json")
             else:
                 resp = {'code': -1, 'msg': 'account does not exist'}
                 return HttpResponse(json.dumps(resp), content_type="application/json")
         except:
-            resp = {'code':-2, 'msg': 'error'}
+            resp = {'code':-2, 'msg': 'Unknown error'}
             return HttpResponse(json.dumps(resp), content_type="application/json")
 """
 Accept Invitation and Create Account (WIP)
@@ -169,14 +180,9 @@ def invite_accept(request):
             resp = {'code': -1, 'msg': 'username already exist'}
             return HttpResponse(json.dumps(resp), content_type="application/json")
         else:
-            nowTime = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-            randomNum = random.randint(0, 100)
-            if randomNum <= 10:
-                randomNum = str(0) + str(randomNum)
-            id = str(nowTime) + str(randomNum)
-            account = Account(accountId=id, username=username, password=password)
+            account = Account(username=username, password=password,status=1)
+            user = User(username=username,status=1)
             account.save()
-            user = User(accountId=id, username=username)
             user.save()
             resp = {'code': 0, 'msg': 'invite accept'}
             return HttpResponse(json.dumps(resp), content_type="application/json")
