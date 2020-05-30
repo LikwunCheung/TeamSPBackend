@@ -31,7 +31,10 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+<<<<<<< HEAD
 
+=======
+>>>>>>> 2719709222fd8bb95729ccd65a79bb7ba1b1f501
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -74,22 +77,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'TeamSPBackend.wsgi.application'
 
-
-# Database
-# https://docs.djangoproject.com/en/3.0/ref/settings/#databases
-
-DATABASES = {
-    'default': {
-        # 'ENGINE': 'django.db.backends.sqlite3',
-        # 'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'sp90013',
-        'USER': 'sp90013',
-        'PASSWORD': 'sp90013',
-        'HOST':'172.26.88.107',
-        'PORT':'3306',
-    }
-}
 
 # Password validation
 # https://docs.djangoproject.com/en/3.0/ref/settings/#auth-password-validators
