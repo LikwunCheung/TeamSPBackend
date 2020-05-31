@@ -39,7 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     # 'TeamSPBackend.account',
-    # 'TeamSPBackend.subject',
+    'TeamSPBackend.subject',
     'TeamSPBackend.invitation',
 ]
 
