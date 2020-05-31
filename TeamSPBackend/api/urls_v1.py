@@ -10,7 +10,5 @@ urlpatterns = [
     path('subject/add', addSubject),
     path('subject/<int:id>/update', updateSubject),
     path('subject/<int:id>/delete', deleteSubjects),
-    path('subject/<int:id>', getSubject),
-    path('subjects/<String:ids>', getSubject)
-
+    path('subject/<int:id>/get', getSubject)
 ]

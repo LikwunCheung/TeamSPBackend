@@ -41,6 +41,9 @@ INSTALLED_APPS = [
     # 'TeamSPBackend.account',
     'TeamSPBackend.subject',
     'TeamSPBackend.invitation',
+    'TeamSPBackend.project',
+    'TeamSPBackend.supervisor',
+    'TeamSPBackend.coordinator'
 ]
 
 MIDDLEWARE = [
