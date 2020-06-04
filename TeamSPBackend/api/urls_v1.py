@@ -6,6 +6,7 @@ from .views import account
 urlpatterns = [
     # Invitation Related API
     path('subject/<int:id>/invite', invitation_router),
+<<<<<<< Updated upstream
     # Account Related API
     path('account/login/', account.login),
     path('account/add/', account.add),
@@ -16,3 +17,12 @@ urlpatterns = [
 ]
 
 
+=======
+    # Subject Related API
+    path('subject/add', addSubject),
+    path('subject/<int:id>/update', updateSubject),
+    path('subject/<int:id>/delete', deleteSubjects),
+    path('subject/<int:id>/get', getSubject),
+    path('subject/<int:subId>/multiGet', multiGetSubject)
+]
+>>>>>>> Stashed changes
