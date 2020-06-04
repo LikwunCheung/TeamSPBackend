@@ -81,8 +81,8 @@ LOGGING = {
         'django': {
             # 'handlers': ['default', 'console', 'error'],
             'handlers': ['console'],
-            'level': 'DEBUG',
-            'propagate': True,
+            'level': 'INFO',
+            'propagate': False,
         },
         # 'collect': {
         #     'handlers': ['console', 'collect'],
