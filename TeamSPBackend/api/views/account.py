@@ -9,6 +9,7 @@ from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect
 
 from django.contrib.auth.hashers import check_password
+from django.utils.timezone import now
 
 from TeamSPBackend.account.models import Account, User
 
@@ -34,9 +35,9 @@ def login(request):
             account = Account.objects.get(Q(username = name_email)| Q(email = name_email) )
             if (password == account.password):
                 request.session['username'] = account.username
-                request.session['accountId'] = account.accountId
+                request.session['account_id'] = account.account_id
                 role = User.objects.get(username= account.username).role
-                data = {'id':account.accountId,'name':account.username,'role':role}
+                data = {'id':account.account_id,'name':account.username,'role':role}
                 resp = {'code' : 0, 'msg': 'login successfully','data':data}
                 return HttpResponse(json.dumps(resp), content_type="application/json")
             else:
@@ -61,6 +62,7 @@ def add(request):
         role = request.POST.get('role')
         first_name = request.POST.get('first_name')
         last_name = request.POST.get('last_name')
+        timestamp = int(now().timestamp())
         if Account.objects.filter(username=username).exists():
             resp = {'code': -1, 'msg': 'username already exist'}
             return HttpResponse(json.dumps(resp), content_type="application/json")
@@ -68,8 +70,8 @@ def add(request):
             resp = {'code': -2, 'msg': 'email has been registered'}
             return HttpResponse(json.dumps(resp), content_type="application/json")
         else:
-            account = Account(username=username, email=email, password=password, status=1)
-            user = User(username=username, first_name=first_name, last_name=last_name, role=role, status=1)
+            account = Account(username=username, email=email, password=password, status=1, create_date=timestamp,)
+            user = User(username=username, first_name=first_name, last_name=last_name, role=role, status=1, create_date=timestamp,)
             account.save()
             user.save()
             resp = {'code': 0, 'msg': 'add ok'}
@@ -114,13 +116,13 @@ def update(request):
 """
 Get Account
 Method: Get
-Request: accountId
+Request: account_id
 """
 def account(request):
     try:
-        id = request.GET.get('accountId')
-        if Account.objects.filter(accountId=id).exists():
-            account = Account.objects.get(accountId=id)
+        id = request.GET.get('account_id')
+        if Account.objects.filter(account_id=id).exists():
+            account = Account.objects.get(account_id=id)
             if account.status == 1:
                 user = User.objects.get(username=account.username)
                 email = account.email
@@ -143,15 +145,15 @@ def account(request):
 """
 Delete Account
 Method: Post
-Request: accountId
+Request: account_id
 """
 def delete(request):
         try:
-            id = request.POST.get('accountId')
-            if Account.objects.filter(accountId=id).exists():
-                # Account.objects.get(accountId=id).delete()
-                # User.objects.get(accountId=id).delete()
-                account = Account.objects.get(accountId=id)
+            id = request.POST.get('account_id')
+            if Account.objects.filter(account_id=id).exists():
+                # Account.objects.get(account_id=id).delete()
+                # User.objects.get(account_id=id).delete()
+                account = Account.objects.get(account_id=id)
                 account.status = 0
                 user = User.objects.get(username=account.username)
                 user.status = 0
@@ -176,12 +178,13 @@ def invite_accept(request):
         key = request.POST.get('key')
         username = request.POST.get('username')
         password = request.POST.get('password')
+        timestamp = int(now().timestamp())
         if Account.objects.filter(username=username).exists():
             resp = {'code': -1, 'msg': 'username already exist'}
             return HttpResponse(json.dumps(resp), content_type="application/json")
         else:
-            account = Account(username=username, password=password,status=1)
-            user = User(username=username,status=1)
+            account = Account(username=username, password=password,status=1,create_date=timestamp,)
+            user = User(username=username,status=1,create_date=timestamp,)
             account.save()
             user.save()
             resp = {'code': 0, 'msg': 'invite accept'}
