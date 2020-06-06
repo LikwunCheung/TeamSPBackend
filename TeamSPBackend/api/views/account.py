@@ -1,175 +1,223 @@
-import datetime
 import json
-import random
 
+from django.http import HttpResponse, HttpResponseNotAllowed, HttpResponseBadRequest
+from django.views.decorators.http import require_http_methods
+from django.utils.timezone import now
 from django.db.models import Q
-from django.shortcuts import render
-
-# Create your views here.
-from django.http import HttpResponse, HttpResponseRedirect
-
-from django.contrib.auth.hashers import check_password
 
 from TeamSPBackend.account.models import Account, User
-
-"""
-Account APIs
-url: api/v1/account/...
-"""
+from TeamSPBackend.common.utils import init_http_response, make_json_response, check_user_login
+from TeamSPBackend.common.choices import RespCode, Status, Roles
 
 
-
-
-"""
-Login
-Method: Post
-Request: username(can input username or email to this), password
-"""
-def login(request):
-
+@require_http_methods(['POST', 'GET'])
+@check_user_login
+def account_router(request, *args, **kwargs):
     if request.method == 'POST':
-        name_email = request.POST.get('username')
-        password = request.POST.get('password')
-        if Account.objects.filter(username=name_email).exists()|Account.objects.filter(email=name_email).exists():
-            account = Account.objects.get(Q(username = name_email)| Q(email = name_email) )
-            if (password == account.password):
-                request.session['username'] = account.username
-                request.session['accountId'] = account.accountId
-                role = User.objects.get(username= account.username).role
-                data = {'id':account.accountId,'name':account.username,'role':role}
-                resp = {'code' : 0, 'msg': 'login successfully','data':data}
-                return HttpResponse(json.dumps(resp), content_type="application/json")
-            else:
-                # wrong password
-                resp = {'code' : -1, 'msg': 'password error'}
-                return HttpResponse(json.dumps(resp), content_type="application/json")
-        else:
-            # wrong username
-            resp = {'code' : -2, 'msg': 'username does not exit'}
-            return HttpResponse(json.dumps(resp), content_type="application/json")
-"""
-Create account and user
-Method: Post
-Request: username, email, password, role, first_name, last_name
-"""
-def add(request):
+        return add_account(request)
+    elif request.method == 'GET':
+        return get_account(request)
+    return HttpResponseNotAllowed(['POST'])
 
-    try:
-        username = request.POST.get('username')
-        email = request.POST.get('email')
-        password = request.POST.get('password')
-        role = request.POST.get('role')
-        first_name = request.POST.get('first_name')
-        last_name = request.POST.get('last_name')
-        if Account.objects.filter(username=username).exists():
-            resp = {'code': -1, 'msg': 'username already exist'}
-            return HttpResponse(json.dumps(resp), content_type="application/json")
-        elif Account.objects.filter(email=email).exists():
-            resp = {'code': -2, 'msg': 'email has been registered'}
-            return HttpResponse(json.dumps(resp), content_type="application/json")
-        else:
-            account = Account(username=username, email=email, password=password, status=1)
-            user = User(username=username, first_name=first_name, last_name=last_name, role=role, status=1)
-            account.save()
-            user.save()
-            resp = {'code': 0, 'msg': 'add ok'}
-            return HttpResponse(json.dumps(resp), content_type="application/json")
-    except:
-        resp = {'code': -3, 'msg': 'Unknown error'}
-        return HttpResponse(json.dumps(resp), content_type="application/json")
 
-"""
-Update account
-Method: Post
-Request: first_name,last_name,old_password,password
-"""
+@require_http_methods(['POST'])
+def login(request):
+    """
+    Login
+    Method: Post
+    Request: username(can input username or email to this), password
+    """
 
-def update(request):
-    try:
-        fname = request.POST.get('first_name')
-        lname = request.POST.get('last_name')
-        old_psw = request.POST.get('old_password')
-        new_psw = request.POST.get('password')
-        username = request.session.get('username', '')
-        user = User.objects.get(username = username)
-        account = Account.objects.get(username = username)
-        if fname!=None:
-            user.first_name = fname
-            user.save()
-        if lname!= None:
-            user.last_name = lname
-            user.save()
-        if old_psw!= None and new_psw!= None:
-            if old_psw == account.password:
-                account.password = new_psw
-                account.save()
-            else:
-                resp = {'code': -1, 'msg': 'old password wrong'}
-                return HttpResponse(json.dumps(resp), content_type="application/json")
-        resp = {'code': 0, 'msg': 'account updated'}
-        return HttpResponse(json.dumps(resp), content_type="application/json")
-    except:
-        resp = {'code': -3, 'msg': 'Unknown Error'}
-        return HttpResponse(json.dumps(resp), content_type="application/json")
-"""
-Get Account
-Method: Get
-Request: accountId
-"""
-def account(request):
-    try:
-        id = request.GET.get('accountId')
-        if Account.objects.filter(accountId=id).exists():
-            account = Account.objects.get(accountId=id)
-            if account.status == 1:
-                user = User.objects.get(username=account.username)
-                email = account.email
-                firstname = user.first_name
-                lastname = user.last_name
-                username = user.username
-                data = {'email': email, 'first_name': firstname, 'last_name': lastname, 'username': username}
-                resp = {'code': 0, 'msg': 'ok', 'data': data}
-                return HttpResponse(json.dumps(resp), content_type="application/json")
-            else:
-                resp = {'code': -1, 'msg': 'account has been deleted'}
-                return HttpResponse(json.dumps(resp), content_type="application/json")
-        else:
-            resp = {'code': -2, 'msg': 'account does not exist'}
-            return HttpResponse(json.dumps(resp), content_type="application/json")
-    except:
-        resp = {'code': -3, 'msg': 'Unknown Error'}
-        return HttpResponse(json.dumps(resp), content_type="application/json")
+    username = request.POST.get('username', '')
+    email = request.POST.get('email', '')
+    if not username and not email:
+        resp = init_http_response(RespCode.invalid_parameter, RespCode.RespCodeChoice.invalid_parameter)
+        return make_json_response(HttpResponseBadRequest, resp)
 
-"""
-Delete Account
-Method: Post
-Request: accountId
-"""
+    password = request.POST.get('password', '')
+
+    account = None
+    if username:
+        account = Account.objects.get(username=username, password=password, status=Status.valid)
+    elif email:
+        account = Account.objects.get(email=email, password=password, status=Status.valid)
+
+    if not account or not password:
+        resp = init_http_response(RespCode.login_fail, RespCode.RespCodeChoice.login_fail)
+        return make_json_response(HttpResponseBadRequest, resp)
+
+    user = User.objects.get(account_id=account.account_id)
+
+    session_data = dict(
+        id=user.user_id,
+        role=user.role,
+        is_login=True,
+    )
+    request.session['user'] = session_data
+
+    data = dict(
+        user_d=user.user_id,
+        account_id=account.id,
+        role=user.role,
+        name=user.get_name()
+    )
+    resp = init_http_response(RespCode.success, RespCode.RespCodeChoice.success)
+    resp['data'] = data
+    return make_json_response(HttpResponse, resp)
+
+
+def add_account(request):
+    """
+    Create account and user
+    Method: Post
+    Request: username, email, password, role, first_name, last_name
+    """
+    username = request.POST.get('username', '')
+    email = request.POST.get('email', '')
+    password = request.POST.get('password', '')
+    role = request.POST.get('role', '')
+    first_name = request.POST.get('first_name', '')
+    last_name = request.POST.get('last_name', '')
+
+    if not username or not email or not password or not role or not first_name or not last_name:
+        resp = init_http_response(RespCode.invalid_parameter, RespCode.RespCodeChoice.invalid_parameter)
+        return make_json_response(HttpResponseBadRequest, resp)
+
+    if Account.objects.filter(Q(username=username) | Q(email=email)).exists():
+        resp = init_http_response(RespCode.account_existed, RespCode.RespCodeChoice.account_existed)
+        return make_json_response(HttpResponseBadRequest, resp)
+
+    timestamp = int(now().timestamp())
+    account = Account(username=username, email=email, password=password, status=Status.valid, create_date=timestamp,
+                      update_date=timestamp)
+    account.save()
+
+    user = User(account_id=account.id, username=username, first_name=first_name, last_name=last_name, role=role,
+                status=Status.valid, create_date=timestamp, update_date=timestamp)
+    user.save()
+
+    resp = init_http_response(RespCode.success, RespCode.RespCodeChoice.success)
+    return make_json_response(HttpResponse, resp)
+
+
+def get_account(request):
+    """
+    Get Account
+    Method: Get
+    Request: accountId
+    """
+    user = request.session.get('user')
+    account_id = user['account_id']
+    account_id = int(request.GET.get('id', account_id))
+
+    if not account_id:
+        resp = init_http_response(RespCode.invalid_parameter, RespCode.RespCodeChoice.invalid_parameter)
+        return make_json_response(HttpResponseBadRequest, resp)
+
+    account = Account.objects.get(account_id=account_id, status=Status.valid)
+    user = User.objects.get(account_id=account_id, status=Status.valid)
+    if not account or not user:
+        resp = init_http_response(RespCode.invalid_parameter, RespCode.RespCodeChoice.invalid_parameter)
+        return make_json_response(HttpResponseBadRequest, resp)
+
+    data = dict(
+        username=account.username,
+        email=account.email,
+        first_name=user.first_name,
+        last_name=user.last_name,
+    )
+    resp = init_http_response(RespCode.success, RespCode.RespCodeChoice.success)
+    resp['data'] = data
+    return make_json_response(HttpResponse, resp)
+
+
+@require_http_methods(['POST'])
+@check_user_login
+def update_account(request, *args, **kwargs):
+    """
+    Update account
+    Method: Post
+    Request: first_name,last_name,old_password,password
+    """
+    user = request.session.get('user')
+    user_id = user['user_id']
+    account_id = user['account_id']
+
+    first_name = request.POST.get('first_name', '')
+    last_name = request.POST.get('last_name', '')
+    old_psw = request.POST.get('old_password', '')
+    new_psw = request.POST.get('password', '')
+
+    user = User.objects.get(user_id=user_id, status=Status.valid)
+    account = Account.objects.get(account_id=account_id, status=Status.valid)
+
+    if not user or not account:
+        resp = init_http_response(RespCode.invalid_parameter, RespCode.RespCodeChoice.invalid_parameter)
+        return make_json_response(HttpResponseBadRequest, resp)
+
+    if old_psw and old_psw != account.password:
+        resp = init_http_response(RespCode.invalid_parameter, RespCode.RespCodeChoice.invalid_parameter)
+        return make_json_response(HttpResponseBadRequest, resp)
+
+    timestamp = int(now().timestamp())
+    if first_name:
+        user.first_name = first_name
+        user.update_date = timestamp
+    if last_name:
+        user.last_name = last_name
+        user.update_date = timestamp
+    if old_psw and new_psw and old_psw == account.password:
+        account.password = new_psw
+        account.update_date = timestamp
+
+    user.save()
+    account.save()
+    resp = init_http_response(RespCode.success, RespCode.RespCodeChoice.success)
+    return make_json_response(HttpResponse, resp)
+
+
+@require_http_methods(['POST'])
+@check_user_login
 def delete(request):
-        try:
-            id = request.POST.get('accountId')
-            if Account.objects.filter(accountId=id).exists():
-                # Account.objects.get(accountId=id).delete()
-                # User.objects.get(accountId=id).delete()
-                account = Account.objects.get(accountId=id)
-                account.status = 0
-                user = User.objects.get(username=account.username)
-                user.status = 0
-                account.save()
-                user.save()
-                resp = {'code': 0, 'msg': 'account delete'}
-                return HttpResponse(json.dumps(resp), content_type="application/json")
-            else:
-                resp = {'code': -1, 'msg': 'account does not exist'}
-                return HttpResponse(json.dumps(resp), content_type="application/json")
-        except:
-            resp = {'code':-2, 'msg': 'Unknown error'}
-            return HttpResponse(json.dumps(resp), content_type="application/json")
+    """
+    Delete Account
+    Method: Post
+    Request: accountId
+    """
+
+    user = request.session.get('user')
+    role = user['role']
+    if role is not Roles.admin:
+        resp = init_http_response(RespCode.invalid_op, RespCode.RespCodeChoice.invalid_op)
+        return make_json_response(HttpResponseBadRequest, resp)
+
+    account_id = request.POST.get('id')
+    account = Account.objects.get(account_id=account_id, status=Status.valid)
+    user = User.objects.get(account_id=account_id, status=Status.valid)
+
+    if not account and not user:
+        resp = init_http_response(RespCode.invalid_parameter, RespCode.RespCodeChoice.invalid_parameter)
+        return make_json_response(HttpResponseBadRequest, resp)
+
+    timestamp = int(now().timestamp())
+    account.status = Status.invalid
+    account.update_date = timestamp
+    account.save()
+    user.status = Status.invalid
+    user.update_date = timestamp
+    user.save()
+
+    resp = init_http_response(RespCode.success, RespCode.RespCodeChoice.success)
+    return make_json_response(HttpResponse, resp)
+
+
 """
 Accept Invitation and Create Account (WIP)
 Method: Post
 Request: key, username, password
 """
+
+
 def invite_accept(request):
     if request.method == 'POST':
 
@@ -180,10 +228,9 @@ def invite_accept(request):
             resp = {'code': -1, 'msg': 'username already exist'}
             return HttpResponse(json.dumps(resp), content_type="application/json")
         else:
-            account = Account(username=username, password=password,status=1)
-            user = User(username=username,status=1)
+            account = Account(username=username, password=password, status=1)
+            user = User(username=username, status=1)
             account.save()
             user.save()
             resp = {'code': 0, 'msg': 'invite accept'}
             return HttpResponse(json.dumps(resp), content_type="application/json")
-
