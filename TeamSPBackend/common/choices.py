@@ -35,3 +35,12 @@ class Roles(Enum):
         (supervisor, 'supervisor'),
         (coordinator, 'coordinator'),
     )
+
+class TeamStatus(Enum):
+    expired = 0
+    unexpired = 1
+
+    TeamStatusChoice = (
+        (expired, 'team is expired'),
+        (unexpired, 'team is unexpired'),
+    )
