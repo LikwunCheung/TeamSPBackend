@@ -93,7 +93,7 @@ def add_account(request):
     account.save()
 
     user = User(account_id=account.id, username=username, first_name=first_name, last_name=last_name, role=role,
-                status=Status.valid, create_date=timestamp, update_date=timestamp)
+                status=Status.valid, create_date=timestamp, update_date=timestamp, email=email)
     user.save()
 
     resp = init_http_response(RespCode.success, RespCode.RespCodeChoice.success)

@@ -23,6 +23,7 @@ class User(models.Model):
     sso_id = models.BigIntegerField(blank=False, null=True, db_index=True)
     first_name = models.CharField(max_length=64, blank=False, null=False)
     last_name = models.CharField(max_length=64, blank=False, null=False)
+    email = models.CharField(max_length=128, null=False)
     role = models.IntegerField(choices=Roles.RolesChoice.value, blank=False, null=False)
     status = models.IntegerField(choices=Status.StatusChoice.value, blank=False, null=False)
     create_date = models.BigIntegerField(blank=False, null=False)
