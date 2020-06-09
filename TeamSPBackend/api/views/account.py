@@ -70,7 +70,7 @@ def add(request):
             resp = {'code': -2, 'msg': 'email has been registered'}
             return HttpResponse(json.dumps(resp), content_type="application/json")
         else:
-            account = Account(username=username, email=email, password=password, status=1, create_date=timestamp,)
+            account = Account(username=username, email=email, password=password, status=1, create_date=timestamp)
             user = User(username=username, first_name=first_name, last_name=last_name, role=role, status=1, create_date=timestamp,)
             account.save()
             user.save()

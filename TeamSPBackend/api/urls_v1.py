@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from django.urls import path
+
+from TeamSPBackend.api.views import team
 from .views.invitation import invitation_router
 from .views import account
 urlpatterns = [
@@ -13,6 +15,11 @@ urlpatterns = [
     path('account/delete/', account.delete),
     path('account/invite/accept/', account.invite_accept),
     path('account', account.account),
+    # Team Related API
+    path('subject/project/team', team.createTeam),
+    path('subject/project/teammember', team.team_member),
+    path('subject/project/getteam', team.getTeams)
+
 ]
 
 
