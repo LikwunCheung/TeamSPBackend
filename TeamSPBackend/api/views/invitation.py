@@ -51,3 +51,7 @@ def add_invitation(request, subject_id: int):
 
     resp = init_http_response(200, 'Success')
     return make_json_response(HttpResponse, resp)
+
+
+if __name__ == '__main__':
+    pass

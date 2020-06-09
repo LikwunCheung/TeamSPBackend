@@ -2,27 +2,23 @@
 
 from django.urls import path
 from .views.invitation import invitation_router
-from .views import account
+from .views.account import account_router, login, update_account, delete, invite_accept
+from .views.subject import subject_router, update_subject, delete_subject
+
 urlpatterns = [
     # Invitation Related API
     path('subject/<int:id>/invite', invitation_router),
-<<<<<<< Updated upstream
+
     # Account Related API
-    path('account/login/', account.login),
-    path('account/add/', account.add),
-    path('account/update/', account.update),
-    path('account/delete/', account.delete),
-    path('account/invite/accept/', account.invite_accept),
-    path('account', account.account),
-]
+    path('account/login', login),
+    path('account/update', update_account),
+    path('account/delete', delete),
+    path('account', account_router),
+    path('subject/invite/accept', invite_accept),
 
-
-=======
     # Subject Related API
-    path('subject/add', addSubject),
-    path('subject/<int:id>/update', updateSubject),
-    path('subject/<int:id>/delete', deleteSubjects),
-    path('subject/<int:id>/get', getSubject),
-    path('subject/<int:subId>/multiGet', multiGetSubject)
+    path('subject/<int:id>/update', update_subject),
+    path('subject/<int:id>/delete', delete_subject),
+    path('subject/<int:id>', subject_router),
+    path('subject', subject_router),
 ]
->>>>>>> Stashed changes
