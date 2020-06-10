@@ -5,13 +5,13 @@ import ujson
 from django.http.response import HttpResponse, HttpResponseNotAllowed, HttpResponseBadRequest
 from django.views.decorators.http import require_http_methods
 from django.utils.timezone import now
+from django.db.models import ObjectDoesNotExist
 
 from TeamSPBackend.common.utils import make_json_response, init_http_response, check_user_login
 from TeamSPBackend.common.choices import RespCode, Roles, Status
+from TeamSPBackend.common.config import SINGLE_PAGE_LIMIT
 from TeamSPBackend.subject.models import Subject
 from TeamSPBackend.account.models import User
-
-SINGLE_PAGE_LIMIT = 20
 
 
 @require_http_methods(['POST', 'GET'])
@@ -38,10 +38,12 @@ def get_subject(request, subject_id: int):
     :param subject_id:
     :return:
     """
-    subject = Subject.objects.get(subject_id=subject_id)
-    coordinator = User.objects.get(user_id=subject.coordinator_id) if subject.coordinator_id else None
-    if not subject or not coordinator:
-        resp = init_http_response(RespCode.invalid_parameter, RespCode.RespCodeChoice.invalid_parameter)
+
+    try:
+        subject = Subject.objects.get(subject_id=subject_id)
+        coordinator = User.objects.get(user_id=subject.coordinator_id) if subject.coordinator_id else None
+    except ObjectDoesNotExist as e:
+        resp = init_http_response(RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
         return make_json_response(HttpResponseBadRequest, resp)
 
     data = dict(
@@ -60,32 +62,35 @@ def get_subject(request, subject_id: int):
         status=subject.status,
     )
 
-    resp = init_http_response(RespCode.success, RespCode.RespCodeChoice.success)
+    resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
     resp['data'] = data
     return make_json_response(HttpResponse, resp)
 
 
 def multi_get_subject(request):
     """
+    Multi get subject
 
     :param request:
     :return:
     """
 
-    ids = request.POST.get('ids', [])
-    code = request.POST.get('code', '')
-    name = request.POST.get('name', '')
+    ids = request.GET.get('ids', '')
+    code = request.GET.get('code', '')
+    name = request.GET.get('name', '')
     offset = int(request.POST.get('offset', 0))
     has_more = 0
 
-    query_set = dict()
+    kwargs = dict()
     if ids:
-        query_set['subject_id__in'] = ids
+        kwargs['subject_id__in'] = [int(x) for x in ids.split(',')]
     if code:
-        query_set['subject_code__contains'] = code
+        kwargs['subject_code__contains'] = code
     if name:
-        query_set['name__contains'] = name
-    subjects = Subject.objects.filter(query_set).order_by('subject_id')[offset: offset + SINGLE_PAGE_LIMIT + 1]
+        kwargs['name__contains'] = name
+
+    print(kwargs)
+    subjects = Subject.objects.filter(**kwargs).order_by('subject_id')[offset: offset + SINGLE_PAGE_LIMIT + 1]
     if len(subjects) > SINGLE_PAGE_LIMIT:
         subjects = subjects[: SINGLE_PAGE_LIMIT]
         has_more = 1
@@ -97,18 +102,18 @@ def multi_get_subject(request):
             has_more=has_more,
             offset=offset,
         )
-        resp = init_http_response(RespCode.success, RespCode.RespCodeChoice.success)
+        resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
         resp['data'] = data
         return make_json_response(HttpResponse, resp)
 
     coord_set = set()
     for subject in subjects:
         coord_set.add(subject.coordinator_id)
-    query_set = dict(
+    kwargs = dict(
         user_id__in=list(coord_set),
-        status=Status.valid,
+        status=Status.valid.value.key,
     )
-    coordinators = User.objects.filter(query_set)
+    coordinators = User.objects.filter(**kwargs)
     coord_dict = dict()
     for coordinator in coordinators:
         coord_dict[coordinator.user_id] = coordinator
@@ -130,7 +135,7 @@ def multi_get_subject(request):
         offset=offset,
     )
 
-    resp = init_http_response(RespCode.success, RespCode.RespCodeChoice.success)
+    resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
     resp['data'] = data
     return make_json_response(HttpResponse, resp)
 
@@ -145,15 +150,28 @@ def add_subject(request):
     subject_name = request.POST.get('name', '')
     coordinator_id = int(request.POST.get('coordinator_id', 0))
 
+    # if the parameter is not sufficient
     if not subject_code or not subject_name or coordinator_id == 0:
-        resp = init_http_response(RespCode.invalid_parameter, RespCode.RespCodeChoice.invalid_parameter)
+        resp = init_http_response(RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
         return make_json_response(HttpResponseBadRequest, resp)
 
-    subject = Subject(subject_code=subject_code, subject_name=subject_name, coordinator_id=coordinator_id,
-                      create_date=int(now().timestamp()), status=Status.valid)
+    # if the subject code existed
+    if Subject.objects.filter(subject_code=subject_code).exists():
+        resp = init_http_response(RespCode.subject_existed.value.key, RespCode.subject_existed.value.msg)
+        return make_json_response(HttpResponseBadRequest, resp)
+
+    # if user is not coordinator
+    try:
+        user = User.objects.get(user_id=coordinator_id, role=Roles.coordinator.value.key, status=Status.valid.value.key)
+    except ObjectDoesNotExist:
+        resp = init_http_response(RespCode.invalid_op.value.key, RespCode.invalid_op.value.msg)
+        return make_json_response(HttpResponseBadRequest, resp)
+
+    subject = Subject(subject_code=subject_code, name=subject_name, coordinator_id=coordinator_id,
+                      create_date=int(now().timestamp()), status=Status.valid.value.key)
     subject.save()
 
-    resp = init_http_response(RespCode.success, RespCode.RespCodeChoice.success)
+    resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
     return make_json_response(HttpResponse, resp)
 
 
@@ -173,16 +191,17 @@ def update_subject(request, *args, **kwargs):
             subject_id = arg.get('id', None)
 
     if not subject_id:
-        resp = init_http_response(RespCode.invalid_parameter, RespCode.RespCodeChoice.invalid_parameter)
+        resp = init_http_response(RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
         return make_json_response(HttpResponseBadRequest, resp)
 
     subject_code = request.POST.get('code', '')
     subject_name = request.POST.get('name', '')
     coordinator_id = int(request.POST.get('coordinator_id', 0))
 
-    subject = Subject.objects.get(subject_id=subject_id)
-    if not subject:
-        resp = init_http_response(RespCode.invalid_parameter, RespCode.RespCodeChoice.invalid_parameter)
+    try:
+        subject = Subject.objects.get(subject_id=subject_id)
+    except ObjectDoesNotExist as e:
+        resp = init_http_response(RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
         return make_json_response(HttpResponseBadRequest, resp)
 
     subject.subject_code = subject_code
@@ -190,7 +209,7 @@ def update_subject(request, *args, **kwargs):
     subject.coordinator_id = coordinator_id
     subject.save()
 
-    resp = init_http_response(RespCode.success, RespCode.RespCodeChoice.success)
+    resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
     return make_json_response(HttpResponse, resp)
 
 
@@ -210,16 +229,17 @@ def delete_subject(request, *args, **kwargs):
             subject_id = arg.get('id', None)
 
     if not subject_id:
-        resp = init_http_response(RespCode.invalid_parameter, RespCode.RespCodeChoice.invalid_parameter)
+        resp = init_http_response(RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
         return make_json_response(HttpResponseBadRequest, resp)
 
-    subject = Subject.objects.get(subject_id=subject_id)
-    if not subject:
-        resp = init_http_response(RespCode.invalid_parameter, RespCode.RespCodeChoice.invalid_parameter)
+    try:
+        subject = Subject.objects.get(subject_id=subject_id)
+    except ObjectDoesNotExist as e:
+        resp = init_http_response(RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
         return make_json_response(HttpResponseBadRequest, resp)
 
     subject.status = Status.invalid
     subject.save()
 
-    resp = init_http_response(RespCode.success, RespCode.RespCodeChoice.success)
+    resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
     return make_json_response(HttpResponse, resp)
