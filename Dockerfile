@@ -17,6 +17,6 @@ COPY . /app/
 #RUN python3 manage.py makemigrations & python3 manage.py migrate
 
 
-EXPOSE 8080
+EXPOSE 8081
 
-CMD ["python3", "manage.py", "runserver", "0:8080"]
+CMD ["python3", "manage.py", "runserver", "0:8081"]
