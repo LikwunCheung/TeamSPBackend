@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from django.db import models
 
 
@@ -5,7 +6,7 @@ class Account(models.Model):
     account_id = models.AutoField(db_column='id', primary_key=True)
     username = models.CharField(max_length=32, unique=True)
     email = models.EmailField(max_length=128, unique=True)
-    password = models.CharField(max_length=128)
+    password = models.CharField(max_length=32)
     status = models.IntegerField(blank=False, null=False)
     create_date = models.BigIntegerField(blank=False, null=False)
     update_date = models.BigIntegerField(blank=False, null=False)

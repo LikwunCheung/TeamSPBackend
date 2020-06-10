@@ -4,7 +4,7 @@ from .base_setting import *
 
 DEBUG = True
 
-ALLOWED_HOSTS = ['172.26.88.107', '*']
+ALLOWED_HOSTS = ['localhost']
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
 SESSION_COOKIE_NAME = "session_id"

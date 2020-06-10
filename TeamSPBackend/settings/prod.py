@@ -4,7 +4,7 @@ from .base_setting import *
 
 DEBUG = True
 
-ALLOWED_HOSTS = ['172.26.88.107', '*']
+ALLOWED_HOSTS = ['*']
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
 SESSION_COOKIE_NAME = "session_id"
@@ -20,7 +20,7 @@ DATABASES = {
         'NAME': 'sp90013',
         'USER': 'sp90013',
         'PASSWORD': 'sp90013',
-        'HOST': '172.26.88.107',
+        'HOST': '127.0.0.1',
         'PORT': 3306,
         'CHARSET': 'utf8mb4'
     }
