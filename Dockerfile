@@ -14,7 +14,7 @@ COPY requirements.txt /app
 RUN pip3 install -r requirements.txt
 
 COPY . /app/
-RUN python3 manage.py makemigrations & python3 manage.py migrate
+#RUN python3 manage.py makemigrations & python3 manage.py migrate
 
 
 EXPOSE 8080
