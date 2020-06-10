@@ -31,7 +31,6 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -42,6 +41,7 @@ INSTALLED_APPS = [
     'TeamSPBackend.account',
     'TeamSPBackend.subject',
     'TeamSPBackend.invitation',
+    'TeamSPBackend.api',
 ]
 
 MIDDLEWARE = [

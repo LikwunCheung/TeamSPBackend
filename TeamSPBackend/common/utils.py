@@ -25,12 +25,34 @@ def init_http_response(err_code, err_msg):
 
 
 def check_user_login(func):
+    """
+    Disable for testing
+    :param func:
+    :return:
+    """
     def wrapper(request, *args, **kwargs):
         user = request.session.get('user', {})
-        if not user or 'user_id' not in user or 'is_login' not in user:
-            resp = init_http_response(RespCode.not_logged, RespCode.RespCodeChoice.not_logged)
+        if not user or 'id' not in user or 'is_login' not in user:
+            resp = init_http_response(RespCode.not_logged.value.key, RespCode.not_logged.value.msg)
             return make_json_response(HttpResponseBadRequest, resp)
 
         request.session.set_expiry(SESSION_REFRESH)
+        return func(request, args, kwargs)
+    return wrapper
+
+
+def check_user_role(func, role):
+    """
+    Disable for testing
+    :param func:
+    :return:
+    """
+    def wrapper(request, *args, **kwargs):
+        user = request.session.get('user', {})
+        user_role = user['role']
+        if user_role is not role:
+            resp = init_http_response(RespCode.permission_deny.value.key, RespCode.permission_deny.value.msg)
+            return make_json_response(HttpResponseBadRequest, resp)
+
         return func(request, args, kwargs)
     return wrapper
