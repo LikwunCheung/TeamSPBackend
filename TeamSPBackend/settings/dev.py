@@ -8,22 +8,21 @@ ALLOWED_HOSTS = ['*']
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
 SESSION_COOKIE_NAME = "session_id"
-SESSION_COOKIE_AGE = 60 * 60 * 24
 
 DATABASES = {
-    # 'default': {
-    #     'ENGINE': 'django.db.backends.sqlite3',
-    #     'NAME': os.path.join(BASE_DIR, '../db.sqlite3'),
-    # }
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'sp90013',
-        'USER': 'sp90013',
-        'PASSWORD': 'sp90013',
-        'HOST': '127.0.0.1',
-        'PORT': 3306,
-        'CHARSET': 'utf8mb4'
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, '../db.sqlite3'),
     }
+    # 'default': {
+    #     'ENGINE': 'django.db.backends.mysql',
+    #     'NAME': 'sp90013',
+    #     'USER': 'sp90013',
+    #     'PASSWORD': 'sp90013',
+    #     'HOST': '172.26.88.107',
+    #     'PORT': 3306,
+    #     'CHARSET': 'utf8mb4'
+    # }
 }
 
 LOGGING = {
