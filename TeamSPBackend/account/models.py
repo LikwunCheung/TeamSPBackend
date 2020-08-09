@@ -1,32 +1,35 @@
+# -*- coding: utf-8 -*-
 from django.db import models
-
-# Create your models here.
-from TeamSPBackend.common.choices import AccountStatus, Roles
 
 
 class Account(models.Model):
-    # accountId = models.CharField(max_length=30, primary_key=True)
-    accountId = models.AutoField(primary_key=True)
-    username = models.CharField(max_length=30, unique= True)
-    email = models.EmailField(max_length=254, unique = True)
-    password = models.CharField(max_length=128)
-    status = models.IntegerField(max_length=2, choices=AccountStatus.AccountStatusChoice.value, blank=False, null=False)
-    create_date = models.DateTimeField(blank=False, null=False,auto_now_add=True)
+    account_id = models.AutoField(db_column='id', primary_key=True)
+    username = models.CharField(max_length=32, unique=True)
+    email = models.EmailField(max_length=128, unique=True)
+    password = models.CharField(max_length=32)
+    status = models.IntegerField(blank=False, null=False)
+    create_date = models.BigIntegerField(blank=False, null=False)
+    update_date = models.BigIntegerField(blank=False, null=False)
 
     class Meta:
         db_table = 'account'
 
 
 class User(models.Model):
-    # id = models.OneToOneField(Account, to_field='id', on_delete= models.CASCADE,primary_key=True)
-    id = models.AutoField(verbose_name='id', primary_key=True)
-    username = models.CharField(max_length=30, unique=True)
-    first_name = models.CharField(max_length=30,null=True)
-    last_name  = models.CharField(max_length = 30,null=True)
-    role = models.IntegerField(null=True, choices=Roles.RolesChoice.value)
-    status = models.IntegerField(max_length=2, choices=AccountStatus.AccountStatusChoice.value, blank=False, null=False)
-    create_date = models.DateTimeField(blank=False, null=False,auto_now_add=True)
+    user_id = models.AutoField(db_column='id', primary_key=True)
+    account_id = models.IntegerField(blank=False, null=False, db_index=True)
+    sso_id = models.BigIntegerField(blank=False, null=True, db_index=True)
+    username = models.CharField(max_length=32, unique=True, null=False)
+    first_name = models.CharField(max_length=64, blank=False, null=False)
+    last_name = models.CharField(max_length=64, blank=False, null=False)
+    email = models.CharField(max_length=128, null=False)
+    role = models.IntegerField(blank=False, null=False)
+    status = models.IntegerField(blank=False, null=False)
+    create_date = models.BigIntegerField(blank=False, null=False)
+    update_date = models.BigIntegerField(blank=False, null=False)
 
     class Meta:
         db_table = 'user'
 
+    def get_name(self):
+        return self.first_name + ' ' + self.last_name
