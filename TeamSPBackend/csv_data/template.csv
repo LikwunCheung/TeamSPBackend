@@ -1,0 +1,6 @@
+name,description,supervisor_id,create_date,expired,project_name,team_members_ids
+90013SP,"description1",supervisor_id_123,01-03-2020,01-07-2020,"860001,860002,860003"
+
+/*name,description,subject_code,project_name,start_date,expired,supervisor_id,team_members_ids,team_members_names,team_members_emails*/
+/*90013SP,"description1",SWEN90013,Software-Processes-Assessment-Tool,01-03-2020,31-10-2020,supervisor_id_1,"800000,800001,800002","zachary-ho,lihuan-zhang,andre-simmonds","zach@student.unimelb.edu.au,lihuan@student.unimelb.edu.au,andre@student.unimelb.edu.au"*/
+/*90014ABC-Koala,"description2",SWEN90014,ABC-Project,01-03-2020,05-06-2020,supervisor_id_2,"800003,800004,800005","zhaochen-fan,xinbo-sun,jarren-toh","zhaochen@student.unimelb.edu.au,xinbo@student.unimelb.edu.au,jarren@student.unimelb.edu.au" */
