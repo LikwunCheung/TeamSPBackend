@@ -3,6 +3,7 @@ from django.db import models
 
 
 class Account(models.Model):
+
     account_id = models.AutoField(db_column='id', primary_key=True)
     username = models.CharField(max_length=32, unique=True)
     email = models.EmailField(max_length=128, unique=True)
@@ -16,6 +17,7 @@ class Account(models.Model):
 
 
 class User(models.Model):
+
     user_id = models.AutoField(db_column='id', primary_key=True)
     account_id = models.IntegerField(blank=False, null=False, db_index=True)
     sso_id = models.BigIntegerField(blank=False, null=True, db_index=True)

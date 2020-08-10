@@ -5,6 +5,7 @@ from django.views.decorators.http import require_http_methods
 from django.utils.timezone import now
 from django.db.models import Q, ObjectDoesNotExist
 
+
 from TeamSPBackend.account.models import Account, User
 from TeamSPBackend.common.utils import init_http_response, make_json_response, check_user_login
 from TeamSPBackend.common.choices import RespCode, Status, Roles
@@ -27,15 +28,12 @@ def login(request):
     Method: Post
     Request: username(can input username or email to this), password
     """
-
     username = request.POST.get('username', '')
     email = request.POST.get('email', '')
     if not username and not email:
         resp = init_http_response(RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
         return make_json_response(HttpResponseBadRequest, resp)
-
     password = request.POST.get('password', '')
-
     account = None
     try:
         if username:
@@ -236,12 +234,15 @@ def invite_accept(request):
         key = request.POST.get('key')
         username = request.POST.get('username')
         password = request.POST.get('password')
-        if Account.objects.get(username=username).exists():
+
+        timestamp = int(now().timestamp())
+        if Account.objects.filter(username=username).exists():
             resp = {'code': -1, 'msg': 'username already exist'}
             return HttpResponse(json.dumps(resp), content_type="application/json")
         else:
-            account = Account(username=username, password=password, status=1)
-            user = User(username=username, status=1)
+            account = Account(username=username, password=password,status=1,create_date=timestamp,)
+            user = User(username=username,status=1,create_date=timestamp,)
+
             account.save()
             user.save()
             resp = {'code': 0, 'msg': 'invite accept'}
