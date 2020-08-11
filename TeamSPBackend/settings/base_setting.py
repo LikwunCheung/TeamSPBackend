@@ -38,7 +38,7 @@ INSTALLED_APPS = [
     'TeamSPBackend.account',
     'TeamSPBackend.subject',
     'TeamSPBackend.invitation',
-    'TeamSPBackend.team'
+    'TeamSPBackend.team',
     'TeamSPBackend.api',
 ]
 
