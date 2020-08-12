@@ -34,10 +34,10 @@ def check_body(func):
     :return:
     """
     def wrapper(request, *args, **kwargs):
-        logging.info('Received: ' + request.body)
 
         try:
             body = dict(ujson.loads(request.body))
+            logging.info('Received: ' + body)
         except json.JSONDecodeError as e:
             resp = init_http_response(RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
             return make_json_response(HttpResponse, resp)
