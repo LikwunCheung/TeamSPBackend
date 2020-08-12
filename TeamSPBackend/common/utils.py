@@ -34,7 +34,7 @@ def check_body(func):
     :return:
     """
     def wrapper(request, *args, **kwargs):
-        logging.info('Received: ' + ujson.dumps(request.__dict__))
+        logging.info('Received: ' + request.body)
 
         try:
             body = dict(ujson.loads(request.body))
