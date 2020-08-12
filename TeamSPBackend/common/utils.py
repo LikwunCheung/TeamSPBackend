@@ -2,6 +2,7 @@
 
 import ujson
 import time
+import json
 
 from django.http.response import HttpResponseForbidden, HttpResponseBadRequest, HttpResponse, HttpResponseRedirect
 
@@ -24,6 +25,22 @@ def init_http_response(err_code, err_msg):
         data=dict(),
     )
 
+
+def check_body(func):
+    """
+
+    :param func:
+    :return:
+    """
+    def wrapper(request, *args, **kwargs):
+        try:
+            body = dict(json.loads(request.body))
+        except json.JSONDecodeError as e:
+            resp = init_http_response(RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
+            return make_json_response(HttpResponse, resp)
+
+        return func(request, body, *args, **kwargs)
+    return wrapper
 
 def check_user_login(func):
     """

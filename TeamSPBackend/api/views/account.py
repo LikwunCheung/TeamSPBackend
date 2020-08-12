@@ -6,7 +6,7 @@ from django.db.models import Q, ObjectDoesNotExist
 from django.db import transaction
 
 from TeamSPBackend.account.models import Account, User
-from TeamSPBackend.common.utils import init_http_response, make_json_response, check_user_login, body_extract, mills_timestamp
+from TeamSPBackend.common.utils import init_http_response, make_json_response, check_user_login, body_extract, mills_timestamp, check_body
 from TeamSPBackend.common.choices import RespCode, Status, Roles
 from TeamSPBackend.api.dto.dto import LoginDTO, AddAccountDTO, UpdateAccountDTO
 
@@ -22,13 +22,13 @@ def account_router(request, *args, **kwargs):
 
 
 @require_http_methods(['POST'])
-def login(request):
+@check_body
+def login(request, body, *args, **kwargs):
     """
     Login
     Method: Post
     Request: username(can input username or email to this), password
     """
-    body = dict(json.loads(request.body))
 
     login_dto = LoginDTO()
     body_extract(body, login_dto)
@@ -68,13 +68,13 @@ def login(request):
     return make_json_response(HttpResponse, resp)
 
 
-def add_account(request):
+@check_body
+def add_account(request, body, *args, **kwargs):
     """
     Create account and user
     Method: Post
     Request: username, email, password, role, first_name, last_name
     """
-    body = dict(json.loads(request.body))
 
     add_account_dto = AddAccountDTO()
     body_extract(body, add_account_dto)
@@ -150,7 +150,8 @@ def get_account(request):
 
 @require_http_methods(['POST'])
 @check_user_login
-def update_account(request, *args, **kwargs):
+@check_body
+def update_account(request, body, *args, **kwargs):
     """
     Update account
     Method: Post
@@ -159,7 +160,7 @@ def update_account(request, *args, **kwargs):
     user = request.session.get('user')
     user_id = user['id']
 
-    body = dict(json.loads(request.body))
+    # body = dict(json.loads(request.body))
     update_account_dto = UpdateAccountDTO()
     body_extract(body, update_account_dto)
     update_account_dto.encrypt()
