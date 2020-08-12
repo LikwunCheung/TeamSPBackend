@@ -1,4 +1,4 @@
-import json
+import ujson
 
 from django.http import HttpResponse, HttpResponseNotAllowed, HttpResponse
 from django.views.decorators.http import require_http_methods

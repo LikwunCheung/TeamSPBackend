@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
 import ujson
-import time
 import json
+import time
+import logging
 
 from django.http.response import HttpResponseForbidden, HttpResponseBadRequest, HttpResponse, HttpResponseRedirect
 
@@ -33,14 +34,17 @@ def check_body(func):
     :return:
     """
     def wrapper(request, *args, **kwargs):
+        logging.info('Received: ' + ujson.dumps(request.__dict__))
+
         try:
-            body = dict(json.loads(request.body))
+            body = dict(ujson.loads(request.body))
         except json.JSONDecodeError as e:
             resp = init_http_response(RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
             return make_json_response(HttpResponse, resp)
 
         return func(request, body, *args, **kwargs)
     return wrapper
+
 
 def check_user_login(func):
     """
@@ -78,7 +82,7 @@ def check_user_role(func, role):
 
 def body_extract(body: dict, obj: object):
     """
-
+    Extract parameters from the request body
     :param body:
     :param obj:
     :return:
