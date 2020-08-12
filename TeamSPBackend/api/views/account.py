@@ -1,14 +1,14 @@
 import json
 
-from django.http import HttpResponse, HttpResponseNotAllowed, HttpResponseBadRequest
+from django.http import HttpResponse, HttpResponseNotAllowed, HttpResponse
 from django.views.decorators.http import require_http_methods
-from django.utils.timezone import now
 from django.db.models import Q, ObjectDoesNotExist
-
+from django.db import transaction
 
 from TeamSPBackend.account.models import Account, User
-from TeamSPBackend.common.utils import init_http_response, make_json_response, check_user_login
+from TeamSPBackend.common.utils import init_http_response, make_json_response, check_user_login, body_extract, mills_timestamp
 from TeamSPBackend.common.choices import RespCode, Status, Roles
+from TeamSPBackend.api.dto.dto import LoginDTO, AddAccountDTO, UpdateAccountDTO
 
 
 @require_http_methods(['POST', 'GET'])
@@ -28,21 +28,25 @@ def login(request):
     Method: Post
     Request: username(can input username or email to this), password
     """
-    username = request.POST.get('username', '')
-    email = request.POST.get('email', '')
-    if not username and not email:
+    body = dict(json.loads(request.body))
+
+    login_dto = LoginDTO()
+    body_extract(body, login_dto)
+
+    if not login_dto.validate():
         resp = init_http_response(RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
-        return make_json_response(HttpResponseBadRequest, resp)
-    password = request.POST.get('password', '')
+        return make_json_response(HttpResponse, resp)
+
+    login_dto.encrypt()
     account = None
     try:
-        if username:
-            account = Account.objects.get(username=username, password=password, status=Status.valid.value.key)
-        elif email:
-            account = Account.objects.get(email=email, password=password, status=Status.valid.value.key)
-    except ObjectDoesNotExist as e:
+        if login_dto.username:
+            account = Account.objects.get(username=login_dto.username, password=login_dto.md5, status=Status.valid.value.key)
+        elif login_dto.email:
+            account = Account.objects.get(email=login_dto.email, password=login_dto.md5, status=Status.valid.value.key)
+    except ObjectDoesNotExist:
         resp = init_http_response(RespCode.login_fail.value.key, RespCode.login_fail.value.msg)
-        return make_json_response(HttpResponseBadRequest, resp)
+        return make_json_response(HttpResponse, resp)
 
     user = User.objects.get(account_id=account.account_id)
 
@@ -54,7 +58,7 @@ def login(request):
     request.session['user'] = session_data
 
     data = dict(
-        user_d=user.user_id,
+        user_id=user.user_id,
         account_id=account.account_id,
         role=user.role,
         name=user.get_name()
@@ -70,30 +74,38 @@ def add_account(request):
     Method: Post
     Request: username, email, password, role, first_name, last_name
     """
-    username = request.POST.get('username', '')
-    email = request.POST.get('email', '')
-    password = request.POST.get('password', '')
-    role = request.POST.get('role', '')
-    first_name = request.POST.get('first_name', '')
-    last_name = request.POST.get('last_name', '')
+    body = dict(json.loads(request.body))
 
-    if not username or not email or not password or not role or not first_name or not last_name:
+    add_account_dto = AddAccountDTO()
+    body_extract(body, add_account_dto)
+
+    if not add_account_dto.not_empty() or not add_account_dto.validate():
         resp = init_http_response(RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
-        return make_json_response(HttpResponseBadRequest, resp)
+        return make_json_response(HttpResponse, resp)
 
-    if Account.objects.filter(Q(username=username) | Q(email=email)).exists():
+    if Account.objects.filter(Q(username=add_account_dto.username) | Q(email=add_account_dto.email)).exists():
         resp = init_http_response(RespCode.account_existed.value.key, RespCode.account_existed.value.msg)
-        return make_json_response(HttpResponseBadRequest, resp)
+        return make_json_response(HttpResponse, resp)
 
-    timestamp = int(now().timestamp())
+    add_account_dto.encrypt()
+    timestamp = mills_timestamp()
 
-    account = Account(username=username, email=email, password=password, status=Status.valid.value.key,
-                      create_date=timestamp, update_date=timestamp)
-    account.save()
+    try:
+        with transaction.atomic():
+            account = Account(username=add_account_dto.username, email=add_account_dto.email,
+                              password=add_account_dto.md5, status=Status.valid.value.key, create_date=timestamp,
+                              update_date=timestamp)
+            account.save()
 
-    user = User(account_id=account.account_id, username=username, first_name=first_name, last_name=last_name, role=role,
-                status=Status.valid.value.key, create_date=timestamp, update_date=timestamp, email=email)
-    user.save()
+            user = User(account_id=account.account_id, username=add_account_dto.username,
+                        first_name=add_account_dto.first_name, last_name=add_account_dto.last_name,
+                        role=add_account_dto.role, status=Status.valid.value.key,
+                        create_date=timestamp, update_date=timestamp, email=add_account_dto.email)
+            user.save()
+    except Exception as e:
+        print(e)
+        resp = init_http_response(RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
+        return make_json_response(HttpResponse, resp)
 
     resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
     return make_json_response(HttpResponse, resp)
@@ -112,18 +124,18 @@ def get_account(request):
         user = User.objects.get(user_id=user_id, status=Status.valid.value.key)
     except ObjectDoesNotExist:
         resp = init_http_response(RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
-        return make_json_response(HttpResponseBadRequest, resp)
+        return make_json_response(HttpResponse, resp)
 
     account_id = int(request.GET.get('id', user.account_id))
     if not account_id:
         resp = init_http_response(RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
-        return make_json_response(HttpResponseBadRequest, resp)
+        return make_json_response(HttpResponse, resp)
 
     try:
         account = Account.objects.get(account_id=account_id, status=Status.valid.value.key)
     except ObjectDoesNotExist:
         resp = init_http_response(RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
-        return make_json_response(HttpResponseBadRequest, resp)
+        return make_json_response(HttpResponse, resp)
 
     data = dict(
         username=account.username,
@@ -147,39 +159,47 @@ def update_account(request, *args, **kwargs):
     user = request.session.get('user')
     user_id = user['id']
 
-    first_name = request.POST.get('first_name', '')
-    last_name = request.POST.get('last_name', '')
-    role = request.POST.get('role', None)
-    old_psw = request.POST.get('old_password', '')
-    new_psw = request.POST.get('password', '')
+    body = dict(json.loads(request.body))
+    update_account_dto = UpdateAccountDTO()
+    body_extract(body, update_account_dto)
+    update_account_dto.encrypt()
 
     try:
         user = User.objects.get(user_id=user_id, status=Status.valid.value.key)
         account = Account.objects.get(account_id=user.account_id, status=Status.valid.value.key)
     except ObjectDoesNotExist:
         resp = init_http_response(RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
-        return make_json_response(HttpResponseBadRequest, resp)
+        return make_json_response(HttpResponse, resp)
 
-    if old_psw and old_psw != account.password:
+    if (update_account_dto.old_password and update_account_dto.old_md5 != account.password) \
+            or not update_account_dto.validate():
         resp = init_http_response(RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
-        return make_json_response(HttpResponseBadRequest, resp)
+        return make_json_response(HttpResponse, resp)
 
-    timestamp = int(now().timestamp())
-    if first_name:
-        user.first_name = first_name
+    timestamp = mills_timestamp()
+    if update_account_dto.first_name:
+        user.first_name = update_account_dto.first_name
         user.update_date = timestamp
-    if role:
-        user.role = int(role)
+    if update_account_dto.role:
+        user.role = update_account_dto.role
         user.update_date = timestamp
-    if last_name:
-        user.last_name = last_name
+    if update_account_dto.last_name:
+        user.last_name = update_account_dto.last_name
         user.update_date = timestamp
-    if old_psw and new_psw and old_psw == account.password:
-        account.password = new_psw
+    if update_account_dto.old_password and update_account_dto.password \
+            and update_account_dto.old_md5 == account.password:
+        account.password = update_account_dto.md5
         account.update_date = timestamp
 
-    user.save()
-    account.save()
+    try:
+        with transaction.atomic():
+            user.save()
+            account.save()
+    except Exception as e:
+        print(e)
+        resp = init_http_response(RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
+        return make_json_response(HttpResponse, resp)
+
     resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
     return make_json_response(HttpResponse, resp)
 
@@ -198,7 +218,7 @@ def delete(request):
 
     if role is not Roles.admin.value.key:
         resp = init_http_response(RespCode.invalid_op.value.key, RespCode.invalid_op.value.msg)
-        return make_json_response(HttpResponseBadRequest, resp)
+        return make_json_response(HttpResponse, resp)
 
     account_id = request.POST.get('id')
     try:
@@ -206,15 +226,22 @@ def delete(request):
         user = User.objects.get(account_id=account_id, status=Status.valid.value.key)
     except ObjectDoesNotExist:
         resp = init_http_response(RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
-        return make_json_response(HttpResponseBadRequest, resp)
+        return make_json_response(HttpResponse, resp)
 
-    timestamp = int(now().timestamp())
-    account.status = Status.invalid.value.key
-    account.update_date = timestamp
-    account.save()
-    user.status = Status.invalid.value.key
-    user.update_date = timestamp
-    user.save()
+    timestamp = mills_timestamp()
+
+    try:
+        with transaction.atomic():
+            account.status = Status.invalid.value.key
+            account.update_date = timestamp
+            account.save()
+            user.status = Status.invalid.value.key
+            user.update_date = timestamp
+            user.save()
+    except Exception as e:
+        print(e)
+        resp = init_http_response(RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
+        return make_json_response(HttpResponse, resp)
 
     resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
     return make_json_response(HttpResponse, resp)
@@ -235,13 +262,13 @@ def invite_accept(request):
         username = request.POST.get('username')
         password = request.POST.get('password')
 
-        timestamp = int(now().timestamp())
+        timestamp = mills_timestamp()
         if Account.objects.filter(username=username).exists():
             resp = {'code': -1, 'msg': 'username already exist'}
             return HttpResponse(json.dumps(resp), content_type="application/json")
         else:
-            account = Account(username=username, password=password,status=1,create_date=timestamp,)
-            user = User(username=username,status=1,create_date=timestamp,)
+            account = Account(username=username, password=password, status=1, create_date=timestamp,)
+            user = User(username=username, status=1, create_date=timestamp,)
 
             account.save()
             user.save()

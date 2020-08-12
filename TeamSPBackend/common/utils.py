@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import ujson
+import time
 
 from django.http.response import HttpResponseForbidden, HttpResponseBadRequest, HttpResponse, HttpResponseRedirect
 
@@ -56,3 +57,19 @@ def check_user_role(func, role):
 
         return func(request, args, kwargs)
     return wrapper
+
+
+def body_extract(body: dict, obj: object):
+    """
+
+    :param body:
+    :param obj:
+    :return:
+    """
+    for i in obj.__dict__.keys():
+        if i in body:
+            obj.__setattr__(i, body.get(i))
+
+
+def mills_timestamp():
+    return int(time.time() * 1000)

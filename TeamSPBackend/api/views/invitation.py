@@ -136,5 +136,3 @@ def get_invitation(request, subject_id: int):
     resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
     resp['data'] = data
     return make_json_response(HttpResponse, resp)
-
-
