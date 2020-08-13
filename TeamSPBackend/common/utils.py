@@ -11,6 +11,9 @@ from TeamSPBackend.common.choices import RespCode
 from TeamSPBackend.common.config import SESSION_REFRESH
 
 
+logger = logging.getLogger('django')
+
+
 def make_json_response(func=HttpResponse, resp=None):
     return func(ujson.dumps(resp), content_type='application/json')
 
@@ -37,7 +40,7 @@ def check_body(func):
 
         try:
             body = dict(ujson.loads(request.body))
-            print(request.body)
+            logger.info(body)
         except json.JSONDecodeError as e:
             resp = init_http_response(RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
             return make_json_response(HttpResponse, resp)
