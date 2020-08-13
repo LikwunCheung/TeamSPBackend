@@ -37,7 +37,7 @@ def check_body(func):
 
         try:
             body = dict(ujson.loads(request.body))
-            logging.info('Received: ' + body)
+            print(request.body)
         except json.JSONDecodeError as e:
             resp = init_http_response(RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
             return make_json_response(HttpResponse, resp)
