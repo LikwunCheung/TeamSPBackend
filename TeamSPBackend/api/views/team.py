@@ -12,6 +12,8 @@ Create team
 Method: Post
 Request: name, project_name, description, supervisor_id,duration,
 """
+
+
 def createTeam(request):
     try:
         name = request.POST.get('name')
@@ -32,11 +34,14 @@ def createTeam(request):
         resp = {'code': -1, 'msg': 'error'}
         return HttpResponse(json.dumps(resp), content_type="application/json")
 
+
 """
 Create relation between team and members
 Method: Post
 Request: team_id, student_id
 """
+
+
 def team_member(request):
     try:
         student_id = request.POST.get('student_id')
@@ -52,11 +57,14 @@ def team_member(request):
         resp = {'code': -1, 'msg': 'error'}
         return HttpResponse(json.dumps(resp), content_type="application/json")
 
+
 """
 Get team information
 Method: Get
 Request: team_ids
 """
+
+
 def getTeams(request):
     try:
         ids = request.GET.getlist('ids', [])
