@@ -25,7 +25,10 @@ urlpatterns = [
     path('subject', subject_router),
     
     # Team Related API
-    path('subject/project/team', team.createTeam),
-    path('subject/project/teammember', team.team_member),
-    path('subject/project/getteam', team.getTeams)
+    # path('subject/project/team', team.createTeam),
+    path('subject/<int:sid>/team', team.create_team),
+    # path('subject/project/teamMember', team.team_member),
+    path('subject/<int:sid>/team/<int:tid>/teamMember', team.team_member),
+    # path('subject/project/getTeam', team.getTeams)
+    path('subject/<int:sid>/team/<int:tid>', team.get_teams)
 ]

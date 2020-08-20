@@ -1,33 +1,33 @@
 import csv
-from django.utils.timezone import now
-from TeamSPBackend.team.models import Team
-filename = "template.csv"
-rows = []
-colNames = []
+import codecs
+from TeamSPBackend.team.models import Team, TeamMember
 
-with open (filename, 'r') as csvfile:
-    data = csv.reader(csvfile)
-    colNames = next(data)
-    for row in data:
-        rows.append(row)
 
-    for row in rows:
-        name = row[0]
-        description = row[1]
-        subject_code  = row[2]
-        project_name = row[3]
-        start_date = row[4]
-        expire_date = row[5]
-        supervisor = row[6]
-        student_ids = row[7]
-        list_students_ids = student_ids.split(",")
-        member_names = rows[8]
-        list_member_names = member_names.split(",")
-        member_emails = rows[8]
-        list_member_emails = member_emails.split(",")
+def read_csv(file, subject_id: int):
+    with file as csv_file:
+        rows = []
+        data = csv.reader(codecs.iterdecode(csv_file, 'utf-8'))
+        for row in data:
+            rows.append(row)
+            print(row)
 
-        team = Team(name = name, description = description, create_date = int(now().timestamp()), subject_code = subject_code,
-                    project_name = project_name, start_date = start_date,
-                    expire_date = expire_date, supervisor = supervisor, student_ids = student_ids,
-                    member_names = member_names, emails = list_member_emails)
-        team.save()
+        for row in rows:
+            name = row[0]
+            description = row[1]
+            supervisor_id = row[2]
+            create_date = row[3]
+            expired = row[4]
+            project_name = row[5]
+            student_ids = row[6]
+            list_students_ids = student_ids.split(",")
+            print(name, description, subject_id, supervisor_id, create_date, expired, project_name)
+            team = Team(name=name, description=description, subject_id=subject_id, supervisor_id=supervisor_id,
+                        create_date=create_date, expired=expired,  project_name=project_name)
+
+            team.save()
+            print(team)
+            for student_id in list_students_ids:
+                team_member = TeamMember(team_id=team.team_id, student_id=student_id)
+                team_member.save()
+
+
