@@ -131,3 +131,7 @@ dmypy.json
 
 */*/migrations/
 */*/migrations/*
+
+# Pipfile & Pipfile.lock (since Docker is used officially)
+Pipfile
+Pipfile.lock
