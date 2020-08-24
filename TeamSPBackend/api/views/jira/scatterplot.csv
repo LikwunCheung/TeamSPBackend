@@ -1,0 +1,8 @@
+completed_date,cycle_time,blocked_days,key,url,issue_type,summary,status,resolution,To Do,In Progress,In Review,Done
+2020-08-24,6.0,0,SP90013-160,https://jira.cis.unimelb.edu.au:8444/browse/SP90013-160,Task,Create Sprint overview document for the client,Done,Done,2020-08-18,2020-08-18,,2020-08-24
+2020-08-21,3.0,0,SP90013-157,https://jira.cis.unimelb.edu.au:8444/browse/SP90013-157,Improvement,Constraints page rework,Done,Done,2020-08-14,2020-08-18,,2020-08-21
+2020-08-24,3.0,0,SP90013-138,https://jira.cis.unimelb.edu.au:8444/browse/SP90013-138,Sub-task,Back-end: Importing information on project teams via Confluence API,Done,Done,2020-07-31,2020-08-21,,2020-08-24
+2020-08-24,3.0,0,SP90013-137,https://jira.cis.unimelb.edu.au:8444/browse/SP90013-137,Sub-task,Back-end: Importing information on students via Confluence API,Done,Done,2020-07-31,2020-08-21,,2020-08-24
+2020-06-11,13.0,0,SP90013-69,https://jira.cis.unimelb.edu.au:8444/browse/SP90013-69,Sub-task,Project Navigation Bar,Done,Done,2020-05-22,2020-05-29,,2020-06-11
+2020-06-11,20.0,0,SP90013-68,https://jira.cis.unimelb.edu.au:8444/browse/SP90013-68,Sub-task,Home Navigation Bar,Done,Done,2020-05-22,2020-05-22,,2020-06-11
+2020-06-11,32.0,0,SP90013-65,https://jira.cis.unimelb.edu.au:8444/browse/SP90013-65,New Feature,Navigation menu,Done,Done,2020-05-09,2020-05-10,,2020-06-11
