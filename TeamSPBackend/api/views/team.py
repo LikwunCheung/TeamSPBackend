@@ -203,7 +203,32 @@ Get teams information
 Method: Get
 Url: localhost:8000/api/v1/team
 Params: None
-Request: team_ids
+Request: supervisor_id (necessary), subject_id||year (optional), team_ids (optional)
+    case1:
+        {
+            "supervisor_id":          #supervisor_id
+        }
+    case2:
+        {
+            "supervisor_id":          #supervisor_id,
+            "subject_id":             #subject_id
+        }
+    case3:
+        {
+            "supervisor_id":          #supervisor_id,
+            "year":                   #year
+        }
+    case4:
+        {
+            "supervisor_id":          #supervisor_id,
+            "subject_id":             #subject_id,
+            "year":                   #year
+        }
+    case5:
+        {
+            "supervisor_id":          #supervisor_id,
+            "team_ids":               [1, 2, 3, 4]
+        }
 """
 
 
@@ -259,34 +284,30 @@ def multi_get_team(request):
     """
         Get multiple teams
 
-        :param request: supervisor_id (necessary), subject_id (not necessary)||team_ids (not necessary)
+        :param request: supervisor_id (necessary), subject_id or year (optional)||team_ids (optional)
         :return:
         """
     try:
         supervisor_id = request.get('supervisor_id', None)
         subject_id = request.get('subject_id', None)
-        ids = request.GET.getlist('ids', [])
+        ids = request.GET.getlist('team_ids', [])
+        year = request.GET.getlist('year', None)
+        filtered_teams = []
+        teams = []
         # Get teams by ids
         if ids:
-            filtered_teams = []
             for team_id in ids:
                 filtered_teams.append(Team.objects.get(team_id=team_id))
-            teams = get_teams_data(filtered_teams)
-            body = {
-                'teams': teams
-            }
-            return HttpResponse(json.dumps(body), content_type="application/json")
-        # Get teams by subject_id
-        elif subject_id:
-            filtered_teams = Team.objects.filter(subject_id=subject_id)
-            teams = get_teams_data(filtered_teams)
-            body = {
-                'teams': teams
-            }
-            return HttpResponse(json.dumps(body), content_type="application/json")
+            teams.append(get_teams_data(filtered_teams))
+        # Get teams by subject_id or year
+        elif subject_id or year:
+            if subject_id:
+                filtered_teams.append(Team.objects.filter(subject_id=subject_id))
+            if year:
+                filtered_teams.append(Team.objects.filter(year=year))
+            teams.append(get_teams_data(filtered_teams))
         # Get all accessible teams for supervisors / coordinators / admins
         else:
-            filtered_teams = []
             user = User.objects.get(user_id=supervisor_id)
             # coordinators
             if user.role == Roles.coordinator.value.key:
@@ -300,11 +321,11 @@ def multi_get_team(request):
             # admins
             else:
                 filtered_teams. append(Team.objects)
-            teams = get_teams_data(filtered_teams)
-            body = {
-                'teams': teams
-            }
-            return HttpResponse(json.dumps(body), content_type="application/json")
+            teams.append(get_teams_data(filtered_teams))
+        body = {
+            'teams': teams
+        }
+        return HttpResponse(json.dumps(body), content_type="application/json")
     except:
         resp = {'code': -1, 'msg': 'error'}
         return HttpResponse(json.dumps(resp), content_type="application/json")
