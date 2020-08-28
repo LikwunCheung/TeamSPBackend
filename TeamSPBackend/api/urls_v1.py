@@ -27,9 +27,9 @@ urlpatterns = [
     path('subject', subject_router),
 
     # Team Related API
-    path('/team', team_router),
-    path('/team/<int:team_id>', team_router),
-    path('/team/<int:team_id>/members', get_team_members),
+    path('team', team_router),
+    path('team/<int:team_id>', team_router),
+    path('team/<int:team_id>/members', get_team_members),
 
 
     # Confluence Related API

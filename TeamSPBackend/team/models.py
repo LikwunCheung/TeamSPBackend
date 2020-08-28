@@ -25,8 +25,8 @@ class Team(models.Model):
     year = models.IntegerField()
     # member = models.ForeignKey('Student',on_delete= models.SET_NULL)
     # member_id = models.IntegerField()
-    create_date = models.BigIntegerField(max_length=20, blank=False, null=False)
-    expired = models.BigIntegerField(max_length=20, blank=False, null=False, db_index=True)
+    create_date = models.BigIntegerField(blank=False, null=False)
+    expired = models.BigIntegerField(blank=False, null=False, db_index=True)
     project_name = models.CharField(max_length=30)
 
     class Meta:
