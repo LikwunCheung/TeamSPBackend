@@ -7,11 +7,12 @@ from django.views.decorators.http import require_http_methods
 from django.utils.timezone import now
 from django.db.models import ObjectDoesNotExist
 
-from TeamSPBackend.common.utils import make_json_response, init_http_response, check_user_login
+from TeamSPBackend.common.utils import make_json_response, init_http_response, check_user_login, check_body, body_extract
 from TeamSPBackend.common.choices import RespCode, Roles, Status
 from TeamSPBackend.common.config import SINGLE_PAGE_LIMIT
 from TeamSPBackend.subject.models import Subject
 from TeamSPBackend.account.models import User
+from TeamSPBackend.api.dto.dto import *
 
 
 @require_http_methods(['POST', 'GET'])
@@ -75,9 +76,9 @@ def multi_get_subject(request):
     :return:
     """
 
-    ids = request.GET.get('ids', '')
-    code = request.GET.get('code', '')
-    name = request.GET.get('name', '')
+    ids = request.GET.get('ids', None)
+    code = request.GET.get('code', None)
+    name = request.GET.get('name', None)
     offset = int(request.POST.get('offset', 0))
     has_more = 0
 
@@ -91,6 +92,7 @@ def multi_get_subject(request):
 
     print(kwargs)
     subjects = Subject.objects.filter(**kwargs).order_by('subject_id')[offset: offset + SINGLE_PAGE_LIMIT + 1]
+
     if len(subjects) > SINGLE_PAGE_LIMIT:
         subjects = subjects[: SINGLE_PAGE_LIMIT]
         has_more = 1
@@ -139,36 +141,38 @@ def multi_get_subject(request):
     resp['data'] = data
     return make_json_response(HttpResponse, resp)
 
-        
-def add_subject(request):
+
+@check_body
+def add_subject(request, body, *args, **kwargs):
     """
 
     :param request:
     :return:
     """
-    subject_code = request.POST.get('code', '')
-    subject_name = request.POST.get('name', '')
-    coordinator_id = int(request.POST.get('coordinator_id', 0))
+    add_subject_dto = AddSubjectDTO()
+    body_extract(body, add_subject)
 
     # if the parameter is not sufficient
-    if not subject_code or not subject_name or coordinator_id == 0:
+    if not add_subject_dto.not_empty():
         resp = init_http_response(RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
         return make_json_response(HttpResponseBadRequest, resp)
 
     # if the subject code existed
-    if Subject.objects.filter(subject_code=subject_code).exists():
+    if Subject.objects.filter(subject_code=add_subject_dto.code).exists():
         resp = init_http_response(RespCode.subject_existed.value.key, RespCode.subject_existed.value.msg)
         return make_json_response(HttpResponseBadRequest, resp)
 
     # if user is not coordinator
     try:
-        user = User.objects.get(user_id=coordinator_id, role=Roles.coordinator.value.key, status=Status.valid.value.key)
+        user = User.objects.get(user_id=add_subject_dto.coordinator_id, role=Roles.coordinator.value.key,
+                                status=Status.valid.value.key)
     except ObjectDoesNotExist:
         resp = init_http_response(RespCode.invalid_op.value.key, RespCode.invalid_op.value.msg)
         return make_json_response(HttpResponseBadRequest, resp)
 
-    subject = Subject(subject_code=subject_code, name=subject_name, coordinator_id=coordinator_id,
-                      create_date=int(now().timestamp()), status=Status.valid.value.key)
+    subject = Subject(subject_code=add_subject_dto.code, name=add_subject_dto.name,
+                      coordinator_id=add_subject_dto.coordinator_id, create_date=int(now().timestamp()),
+                      status=Status.valid.value.key)
     subject.save()
 
     resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
@@ -177,7 +181,8 @@ def add_subject(request):
 
 @require_http_methods(['POST'])
 @check_user_login
-def update_subject(request, *args, **kwargs):
+@check_body
+def update_subject(request, body, *args, **kwargs):
     """
 
     :param request:
@@ -194,9 +199,8 @@ def update_subject(request, *args, **kwargs):
         resp = init_http_response(RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
         return make_json_response(HttpResponseBadRequest, resp)
 
-    subject_code = request.POST.get('code', '')
-    subject_name = request.POST.get('name', '')
-    coordinator_id = int(request.POST.get('coordinator_id', 0))
+    add_subject_dto = AddSubjectDTO()
+    body_extract(body, add_subject_dto)
 
     try:
         subject = Subject.objects.get(subject_id=subject_id)
@@ -204,9 +208,9 @@ def update_subject(request, *args, **kwargs):
         resp = init_http_response(RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
         return make_json_response(HttpResponseBadRequest, resp)
 
-    subject.subject_code = subject_code
-    subject.subject_name = subject_name
-    subject.coordinator_id = coordinator_id
+    subject.subject_code = add_subject_dto.code
+    subject.subject_name = add_subject_dto.name
+    subject.coordinator_id = add_subject_dto.coordinator_id
     subject.save()
 
     resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)

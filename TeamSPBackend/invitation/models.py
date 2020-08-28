@@ -7,8 +7,6 @@ from django.db import models
 class Invitation(models.Model):
 
     invitation_id = models.AutoField(db_column='id', primary_key=True)
-    subject_id = models.IntegerField(blank=False, null=False, db_index=True)
-    supervisor_id = models.IntegerField(blank=False, null=True)
     key = models.CharField(max_length=128, blank=False, null=False, db_index=True, unique=True)
     first_name = models.CharField(max_length=50, blank=False, null=True)
     last_name = models.CharField(max_length=50, blank=False, null=True)

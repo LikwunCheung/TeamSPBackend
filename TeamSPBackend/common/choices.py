@@ -31,6 +31,13 @@ class InvitationStatus(Enum):
     expired = Choice(4, 'invitation expired')
 
 
+class InvitationRespCode(Enum):
+    success = Choice(0, 'success')
+    invalid_email = Choice(-1, 'invalid email')
+    send_fail = Choice(-2, 'send invitation fail')
+    existed = Choice(-3, 'invitation existed')
+
+
 class Status(Enum):
     invalid = Choice(0, 'invalid')
     valid = Choice(1, 'valid')
@@ -42,5 +49,10 @@ class Roles(Enum):
     coordinator = Choice(2, 'coordinator')
 
 
+def get_message(choices, index):
+    key = list(choices)[index]
+    return choices[key].value.msg
+
+
 if __name__ == "__main__":
-    print(RespCode.success.key)
+    pass

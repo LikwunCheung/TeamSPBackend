@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import ujson
+import re
 import json
 import time
 import logging
@@ -22,10 +23,10 @@ def make_redirect_response(func=HttpResponse, resp=None):
     return func(ujson.dumps(resp), content_type='application/json', status=302)
 
 
-def init_http_response(code, msg):
+def init_http_response(code, message):
     return dict(
         code=code,
-        msg=msg,
+        message=message,
         data=dict(),
     )
 
@@ -41,7 +42,7 @@ def check_body(func):
         try:
             body = dict(ujson.loads(request.body))
             logger.info(body)
-        except json.JSONDecodeError as e:
+        except ValueError or json.JSONDecodeError as e:
             resp = init_http_response(
                 RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
             return make_json_response(HttpResponse, resp)
@@ -59,9 +60,8 @@ def check_user_login(func):
     def wrapper(request, *args, **kwargs):
         user = request.session.get('user', {})
         if not user or 'id' not in user or 'is_login' not in user:
-            resp = init_http_response(
-                RespCode.not_logged.value.key, RespCode.not_logged.value.msg)
-            return make_json_response(HttpResponseBadRequest, resp)
+            resp = init_http_response(RespCode.not_logged.value.key, RespCode.not_logged.value.msg)
+            return make_json_response(HttpResponse, resp)
 
         request.session.set_expiry(SESSION_REFRESH)
         return func(request, args, kwargs)
@@ -78,9 +78,8 @@ def check_user_role(func, role):
         user = request.session.get('user', {})
         user_role = user['role']
         if user_role is not role:
-            resp = init_http_response(
-                RespCode.permission_deny.value.key, RespCode.permission_deny.value.msg)
-            return make_json_response(HttpResponseBadRequest, resp)
+            resp = init_http_response(RespCode.permission_deny.value.key, RespCode.permission_deny.value.msg)
+            return make_json_response(HttpResponse, resp)
 
         return func(request, args, kwargs)
     return wrapper
@@ -100,3 +99,8 @@ def body_extract(body: dict, obj: object):
 
 def mills_timestamp():
     return int(time.time() * 1000)
+
+
+def email_validate(email):
+    # return re.match(r'^[0-9a-zA-Z_]{0,19}@[[0-9a-zA-Z]{1,13}\.]{1,3}[com,cn,net,au]{1,3}$', email)
+    return True

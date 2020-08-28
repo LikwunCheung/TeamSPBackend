@@ -71,7 +71,7 @@ def getTeams(request):
         teams = []
         for team_id in ids:
             team = Team.objects.get(team_id=team_id)
-            supervisor = Account.objects.get(account_id=team.supervisor_id)
+            supervisor = Account.objects.get(account_id=team.coordinator_id)
             supervisor_data = {
                 'id': supervisor.account_id,
                 'name': supervisor.username,
