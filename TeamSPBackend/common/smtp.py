@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import socks
+
 from xsmtplib.xsmtplib import SMTP
 
 from TeamSPBackend.common import *
@@ -11,7 +13,7 @@ from TeamSPBackend.invitation.models import Invitation
 logger = logging.getLogger('django')
 
 try:
-    s = SMTP(host=GMAIL_ADDRESS, port=GMAIL_PROT, proxy_host=PROXY_HOST, proxy_port=PROXY_PORT, timeout=60)
+    s = SMTP(host=GMAIL_ADDRESS, port=GMAIL_PROT, proxy_host=PROXY_HOST, proxy_port=PROXY_PORT, proxy_type=socks.PROXY_TYPE_SOCKS4, timeout=60)
 except Exception as e:
     print(e)
     s = SMTP(host=GMAIL_ADDRESS, port=GMAIL_PROT, timeout=60)
