@@ -18,6 +18,7 @@ from TeamSPBackend.account.models import Account
 @require_http_methods(['POST', 'GET'])
 @check_user_login
 def invitation_router(request, *args, **kwargs):
+    print(request.COOKIES)
     if request.method == 'POST':
         return add_invitation(request)
     elif request.method == 'GET':
