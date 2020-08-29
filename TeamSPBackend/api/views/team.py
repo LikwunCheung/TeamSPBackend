@@ -1,15 +1,12 @@
 import json
-
-from django.shortcuts import render
-from django.http.response import HttpResponse, HttpResponseNotAllowed, HttpResponseBadRequest
+from django.http.response import HttpResponseBadRequest
 from django.http import HttpResponse, HttpResponseNotAllowed
 from django.utils.timezone import now
 from django.views.decorators.http import require_http_methods
-from TeamSPBackend.common.utils import check_body, check_user_login, make_json_response, init_http_response
-from TeamSPBackend.common.choices import RespCode, Roles, Status
+from TeamSPBackend.common.utils import check_user_login, make_json_response, init_http_response
+from TeamSPBackend.common.choices import RespCode, Roles
 from TeamSPBackend.account.models import Account
 from TeamSPBackend.team.models import Team, Student, TeamMember
-from TeamSPBackend.csv_data.csvRead import read_csv
 from TeamSPBackend.subject.models import Subject
 from TeamSPBackend.account.models import User
 from django.db.models import ObjectDoesNotExist
@@ -25,13 +22,13 @@ def team_router(request, *args):
     if request.method == 'POST':
         if team_id:
             # Assign secondary supervisor for a specific team
-            return assign_supervisor(request, team_id)  # done
+            return update_team(request, team_id)  # done
         # Create team from request with supervisor_id
         return create_team(request)  # todo: might need to change for retrieving confluence data / front-end request with team info
     elif request.method == 'GET':
         if team_id:
             # Get a specific team information
-            return get_team(request, team_id)  # done
+            return get_team_members(request, team_id)  # done
         # Get teams information
         return multi_get_team(request)  # done
     return HttpResponseNotAllowed(['POST'])
@@ -62,7 +59,7 @@ Request:
                 "description":         #team_description,
                 "supervisor_id"：      #supervisor_id,
                 "year"：               #year,
-                "duration":            #duration: days,
+                "duration":            #days,
                 "students":[
                     {
                         "student_id":       #student_id,
@@ -129,7 +126,7 @@ def team_member(request):
 
 
 """
-Get a specific team information
+Get a specific team information (not needed for now)
 
 Method: Get
 Url: localhost:8000/api/v1/team/<int:team_id>
@@ -138,63 +135,62 @@ Request: None
 """
 
 
-def get_team(request, team_id: int):
-    try:
-        data = []
-        team = Team.objects.get(team_id=team_id)
-
-        supervisor = Account.objects.get(account_id=team.supervisor_id)
-        supervisor_data = {
-            'supervisor_id': supervisor.account_id,
-            'first_name': supervisor.first_name,
-            'last_name': supervisor.last_name,
-            'email': supervisor.email
-        }
-
-        secondary_supervisor = Account.objects.get(account_id=team.secondary_supervisor_id)
-        secondary_supervisor_data = {
-            'secondary_supervisor_id': secondary_supervisor.account_id,
-            'first_name': secondary_supervisor.first_name,
-            'last_name': secondary_supervisor.last_name,
-            'email': secondary_supervisor.email
-        }
-
-        t_members = TeamMember.objects.filter(team_id=team_id)
-        members_data = []
-        for t_member in t_members:
-            member_id = t_member.student_id
-            member = Student.objects.get(student_id=member_id)
-            member_data = {
-                'student_id': member_id,
-                'student_number': member.student_number,
-                'first_name': member.first_name,
-                'last_name': member.last_name,
-                'student_email': member.email
-            }
-            members_data.append(member_data)
-
-        team_data = {
-            'id': team.team_id,
-            'name': team.name,
-            'description': team.description,
-            'subject_id': team.subject_id,
-            'year': team.year,
-            'supervisor': supervisor_data,
-            'secondary_supervisor': secondary_supervisor_data,
-            'create_date': team.create_date,
-            'expired': team.expired,
-            'member': members_data
-        }
-        data.append(team_data)
-        body = {
-            'team_data': data
-
-        }
-        return HttpResponse(json.dumps(body), content_type="application/json")
-
-    except:
-        resp = {'code': -1, 'msg': 'error'}
-        return HttpResponse(json.dumps(resp), content_type="application/json")
+# def get_team(request, team_id: int):
+#     try:
+#         data = []
+#         team = Team.objects.get(team_id=team_id)
+#
+#         supervisor = Account.objects.get(account_id=team.supervisor_id)
+#         supervisor_data = {
+#             'supervisor_id': supervisor.account_id,
+#             'first_name': supervisor.first_name,
+#             'last_name': supervisor.last_name,
+#             'email': supervisor.email
+#         }
+#
+#         secondary_supervisor = Account.objects.get(account_id=team.secondary_supervisor_id)
+#         secondary_supervisor_data = {
+#             'secondary_supervisor_id': secondary_supervisor.account_id,
+#             'first_name': secondary_supervisor.first_name,
+#             'last_name': secondary_supervisor.last_name,
+#             'email': secondary_supervisor.email
+#         }
+#
+#         t_members = TeamMember.objects.filter(team_id=team_id)
+#         members_data = []
+#         for t_member in t_members:
+#             member_id = t_member.student_id
+#             member = Student.objects.get(student_id=member_id)
+#             member_data = {
+#                 'student_id': member_id,
+#                 'first_name': member.first_name,
+#                 'last_name': member.last_name,
+#                 'student_email': member.email
+#             }
+#             members_data.append(member_data)
+#
+#         team_data = {
+#             'id': team.team_id,
+#             'name': team.name,
+#             'description': team.description,
+#             'subject_id': team.subject_id,
+#             'year': team.year,
+#             'supervisor': supervisor_data,
+#             'secondary_supervisor': secondary_supervisor_data,
+#             'create_date': team.create_date,
+#             'expired': team.expired,
+#             'member': members_data
+#         }
+#         data.append(team_data)
+#         body = {
+#             'team_data': data
+#
+#         }
+#         return HttpResponse(json.dumps(body), content_type="application/json")
+#
+#     except:
+#         resp = {'code': -1, 'msg': 'error'}
+#         return HttpResponse(json.dumps(resp), content_type="application/json")
 
 
 """
@@ -252,29 +248,29 @@ def get_teams_data(filtered_teams):
             'email': secondary_supervisor.email
         }
 
-        t_members = TeamMember.objects.filter(team_id=team.team_id)
-        members_data = []
-        for t_member in t_members:
-            member_id = t_member.student_id
-            member = Student.objects.get(student_id=member_id)
-            member_data = {
-                'id': member_id,
-                'name': member.name,
-                'email': member.email
-            }
-            members_data.append(member_data)
+        # t_members = TeamMember.objects.filter(team_id=team.team_id)
+        # members_data = []
+        # for t_member in t_members:
+        #     member_id = t_member.student_id
+        #     member = Student.objects.get(student_id=member_id)
+        #     member_data = {
+        #         'id': member_id,
+        #         'name': member.name,
+        #         'email': member.email
+        #     }
+        #     members_data.append(member_data)
 
         team_data = {
             'id': team.team_id,
             'name': team.name,
-            'description': team.description,
-            'subject_id': team.subject_id,
-            'year': team.year,
+            # 'description': team.description,
+            # 'subject_id': team.subject_id,
+            # 'year': team.year,
             'supervisor': supervisor_data,
             'secondary_supervisor': secondary_supervisor_data,
-            'create_date': team.create_date,
-            'expired': team.expired,
-            'member': members_data
+            # 'create_date': team.create_date,
+            # 'expired': team.expired,
+            # 'member': members_data
         }
         teams.append(team_data)
     return teams
@@ -287,64 +283,48 @@ def multi_get_team(request):
         :param request: supervisor_id (necessary), subject_id or year (optional)||team_ids (optional)
         :return:
         """
+    supervisor_id = request.get('supervisor_id', None)
+    filtered_teams = []
+    teams = []
     try:
-        supervisor_id = request.get('supervisor_id', None)
-        subject_id = request.get('subject_id', None)
-        ids = request.GET.getlist('team_ids', [])
-        year = request.GET.getlist('year', None)
-        filtered_teams = []
-        teams = []
-        # Get teams by ids
-        if ids:
-            for team_id in ids:
-                filtered_teams.append(Team.objects.get(team_id=team_id))
-            teams.append(get_teams_data(filtered_teams))
-        # Get teams by subject_id or year
-        elif subject_id or year:
-            if subject_id:
-                filtered_teams.append(Team.objects.filter(subject_id=subject_id))
-            if year:
-                filtered_teams.append(Team.objects.filter(year=year))
-            teams.append(get_teams_data(filtered_teams))
-        # Get all accessible teams for supervisors / coordinators / admins
-        else:
-            user = User.objects.get(user_id=supervisor_id)
-            # coordinators
-            if user.role == Roles.coordinator.value.key:
-                subject_ids = Subject.objects.filter(coordinator_id=user.user_id)
-                for subject_id in subject_ids:
-                    filtered_teams.append(Team.objects.filter(subject_id=subject_id))
-            # supervisors
-            elif user.role == Roles.supervisor.value.key:
-                filtered_teams.append(Team.objects.filter(supervisor_id=user.user_id))
-                filtered_teams.append(Team.objects.filter(secondary_supervisor_id=user.id))
-            # admins
-            else:
-                filtered_teams. append(Team.objects)
-            teams.append(get_teams_data(filtered_teams))
-        body = {
-            'teams': teams
-        }
-        return HttpResponse(json.dumps(body), content_type="application/json")
-    except:
-        resp = {'code': -1, 'msg': 'error'}
-        return HttpResponse(json.dumps(resp), content_type="application/json")
+        user = User.objects.get(user_id=supervisor_id)
+    except ObjectDoesNotExist:
+        resp = init_http_response(RespCode.invalid_op.value.key, RespCode.invalid_op.value.msg)
+        return make_json_response(HttpResponseBadRequest, resp)
+    # coordinators
+    if user.role == Roles.coordinator.value.key:
+        subject_ids = Subject.objects.filter(coordinator_id=user.user_id)
+        for subject_id in subject_ids:
+            filtered_teams.append(Team.objects.filter(subject_id=subject_id))
+    # supervisors
+    elif user.role == Roles.supervisor.value.key:
+        filtered_teams.append(Team.objects.filter(supervisor_id=user.user_id))
+        filtered_teams.append(Team.objects.filter(secondary_supervisor_id=user.id))
+    # admins
+    else:
+        filtered_teams. append(Team.objects)
+    teams.append(get_teams_data(filtered_teams))
+    body = {
+        'teams': teams
+    }
+    return HttpResponse(json.dumps(body), content_type="application/json")
 
 
 """
-Assign secondary supervisor for a specific team
+Assign supervisor or secondary supervisor for a specific team
 
 Method: Post
 Url: localhost:8000/api/v1/team/<team_id>
 Params: team_id
 Request: 
         {
+            "supervisor_id":                    #supervisor_id
             "secondary_supervisor_id":          #secondary_supervisor_id
         }
 """
 
 
-def assign_supervisor(request, team_id: int):
+def update_team(request, team_id: int):
     """
             Post secondary_supervisor_id
 
@@ -352,16 +332,25 @@ def assign_supervisor(request, team_id: int):
             :param team_id:
             :return:
             """
+    supervisor_id = request.GET('supervisor_id', None)
+    secondary_supervisor_id = request.GET('secondary_supervisor_id', None)
     try:
-        secondary_supervisor_id = request.GET('secondary_supervisor_id', None)
         team = Team.objects.get(team_id=team_id)
-    except ObjectDoesNotExist as e:
-        resp = init_http_response(RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
+    except ObjectDoesNotExist:
+        resp = init_http_response(RespCode.invalid_op.value.key, RespCode.invalid_op.value.msg)
         return make_json_response(HttpResponseBadRequest, resp)
-    if secondary_supervisor_id:
-        team.secondary_supervisor_id=secondary_supervisor_id
+    if supervisor_id and team.supervisor_id != supervisor_id:
+        team.supervisor_id = supervisor_id
         team.save()
-        resp = {'code': 0, 'msg': 'create successfully'}
+        resp = {'code': 0, 'msg': 'Update successfully'}
+    if secondary_supervisor_id and team.secondary_supervisor_id != secondary_supervisor_id:
+        team.secondary_supervisor_id = secondary_supervisor_id
+        team.save()
+        resp = {'code': 0, 'msg': 'Update successfully'}
+    if resp:
+        return HttpResponse(json.dumps(resp), content_type="application/json")
+    else:
+        resp = {'code': -1, 'msg': 'Nothing to update'}
         return HttpResponse(json.dumps(resp), content_type="application/json")
 
 
@@ -386,34 +375,37 @@ def get_team_members(request, *args):
         :return:
         """
 
+    team_id = None
+    for arg in args:
+        if isinstance(arg, dict):
+            team_id = arg.get('team_id', None)
     try:
-        team_id = None
-        for arg in args:
-            if isinstance(arg, dict):
-                team_id = arg.get('team_id', None)
         team = Team.objects.get(team_id=team_id)
         team_members = TeamMember.objects.get(team_id=team_id)
-        supervisor = User.objects.get(user_id=team.supervisor_id)
-        secondary_supervisor = User.objects.get(user_id=team.secondary_supervisor_id)
     except ObjectDoesNotExist:
         resp = init_http_response(RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
         return make_json_response(HttpResponseBadRequest, resp)
+
+    supervisor = User.objects.get(user_id=team.supervisor_id)
+    secondary_supervisor = User.objects.get(user_id=team.secondary_supervisor_id)
 
     members = []
 
     if supervisor:
         supervisor_data = {
+            'supervisor_id', supervisor.user_id,
             'supervisor_first_name', supervisor.first_name,
             'supervisor_last_name', supervisor.last_name,
-            'supervisor_email', supervisor.email
+            'email', supervisor.email
         }
         members.append(supervisor_data)
 
     if secondary_supervisor:
         secondary_supervisor_data = {
+            'secondary_supervisor_id', secondary_supervisor.user_id,
             'secondary_supervisor_first_name', secondary_supervisor.first_name,
             'secondary_supervisor_last_name', secondary_supervisor.last_name,
-            'secondary_supervisor_email', secondary_supervisor.email,
+            'email', secondary_supervisor.email,
 
         }
         members.append(secondary_supervisor_data)
@@ -424,7 +416,7 @@ def get_team_members(request, *args):
             'student_id': student.student_id,
             'first_name': student.first_name,
             'last_name': student.last_name,
-            'student_email': student.email
+            'email': student.email
         }
         members.append(member_data)
 
