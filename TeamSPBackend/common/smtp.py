@@ -11,7 +11,7 @@ from TeamSPBackend.common.config import *
 from TeamSPBackend.invitation.models import Invitation
 
 logger = logging.getLogger('django')
-
+s = None
 connected = False
 
 
@@ -22,11 +22,11 @@ def init_smtp():
     try:
         try:
             s = SMTP(host=GMAIL_ADDRESS, port=GMAIL_PROT, proxy_host=PROXY_HOST, proxy_port=PROXY_PORT,
-                     proxy_type=socks.PROXY_TYPE_SOCKS4, timeout=60)
+                     proxy_type=socks.PROXY_TYPE_SOCKS4, timeout=10)
         except Exception as e:
             print(e)
             try:
-                s = SMTP(host=GMAIL_ADDRESS, port=GMAIL_PROT, timeout=60)
+                s = SMTP(host=GMAIL_ADDRESS, port=GMAIL_PROT, timeout=10)
             except Exception as e:
                 print(e)
                 return
@@ -41,9 +41,9 @@ def init_smtp():
 
 
 def send_email(coordinator, address, content):
-    global connected
+    global connected, s
 
-    if not connected:
+    if not connected or s is None:
         return False
 
     try:
