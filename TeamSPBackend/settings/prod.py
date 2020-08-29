@@ -5,10 +5,11 @@ from .base_setting import *
 DEBUG = True
 
 CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_WHITELIST = ('localhost:3000', '172.26.88.107:8081', '172.26.88.107')
 SESSION_COOKIE_SAMESITE = None
 CSRF_COOKIE_SAMESITE = None
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['localhost:3000', '172.26.88.107:8081', '172.26.88.107']
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
 SESSION_COOKIE_NAME = "session_id"
