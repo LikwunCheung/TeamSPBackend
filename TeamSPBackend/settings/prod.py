@@ -5,6 +5,8 @@ from .base_setting import *
 DEBUG = True
 
 CORS_ALLOW_CREDENTIALS = True
+SESSION_COOKIE_SAMESITE = None
+CSRF_COOKIE_SAMESITE = None
 
 ALLOWED_HOSTS = ['*']
 
