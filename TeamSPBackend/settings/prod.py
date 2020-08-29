@@ -6,7 +6,7 @@ DEBUG = True
 
 CORS_ALLOW_CREDENTIALS = True
 CORS_ORIGIN_ALLOW_ALL = True
-CORS_ORIGIN_WHITELIST = ('localhost:3000', '172.26.88.107:8081', '172.26.88.107')
+CORS_ORIGIN_WHITELIST = ('http://localhost:3000', 'http://172.26.88.107:8081', 'http://172.26.88.107')
 CORS_ALLOW_METHODS = (
     'DELETE', 'GET', 'POST', 'OPTIONS', 'PATCH', 'PUT',
 )
@@ -27,7 +27,7 @@ CORS_ALLOW_HEADERS = (
 SESSION_COOKIE_SAMESITE = None
 CSRF_COOKIE_SAMESITE = None
 
-ALLOWED_HOSTS = ['localhost:3000', '172.26.88.107:8081', '172.26.88.107']
+ALLOWED_HOSTS = ['*']
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
 SESSION_COOKIE_NAME = "session_id"
