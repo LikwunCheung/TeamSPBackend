@@ -11,9 +11,10 @@ from TeamSPBackend.invitation.models import Invitation
 logger = logging.getLogger('django')
 
 try:
-    s = SMTP(host=GMAIL_ADDRESS, port=GMAIL_PROT, proxy_host=PROXY_HOST, proxy_port=PROXY_PORT, timeout=10)
+    s = SMTP(host=GMAIL_ADDRESS, port=GMAIL_PROT, proxy_host=PROXY_HOST, proxy_port=PROXY_PORT, timeout=60)
 except Exception as e:
-    s = SMTP(host=GMAIL_ADDRESS, port=GMAIL_PROT, timeout=10)
+    print(e)
+    s = SMTP(host=GMAIL_ADDRESS, port=GMAIL_PROT, timeout=60)
 
 connected = False
 
