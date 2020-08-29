@@ -69,7 +69,6 @@ def login(request, body, *args, **kwargs):
         name=user.get_name()
     )
     resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
-    resp.
     resp['data'] = data
     return make_json_response(HttpResponse, resp)
 
