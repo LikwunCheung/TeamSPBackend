@@ -35,7 +35,7 @@ def team_router(request, *args):
 
 
 """
-Create team from csv
+Create team from csv (not used anymore)
 Method: Post
 Request: csv_file
 """
