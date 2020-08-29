@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from xsmtplib.xsmtplib import SMTP
+
 from TeamSPBackend.common import *
 from TeamSPBackend.common.utils import mills_timestamp
 from TeamSPBackend.common.choices import InvitationStatus
@@ -8,7 +10,11 @@ from TeamSPBackend.invitation.models import Invitation
 
 logger = logging.getLogger('django')
 
-s = smtplib.SMTP(GMAIL_ADDRESS, GMAIL_PROT)
+try:
+    s = SMTP(host=GMAIL_ADDRESS, port=GMAIL_PROT, proxy_host=PROXY_HOST, proxy_port=PROXY_PORT, timeout=10)
+except Exception as e:
+    s = SMTP(host=GMAIL_ADDRESS, port=GMAIL_PROT, timeout=10)
+
 connected = False
 
 
@@ -40,7 +46,7 @@ def send_email(coordinator, address, content):
         message[TO] = Header(address, UTF8)
         message[SUBJECT] = Header(INVITATION_TITLE, UTF8)
 
-        s.sendmail(GMAIL_ADDRESS, address, message.as_string())
+        s.sendmail(GMAIL_ACCOUNT, address, message.as_string())
         return True
     except Exception as e:
         print(e)

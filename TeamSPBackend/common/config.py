@@ -22,5 +22,7 @@ GMAIL_ADDRESS = 'smtp.gmail.com'
 GMAIL_PROT = 587
 GMAIL_ACCOUNT = 'swen90013.2020.sp@gmail.com'
 GMAIL_PASSWORD = 'fvwdissshcpobsdl'
+PROXY_HOST = 'proxy.unimelb.edu.au'
+PROXY_PORT = 8000
 
 INVITATION_TITLE = 'Supervisor Invitation Link'

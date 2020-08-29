@@ -4,7 +4,7 @@ import logging
 import re
 import time
 import ujson
-import smtplib
+import xsmtplib
 import threading
 
 from queue import Queue
