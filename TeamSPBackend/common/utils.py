@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import ujson
-import re
-import json
-import time
-import logging
+from TeamSPBackend.common import *
 
 from django.http.response import HttpResponseForbidden, HttpResponseBadRequest, HttpResponse, HttpResponseRedirect
 

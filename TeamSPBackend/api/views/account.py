@@ -1,4 +1,5 @@
 import ujson
+import logging
 
 from django.http import HttpResponse, HttpResponseNotAllowed, HttpResponse
 from django.views.decorators.http import require_http_methods
@@ -9,6 +10,9 @@ from TeamSPBackend.account.models import Account, User
 from TeamSPBackend.common.utils import init_http_response, make_json_response, check_user_login, body_extract, mills_timestamp, check_body
 from TeamSPBackend.common.choices import RespCode, Status, Roles
 from TeamSPBackend.api.dto.dto import LoginDTO, AddAccountDTO, UpdateAccountDTO
+
+
+logger = logging.getLogger('django')
 
 
 @require_http_methods(['POST', 'GET'])

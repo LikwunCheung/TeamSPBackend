@@ -7,6 +7,7 @@ from django.http.response import HttpResponse, HttpResponseRedirect, HttpRespons
 from django.views.decorators.http import require_http_methods
 from django.db import transaction
 
+from TeamSPBackend.common import smtp_thread
 from TeamSPBackend.common.utils import make_json_response, init_http_response, check_user_login, check_body, body_extract, mills_timestamp, get_invitation_link
 from TeamSPBackend.common.choices import InvitationStatus, RespCode, InvitationRespCode, Status, get_message
 from TeamSPBackend.common.config import SINGLE_PAGE_LIMIT, PATTERN_COORDINATOR, PATTERN_URL
@@ -56,8 +57,8 @@ def add_invitation(request, body, *args, **kwargs):
                 Account.objects.filter(email=email, status=Status.valid.value.key).exists():
             failed_list.append(dict(
                 email=email,
-                status=InvitationRespCode.invalid_email.value.key,
-                message=InvitationRespCode.invalid_email.value.msg,
+                status=InvitationRespCode.existed.value.key,
+                message=InvitationRespCode.existed.value.msg,
             ))
             continue
 
@@ -72,6 +73,8 @@ def add_invitation(request, body, *args, **kwargs):
         with transaction.atomic():
             for invite in invitations:
                 invite.save()
+        for invite in invitations:
+            smtp_thread.put_task(invite.invitation_id, user['name'], invite.email, invite.template)
     except Exception as e:
         print(e)
         resp = init_http_response(RespCode.server_error.value.key, RespCode.server_error.value.msg)
@@ -155,3 +158,5 @@ def get_invitation(request):
     resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
     resp['data'] = data
     return make_json_response(HttpResponse, resp)
+
+
