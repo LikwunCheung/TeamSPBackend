@@ -9,7 +9,7 @@ import logging
 from django.http.response import HttpResponseForbidden, HttpResponseBadRequest, HttpResponse, HttpResponseRedirect
 
 from TeamSPBackend.common.choices import RespCode
-from TeamSPBackend.common.config import SESSION_REFRESH
+from TeamSPBackend.common.config import SESSION_REFRESH, HOMEPAGE, REGISTER_PAGE, INVITATION_KEY
 
 
 logger = logging.getLogger('django')
@@ -102,5 +102,8 @@ def mills_timestamp():
 
 
 def email_validate(email):
-    # return re.match(r'^[0-9a-zA-Z_]{0,19}@[[0-9a-zA-Z]{1,13}\.]{1,3}[com,cn,net,au]{1,3}$', email)
-    return True
+    return re.match(r'^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$', email)
+
+
+def get_invitation_link(key):
+    return HOMEPAGE + REGISTER_PAGE + '?' + INVITATION_KEY + '=' + key

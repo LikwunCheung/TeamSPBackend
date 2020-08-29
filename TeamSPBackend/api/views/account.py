@@ -52,6 +52,7 @@ def login(request, body, *args, **kwargs):
 
     session_data = dict(
         id=user.user_id,
+        name=user.get_name(),
         role=user.role,
         is_login=True,
     )
