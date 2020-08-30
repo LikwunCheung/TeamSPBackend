@@ -285,22 +285,22 @@ def multi_get_team(request):
         :param request: supervisor_id (necessary), subject_id or year (optional)||team_ids (optional)
         :return:
         """
-    supervisor_id = request.get('supervisor_id', None)
+    supervisor_id = request.GET.get('supervisor_id', None)
     filtered_teams = []
     teams = []
     try:
-        user = User.objects.get(user_id=supervisor_id)
+        user = User.objects.get(account_id=supervisor_id)
     except ObjectDoesNotExist:
         resp = init_http_response(RespCode.invalid_op.value.key, RespCode.invalid_op.value.msg)
         return make_json_response(HttpResponseBadRequest, resp)
     # coordinators
     if user.role == Roles.coordinator.value.key:
-        subject_ids = Subject.objects.filter(coordinator_id=user.user_id)
+        subject_ids = Subject.objects.filter(coordinator_id=user.account_id)
         for subject_id in subject_ids:
             filtered_teams.append(Team.objects.filter(subject_id=subject_id))
     # supervisors
     elif user.role == Roles.supervisor.value.key:
-        filtered_teams.append(Team.objects.filter(supervisor_id=user.user_id))
+        filtered_teams.append(Team.objects.filter(supervisor_id=user.account_id))
         filtered_teams.append(Team.objects.filter(secondary_supervisor_id=user.id))
     # admins
     else:
@@ -334,8 +334,8 @@ def update_team(request, team_id: int):
             :param team_id:
             :return:
             """
-    supervisor_id = request.GET('supervisor_id', None)
-    secondary_supervisor_id = request.GET('secondary_supervisor_id', None)
+    supervisor_id = request.GET.get('supervisor_id', None)
+    secondary_supervisor_id = request.GET.get('secondary_supervisor_id', None)
     try:
         team = Team.objects.get(team_id=team_id)
     except ObjectDoesNotExist:
@@ -368,7 +368,7 @@ Request:
 
 @require_http_methods(['GET'])
 @check_user_login
-def get_team_members(request, *args):
+def get_team_members(request, *args, **kwargs):
     """
         Get certain team members
 
@@ -381,39 +381,42 @@ def get_team_members(request, *args):
     for arg in args:
         if isinstance(arg, dict):
             team_id = arg.get('team_id', None)
+    # Queryset list of team members
+    team_members = []
+    # Result list for members: supervisor, secondary_supervisor, and team members
+    members = []
+    resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
     try:
         team = Team.objects.get(team_id=team_id)
-        team_members = TeamMember.objects.get(team_id=team_id)
+        team_members.append(TeamMember.objects.filter(team_id=team_id))
     except ObjectDoesNotExist:
-        resp = init_http_response(RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
         return make_json_response(HttpResponseBadRequest, resp)
-
-    supervisor = User.objects.get(user_id=team.supervisor_id)
-    secondary_supervisor = User.objects.get(user_id=team.secondary_supervisor_id)
-
-    members = []
-
-    if supervisor:
-        supervisor_data = {
-            'supervisor_id', supervisor.user_id,
-            'supervisor_first_name', supervisor.first_name,
-            'supervisor_last_name', supervisor.last_name,
-            'email', supervisor.email
-        }
-        members.append(supervisor_data)
-
-    if secondary_supervisor:
-        secondary_supervisor_data = {
-            'secondary_supervisor_id', secondary_supervisor.user_id,
-            'secondary_supervisor_first_name', secondary_supervisor.first_name,
-            'secondary_supervisor_last_name', secondary_supervisor.last_name,
-            'email', secondary_supervisor.email,
-
-        }
-        members.append(secondary_supervisor_data)
-
-    for member in team_members:
-        student = Student.objects.get(id=member.student_id)
+    try:
+        supervisor = User.objects.get(account_id=team.supervisor_id)
+        if supervisor:
+            supervisor_data = {
+                'supervisor_id': supervisor.account_id,
+                'supervisor_first_name': supervisor.first_name,
+                'supervisor_last_name': supervisor.last_name,
+                'email': supervisor.email
+            }
+            members.append(supervisor_data)
+    except ObjectDoesNotExist:
+        resp['supervisor'] = "supervisor not exist"
+    try:
+        secondary_supervisor = User.objects.get(account_id=team.secondary_supervisor_id)
+        if secondary_supervisor:
+            secondary_supervisor_data = {
+                'secondary_supervisor_id': secondary_supervisor.account_id,
+                'secondary_supervisor_first_name': secondary_supervisor.first_name,
+                'secondary_supervisor_last_name': secondary_supervisor.last_name,
+                'email': secondary_supervisor.email,
+            }
+            members.append(secondary_supervisor_data)
+    except ObjectDoesNotExist:
+        resp['secondary_supervisor'] = "secondary_supervisor not exist"
+    for member in team_members[0]:
+        student = Student.objects.get(student_id=member.student_id)
         member_data = {
             'student_id': student.student_id,
             'first_name': student.first_name,
@@ -426,6 +429,5 @@ def get_team_members(request, *args):
         'team_members': members
     }
 
-    resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
     resp['data'] = data
     return make_json_response(HttpResponse, resp)
