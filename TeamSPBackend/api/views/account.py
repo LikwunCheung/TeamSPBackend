@@ -9,12 +9,10 @@ from TeamSPBackend.account.models import Account, User
 from TeamSPBackend.common.utils import init_http_response, make_json_response, check_user_login, body_extract, mills_timestamp, check_body
 from TeamSPBackend.common.choices import RespCode, Status, Roles
 from TeamSPBackend.api.dto.dto import LoginDTO, AddAccountDTO, UpdateAccountDTO
-from TeamSPBackend.api.views.jira.helpJira import anaJira
 
 @require_http_methods(['POST', 'GET'])
 @check_user_login
 def account_router(request, *args, **kwargs):
-    anaJira
     if request.method == 'POST':
         return add_account(request)
     elif request.method == 'GET':
@@ -32,6 +30,12 @@ def login(request, body, *args, **kwargs):
     """
 
     login_dto = LoginDTO()
+
+    #######
+    username = login_dto.username
+    password = login_dto.password
+    #######
+
     body_extract(body, login_dto)
 
     if not login_dto.validate():

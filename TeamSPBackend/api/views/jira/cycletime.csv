@@ -1,9 +1,9 @@
 ID,Link,Name,To Do,In Progress,In Review,Done,Type,Status,Resolution,Blocked Days
 SP90013-165,https://jira.cis.unimelb.edu.au:8444/browse/SP90013-165,Back-end: Confluence API to get students and project teams,2020-08-24,,,2020-08-24,Sub-task,Done,Done,0
-SP90013-164,https://jira.cis.unimelb.edu.au:8444/browse/SP90013-164,Create README.md for backend repository,2020-08-21,,,,Task,To Do,,0
+SP90013-164,https://jira.cis.unimelb.edu.au:8444/browse/SP90013-164,Create README.md for backend repository,2020-08-21,,,2020-08-25,Task,Done,Done,0
 SP90013-163,https://jira.cis.unimelb.edu.au:8444/browse/SP90013-163,Integrate Supervisor's homepage,2020-08-18,,,,Sub-task,To Do,,0
 SP90013-162,https://jira.cis.unimelb.edu.au:8444/browse/SP90013-162,Integration of Mange Supervisor Page,2020-08-18,2020-08-21,,,Sub-task,In Progress,,0
-SP90013-161,https://jira.cis.unimelb.edu.au:8444/browse/SP90013-161,Finished the integration of login page and register page,2020-08-18,,,,Sub-task,To Do,,0
+SP90013-161,https://jira.cis.unimelb.edu.au:8444/browse/SP90013-161,Finished the integration of login page and register page,2020-08-18,2020-08-25,,,Sub-task,In Progress,,0
 SP90013-160,https://jira.cis.unimelb.edu.au:8444/browse/SP90013-160,Create Sprint overview document for the client,2020-08-18,2020-08-18,,2020-08-24,Task,Done,Done,0
 SP90013-159,https://jira.cis.unimelb.edu.au:8444/browse/SP90013-159,General confluence format/ grammar sweep,2020-08-14,,,,Improvement,Review,,0
 SP90013-158,https://jira.cis.unimelb.edu.au:8444/browse/SP90013-158,Connection to tools Page rework,2020-08-14,,,,Improvement,Review,,0
@@ -20,15 +20,15 @@ SP90013-148,https://jira.cis.unimelb.edu.au:8444/browse/SP90013-148,Back-end: Re
 SP90013-147,https://jira.cis.unimelb.edu.au:8444/browse/SP90013-147,Back-end: Import Confluence data on Teams and Users into our own database,2020-07-31,,,,Sub-task,To Do,,0
 SP90013-146,https://jira.cis.unimelb.edu.au:8444/browse/SP90013-146,Front-end: Design layout for project team page,2020-07-31,,,2020-08-07,Sub-task,Done,Done,0
 SP90013-145,https://jira.cis.unimelb.edu.au:8444/browse/SP90013-145,Front-end: Design layout to clearly show the difference between primary and secondary supervisors,2020-07-31,,,2020-08-07,Sub-task,Done,Done,0
-SP90013-144,https://jira.cis.unimelb.edu.au:8444/browse/SP90013-144,Back-end: API for supervisor list,2020-07-31,,,,Sub-task,To Do,,0
+SP90013-144,https://jira.cis.unimelb.edu.au:8444/browse/SP90013-144,Back-end: API for supervisor list,2020-07-31,2020-08-29,,2020-08-29,Sub-task,Done,Done,0
 SP90013-143,https://jira.cis.unimelb.edu.au:8444/browse/SP90013-143,Front-end: Design layout for supervisor list page,2020-07-31,,,2020-08-07,Sub-task,Done,Done,0
 SP90013-142,https://jira.cis.unimelb.edu.au:8444/browse/SP90013-142,Back-end: Implement process for inviting a supervisor,2020-07-31,,,,Sub-task,To Do,,0
 SP90013-141,https://jira.cis.unimelb.edu.au:8444/browse/SP90013-141,Front-end: Design layout for supervisor invitation page,2020-07-31,,,2020-08-07,Sub-task,Done,Done,0
-SP90013-140,https://jira.cis.unimelb.edu.au:8444/browse/SP90013-140,Back-end: API for all projects,2020-07-31,,,,Sub-task,To Do,,0
+SP90013-140,https://jira.cis.unimelb.edu.au:8444/browse/SP90013-140,Back-end: API for all projects,2020-07-31,2020-08-29,,2020-08-29,Sub-task,Done,Done,0
 SP90013-139,https://jira.cis.unimelb.edu.au:8444/browse/SP90013-139,Front-end: Design layout for project list page,2020-07-31,,,2020-08-07,Sub-task,Done,Done,0
 SP90013-138,https://jira.cis.unimelb.edu.au:8444/browse/SP90013-138,Back-end: Importing information on project teams via Confluence API,2020-07-31,2020-08-21,,2020-08-24,Sub-task,Done,Done,0
 SP90013-137,https://jira.cis.unimelb.edu.au:8444/browse/SP90013-137,Back-end: Importing information on students via Confluence API,2020-07-31,2020-08-21,,2020-08-24,Sub-task,Done,Done,0
-SP90013-136,https://jira.cis.unimelb.edu.au:8444/browse/SP90013-136,Front-end: Design layout for the importing page,2020-07-31,,2020-08-07,,Sub-task,In Review,,0
+SP90013-136,https://jira.cis.unimelb.edu.au:8444/browse/SP90013-136,Front-end: Design layout for the importing page,2020-07-31,2020-08-25,,,Sub-task,In Progress,,0
 SP90013-135,https://jira.cis.unimelb.edu.au:8444/browse/SP90013-135,Back-end: Design APIs for creating a new account for a supervisor,2020-07-31,,,,Sub-task,To Do,,0
 SP90013-134,https://jira.cis.unimelb.edu.au:8444/browse/SP90013-134,Front-end: Design layout and flow for the process of creating a new supervisor account,2020-07-31,,,,Sub-task,To Do,,0
 SP90013-133,https://jira.cis.unimelb.edu.au:8444/browse/SP90013-133,Front-end: Design layout for login page,2020-07-31,,,2020-08-07,Sub-task,Done,Done,0

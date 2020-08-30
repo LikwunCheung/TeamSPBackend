@@ -30,8 +30,8 @@ urlpatterns = [
     path('subject/project/getteam', team.getTeams),
 
     # Jira Related API
-    path('subject/project/team/id/jiracfd', helpJira.getJiraCFD),
-    path('subject/project/team/id/jiraburn', helpJira.getJiraburn),
-    path('subject/project/team/id/jiraburnforecast', helpJira.getJiraburnforecast)
+    path('subject/project/team/jiracfd', helpJira.getJiraCFD),
+    path('subject/project/team/jiraburn', helpJira.getJiraburn),
+    path('subject/project/team/jiraburnforecast', helpJira.getJiraburnforecast)
 
 ]
