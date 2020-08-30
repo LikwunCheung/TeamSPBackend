@@ -18,7 +18,7 @@ class Team(models.Model):
     team_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=30, unique= True)
     description = models.CharField(max_length=1000)
-    subject_id = models.IntegerField()
+    subject_id = models.CharField(max_length=30)
     # supervisor = models.ForeignKey('Account',on_delete= models.SET_NULL)
     supervisor_id = models.IntegerField()
     secondary_supervisor_id = models.IntegerField()

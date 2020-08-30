@@ -1,4 +1,5 @@
 import json
+from TeamSPBackend.common.config import SINGLE_PAGE_LIMIT
 from django.http.response import HttpResponseBadRequest
 from django.http import HttpResponse, HttpResponseNotAllowed
 from django.utils.timezone import now
@@ -232,49 +233,55 @@ Request: supervisor_id (necessary), subject_id||year (optional), team_ids (optio
 # function to return all team candidates info as a list
 def get_teams_data(filtered_teams):
     teams = []
-    for team in filtered_teams:
-        supervisor = Account.objects.get(account_id=team.supervisor_id)
-        supervisor_data = {
-            'supervisor_id': supervisor.account_id,
-            'first_name': supervisor.first_name,
-            'last_name': supervisor.last_name,
-            'email': supervisor.email
-        }
+    for i in range(len(filtered_teams)):
+        for team in filtered_teams[i]:
+            try:
+                supervisor = User.objects.get(account_id=team.supervisor_id)
+                supervisor_data = {
+                    'supervisor_id': supervisor.account_id,
+                    'first_name': supervisor.first_name,
+                    'last_name': supervisor.last_name,
+                    'email': supervisor.email
+                }
+            except ObjectDoesNotExist:
+                supervisor_data = {}
+            try:
+                secondary_supervisor = User.objects.get(account_id=team.secondary_supervisor_id)
+                secondary_supervisor_data = {
+                    'secondary_supervisor_id': secondary_supervisor.account_id,
+                    'first_name': secondary_supervisor.first_name,
+                    'last_name': secondary_supervisor.last_name,
+                    'email': secondary_supervisor.email
+                }
+            except ObjectDoesNotExist:
+                secondary_supervisor_data = {}
 
-        secondary_supervisor = Account.objects.get(account_id=team.secondary_supervisor_id)
-        secondary_supervisor_data = {
-            'secondary_supervisor_id': secondary_supervisor.account_id,
-            'first_name': secondary_supervisor.first_name,
-            'last_name': secondary_supervisor.last_name,
-            'email': secondary_supervisor.email
-        }
+            # t_members = TeamMember.objects.filter(team_id=team.team_id)
+            # members_data = []
+            # for t_member in t_members:
+            #     member_id = t_member.student_id
+            #     member = Student.objects.get(student_id=member_id)
+            #     member_data = {
+            #         'id': member_id,
+            #         'name': member.name,
+            #         'email': member.email
+            #     }
+            #     members_data.append(member_data)
 
-        # t_members = TeamMember.objects.filter(team_id=team.team_id)
-        # members_data = []
-        # for t_member in t_members:
-        #     member_id = t_member.student_id
-        #     member = Student.objects.get(student_id=member_id)
-        #     member_data = {
-        #         'id': member_id,
-        #         'name': member.name,
-        #         'email': member.email
-        #     }
-        #     members_data.append(member_data)
-
-        team_data = {
-            'id': team.team_id,
-            'name': team.name,
-            'project_name': team.project_name,
-            # 'description': team.description,
-            # 'subject_id': team.subject_id,
-            # 'year': team.year,
-            'supervisor': supervisor_data,
-            'secondary_supervisor': secondary_supervisor_data,
-            # 'create_date': team.create_date,
-            # 'expired': team.expired,
-            # 'member': members_data
-        }
-        teams.append(team_data)
+            team_data = {
+                'id': team.team_id,
+                'name': team.name,
+                'project_name': team.project_name,
+                # 'description': team.description,
+                # 'subject_id': team.subject_id,
+                # 'year': team.year,
+                'supervisor': supervisor_data,
+                'secondary_supervisor': secondary_supervisor_data,
+                # 'create_date': team.create_date,
+                # 'expired': team.expired,
+                # 'member': members_data
+            }
+            teams.append(team_data)
     return teams
 
 
@@ -282,30 +289,55 @@ def multi_get_team(request):
     """
         Get multiple teams
 
-        :param request: supervisor_id (necessary), subject_id or year (optional)||team_ids (optional)
+        :param request: supervisor_id/coordinator_id
         :return:
         """
-    supervisor_id = request.GET.get('supervisor_id', None)
+    print(request)
+    account_id = request.GET.get('account_id', None)
+    print(account_id)
+    offset = int(request.POST.get('offset', 0))
+    has_more = 0
     filtered_teams = []
     teams = []
     try:
-        user = User.objects.get(account_id=supervisor_id)
+        user = User.objects.get(account_id=account_id)
+        print(user)
     except ObjectDoesNotExist:
         resp = init_http_response(RespCode.invalid_op.value.key, RespCode.invalid_op.value.msg)
         return make_json_response(HttpResponseBadRequest, resp)
     # coordinators
     if user.role == Roles.coordinator.value.key:
-        subject_ids = Subject.objects.filter(coordinator_id=user.account_id)
-        for subject_id in subject_ids:
-            filtered_teams.append(Team.objects.filter(subject_id=subject_id))
+        print(user.account_id)
+        subjects = Subject.objects.filter(coordinator_id=user.account_id)
+        print(subjects)
+        for subject in subjects:
+            filtered_teams.append(Team.objects.filter(subject_id=subject.subject_code))
+            print(subject.subject_code)
+            print(filtered_teams)
     # supervisors
     elif user.role == Roles.supervisor.value.key:
         filtered_teams.append(Team.objects.filter(supervisor_id=user.account_id))
-        filtered_teams.append(Team.objects.filter(secondary_supervisor_id=user.id))
+        filtered_teams.append(Team.objects.filter(secondary_supervisor_id=user.account_id))
     # admins
     else:
-        filtered_teams. append(Team.objects)
+        filtered_teams.append(Team.objects.all())
     teams.append(get_teams_data(filtered_teams))
+    # TODO: page split
+    # kwargs = dict()
+    # if ids:
+    #     kwargs['team_id__in'] = [int(x) for x in ids.split(',')]
+    # if code:
+    #     kwargs['subject_code__contains'] = code
+    # if name:
+    #     kwargs['name__contains'] = name
+    #
+    # teams = Team.objects.filter(teams).order_by('team_id')[offset: offset + SINGLE_PAGE_LIMIT + 1]
+    #
+    # if len(teams) > SINGLE_PAGE_LIMIT:
+    #     teams = teams[: SINGLE_PAGE_LIMIT]
+    #     has_more = 1
+    # offset += len(teams)
+
     body = {
         'teams': teams
     }
