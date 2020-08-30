@@ -10,6 +10,7 @@ idna==2.9
 mysqlclient==1.4.6
 oauthlib==3.1.0
 pycparser==2.20
+pycryptodome==3.9.8
 PyMySQL==0.9.3
 PySocks==1.5.7
 pytz==2020.1

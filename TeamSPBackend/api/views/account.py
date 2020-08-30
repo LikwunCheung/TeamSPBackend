@@ -210,6 +210,13 @@ def update_account(request, body, *args, **kwargs):
     if update_account_dto.last_name:
         user.last_name = update_account_dto.last_name
         user.update_date = timestamp
+    if update_account_dto.atl_username:
+        user.atl_username = update_account_dto.atl_username
+        user.update_date = timestamp
+    if update_account_dto.atl_password:
+        update_account_dto.encrypt_aes()
+        user.atl_password = update_account_dto.aes
+        user.update_date = timestamp
     if update_account_dto.old_password and update_account_dto.password \
             and update_account_dto.old_md5 == account.password:
         account.password = update_account_dto.md5
@@ -271,32 +278,3 @@ def delete(request, body, *args, **kwargs):
 
     resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
     return make_json_response(HttpResponse, resp)
-
-
-@require_http_methods(['POST'])
-@check_user_login
-def invite_accept(request):
-    """
-    Accept Invitation and Create Account (WIP)
-    Method: Post
-    Request: key, username, password
-    """
-
-    if request.method == 'POST':
-
-        key = request.POST.get('key')
-        username = request.POST.get('username')
-        password = request.POST.get('password')
-
-        timestamp = mills_timestamp()
-        if Account.objects.filter(username=username).exists():
-            resp = {'code': -1, 'msg': 'username already exist'}
-            return HttpResponse(ujson.dumps(resp), content_type="application/json")
-        else:
-            account = Account(username=username, password=password, status=1, create_date=timestamp,)
-            user = User(username=username, status=1, create_date=timestamp,)
-
-            account.save()
-            user.save()
-            resp = {'code': 0, 'msg': 'invite accept'}
-            return HttpResponse(ujson.dumps(resp), content_type="application/json")

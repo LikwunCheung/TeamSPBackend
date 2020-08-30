@@ -90,6 +90,7 @@ class SendEmailPool(threading.Thread):
 
         if send_email(task['coordinator'], task['email'], task['text']):
             invite.status = InvitationStatus.sent.value.key
+            invite.send_date = mills_timestamp()
             invite.save()
 
     def run(self):

@@ -24,7 +24,6 @@ CORS_ALLOW_HEADERS = (
     'X_FILENAME',
 )
 
-SESSION_COOKIE_SAMESITE = None
 CSRF_COOKIE_SAMESITE = None
 
 ALLOWED_HOSTS = ['*']
@@ -32,6 +31,7 @@ ALLOWED_HOSTS = ['*']
 SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
 SESSION_COOKIE_NAME = "session_id"
 SESSION_COOKIE_AGE = 60 * 60 * 24
+SESSION_COOKIE_SAMESITE = None
 
 DATABASES = {
     # 'default': {

@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 
-from TeamSPBackend.common import *
+import base64
+from Crypto.Cipher import AES
 
 from django.http.response import HttpResponseForbidden, HttpResponseBadRequest, HttpResponse, HttpResponseRedirect
 
+from TeamSPBackend.common import *
 from TeamSPBackend.common.choices import RespCode
-from TeamSPBackend.common.config import SESSION_REFRESH, HOMEPAGE, REGISTER_PAGE, INVITATION_KEY
+from TeamSPBackend.common.config import SESSION_REFRESH, HOMEPAGE, REGISTER_PAGE, INVITATION_KEY, SALT
 
 
 logger = logging.getLogger('django')
@@ -103,3 +105,18 @@ def email_validate(email):
 
 def get_invitation_link(key):
     return HOMEPAGE + REGISTER_PAGE + '?' + INVITATION_KEY + '=' + key
+
+
+def auto_fill(key):
+    if not isinstance(key, str):
+        return None
+    while len(key) % 16 != 0:
+        key += '\0'
+    return str.encode(key)
+
+
+def decrypt_aes(key):
+    if key is None:
+        return None
+    aes = AES.new(auto_fill(SALT), AES.MODE_ECB)
+    return aes.decrypt(base64.decodebytes(key))

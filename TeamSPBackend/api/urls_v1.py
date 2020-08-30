@@ -4,14 +4,15 @@ from django.urls import path
 
 from TeamSPBackend.api.views import team
 from TeamSPBackend.api.views.confluence import confluence
-from .views.invitation import invitation_router
-from .views.account import account_router, login, logout, update_account, delete, invite_accept
+from .views.invitation import invitation_router, invite_accept
+from .views.account import account_router, login, logout, update_account, delete
 from .views.subject import subject_router, update_subject, delete_subject
 from .views.team import team_router, get_team_members
 
 urlpatterns = [
     # Invitation Related API
     path('invite', invitation_router),
+    path('invite/accept', invite_accept),
 
     # Account Related API
     path('account/login', login),
@@ -19,7 +20,6 @@ urlpatterns = [
     path('account/update', update_account),
     path('account/delete', delete),
     path('account', account_router),
-    path('subject/invite/accept', invite_accept),
 
     # Subject Related API
     path('subject/<int:id>/update', update_subject),
