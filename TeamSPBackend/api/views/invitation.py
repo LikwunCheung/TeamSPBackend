@@ -183,8 +183,10 @@ def invite_accept(request, body, *args, **kwargs):
         resp = init_http_response(RespCode.account_existed.value.key, RespCode.account_existed.value.msg)
         return make_json_response(HttpResponse, resp)
 
-    invitation = Invitation.objects.get(key=invite_accept_dto.key, status=InvitationStatus.sent.value.key)
-    if invitation is None:
+    try:
+        invitation = Invitation.objects.get(key=invite_accept_dto.key, status=InvitationStatus.sent.value.key)
+    except Exception as e:
+        print(e)
         resp = init_http_response(RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
         return make_json_response(HttpResponse, resp)
 
