@@ -22,7 +22,10 @@ DATABASES = {
         'PASSWORD': 'sp90013',
         'HOST': '127.0.0.1',
         'PORT': 3306,
-        'CHARSET': 'utf8mb4'
+        'CHARSET': 'utf8mb4',
+        'TEST': {
+            'PASSWORD': ''
+        }
     }
 }
 
@@ -91,3 +94,4 @@ LOGGING = {
         # },
     }
 }
+
