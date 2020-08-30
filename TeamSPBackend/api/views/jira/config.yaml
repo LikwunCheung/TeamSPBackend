@@ -1,0 +1,76 @@
+# How to connect to JIRA. Can also include `Username` and `Password`
+Connection:
+    Domain: https://jira.cis.unimelb.edu.au:8444 # your JIRA instance
+    Username: usernameplace
+    Password: passwordplace
+    # bypass JIRA API call for the server version endpoint 
+#   Jira server version check: False
+
+# What issues to search for. Uses JQL syntax.
+Query: Project= projectplace
+
+# The workflow we want to analyse. By convention, the first stage should be
+# the backlog / initial state, and the final stage should indicate the work
+# is done.
+#
+# We map analytics names to JIRA status names. It's possible to collapse
+# multiple JIRA statuses into a single workflow stage, as with `QA` below.
+Workflow: 
+    To Do: To Do
+    In Progress: In Progress
+    In Review: In Review
+    Done: Done
+
+# What outputs to produce. These are all optional. If an option isn't set
+# the relevant metric will not be produced.
+
+Output:
+
+    # CSV files with raw data for input to other tools or further analysis in a spreadsheet
+    # If you use .json or .xlsx as the extension, you can get JSON data files or Excel
+    # spreadsheets instead
+
+    Cycle time data:
+        - cycletime.csv
+        - cycletime.json
+    CFD data: cfd.csv
+    Scatterplot data: scatterplot.csv
+    Histogram data: histogram.csv
+    Throughput data: throughput.csv
+    Percentiles data: percentiles.csv
+
+    # Various charts
+
+    Scatterplot chart: scatterplot.png
+    Scatterplot chart title: Cycle time scatter plot
+    
+    Histogram chart: histogram.png
+    Histogram chart title: Cycle time histogram
+    
+    CFD chart: cfd.png
+    CFD chart title: Cumulative Flow Diagram
+    
+    Throughput chart: throughput.png
+    Throughput chart title: Throughput trend
+    
+    Burnup chart: burnup.png
+    Burnup chart title: Burn-up
+
+    Burnup forecast chart: burnup-forecast.png
+    Burnup forecast chart title: Burn-up forecast
+    Burnup forecast chart trials: 100 # number of Monte Carlo trials to run to estimate completion date
+
+    # Burnup forecast chart throughput window: 60 # Days in the past to use for calculating historical throughput
+    # Burnup forecast chart throughput window end: 2018-06-01 # Calculate throughput window to this date (defaults to today)
+    # Burnup forecast chart target: 100 # items to complete in total; by default uses the current size of the backlog
+    # Burnup forecast chart deadline: 2018-06-01 # deadline date, in ISO format; if not set, no deadline is drawn.
+    # Burnup forecast chart deadline confidence: .85 # percentile to use to compare forecast to deadline
+    
+    WIP chart: wip.png
+    WIP chart title: Work in Progress
+
+    Ageing WIP chart: ageing-wip.png
+    Ageing WIP chart title: Ageing WIP
+
+    Net flow chart: net-flow.png
+    Net flow chart title: Net flow

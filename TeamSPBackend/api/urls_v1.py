@@ -9,6 +9,7 @@ from .views.account import account_router, login, logout, update_account, delete
 from .views.subject import subject_router, update_subject, delete_subject
 from .views.team import team_router, get_team_members
 
+from TeamSPBackend.api.views.jira import helpJira
 urlpatterns = [
     # Invitation Related API
     path('invite', invitation_router),
@@ -38,6 +39,12 @@ urlpatterns = [
     path('confluence/spaces/<space_key>/pages/<int:page_id>',
          confluence.getPageContributors),
     path('confluence/groups', confluence.getAllGroups),
-    path('confluence/groups/<group_name>/members', confluence.getGroupMembers),
-    path('confluence/users/<username>', confluence.getUserDetails),
+    path('confluence/groups/searchteam/<keyword>', confluence.searchTeam),
+    path('confluence/groups/<group>/members', confluence.getGroupMembers),
+    path('confluence/users/<username>', confluence.getUserDetails)
+    # Jira Related API
+    path('subject/project/team/jiracfd', helpJira.getJiraCFD),
+    path('subject/project/team/jiraburn', helpJira.getJiraburn),
+    path('subject/project/team/jiraburnforecast', helpJira.getJiraburnforecast)
+
 ]

@@ -21,3 +21,5 @@ sqlparse==0.3.1
 ujson==3.0.0
 urllib3==1.25.9
 xsmtplib==1.0.1.dev0
+atlassian-python-api==1.16.1
+jira-metrics-extract
