@@ -10,7 +10,6 @@ from TeamSPBackend.common.utils import init_http_response, make_json_response, c
 from TeamSPBackend.common.choices import RespCode, Status, Roles
 from TeamSPBackend.api.dto.dto import LoginDTO, AddAccountDTO, UpdateAccountDTO
 
-
 @require_http_methods(['POST', 'GET'])
 @check_user_login
 def account_router(request, *args, **kwargs):
@@ -31,6 +30,12 @@ def login(request, body, *args, **kwargs):
     """
 
     login_dto = LoginDTO()
+
+    #######
+    username = login_dto.username
+    password = login_dto.password
+    #######
+
     body_extract(body, login_dto)
 
     if not login_dto.validate():

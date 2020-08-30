@@ -7,7 +7,7 @@ from TeamSPBackend.api.views.confluence import confluence
 from .views.invitation import invitation_router
 from .views.account import account_router, login, update_account, delete, invite_accept
 from .views.subject import subject_router, update_subject, delete_subject
-
+from TeamSPBackend.api.views.jira import helpJira
 urlpatterns = [
     # Invitation Related API
     path('subject/<int:id>/invite', invitation_router),
@@ -39,4 +39,9 @@ urlpatterns = [
     path('confluence/groups/searchteam/<keyword>', confluence.searchTeam),
     path('confluence/groups/<group>/members', confluence.getGroupMembers),
     path('confluence/users/<username>', confluence.getUserDetails)
+    # Jira Related API
+    path('subject/project/team/jiracfd', helpJira.getJiraCFD),
+    path('subject/project/team/jiraburn', helpJira.getJiraburn),
+    path('subject/project/team/jiraburnforecast', helpJira.getJiraburnforecast)
+
 ]
