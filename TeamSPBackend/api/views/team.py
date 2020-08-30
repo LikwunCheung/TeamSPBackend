@@ -89,11 +89,12 @@ def create_team(request):
         supervisor_id = request.POST.get('supervisor_id')
         year = request.POST.get('year')
         # member_id = request.POST.get('member_id')
-        duration = request.POST.get('duration')
+        # duration = request.POST.get('duration')
+        project_name = request.POST.get('project_name')
         timestamp = int(now().timestamp())
-        expired = timestamp + 60 * 60 * 24 * int(duration)
+        # expired = timestamp + 60 * 60 * 24 * int(duration)
         team = Team(name=name, description=description, supervisor_id=supervisor_id,
-                    year=year, create_date=timestamp, expired=expired)
+                    year=year, create_date=timestamp, project_name=project_name)
         team.save()
         resp = {'code': 0, 'msg': 'create successfully'}
         return HttpResponse(json.dumps(resp), content_type="application/json")
@@ -263,6 +264,7 @@ def get_teams_data(filtered_teams):
         team_data = {
             'id': team.team_id,
             'name': team.name,
+            'project_name': team.project_name,
             # 'description': team.description,
             # 'subject_id': team.subject_id,
             # 'year': team.year,
