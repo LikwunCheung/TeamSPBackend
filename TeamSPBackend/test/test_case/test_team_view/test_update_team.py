@@ -27,7 +27,7 @@ class UpdateTeamTestCase(TestCase):
             "project_name": "sp"
         }
         req = HttpRequest()
-        req.POST = team_data
+        req.body = team_data
         response = team.create_team(req)
 
         self.team = Team.objects.get(name=team_data["name"])
@@ -39,7 +39,7 @@ class UpdateTeamTestCase(TestCase):
             "secondary_supervisor_id": 6
         }
         req = HttpRequest()
-        req.POST = new_team_data
+        req.body = new_team_data
         team.update_team(req, self.team["team_id"])
 
         updated_team = Team.objects.get(name=self.team["name"])
