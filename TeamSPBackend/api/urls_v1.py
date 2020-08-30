@@ -37,6 +37,6 @@ urlpatterns = [
          confluence.getPageContributors),
     path('confluence/groups', confluence.getAllGroups),
     path('confluence/groups/searchteam/<keyword>', confluence.searchTeam),
-    path('confluence/groups/members', confluence.getGroupMembers),
+    path('confluence/groups/<group>/members', confluence.getGroupMembers),
     path('confluence/users/<username>', confluence.getUserDetails)
 ]
