@@ -2,7 +2,7 @@
 import hashlib
 
 from TeamSPBackend.common.config import SALT
-from TeamSPBackend.common.choices import Roles
+from TeamSPBackend.common.utils import email_validate
 
 
 class LoginDTO(object):
@@ -68,3 +68,28 @@ class UpdateAccountDTO(object):
         if self.role:
             return 0 <= self.role <= 2
         return True
+
+
+class AddSubjectDTO(object):
+
+    def __init__(self):
+        self.code = None
+        self.name = None
+        self.coordinator_id = 0
+
+    def not_empty(self):
+        return not (not self.code or not self.name or self.coordinator_id is 0)
+
+
+class InviteUserDTO(object):
+
+    def __init__(self):
+        self.first_name = None
+        self.last_name = None
+        self.email = None
+
+    def not_empty(self):
+        return not (not self.first_name or not self.last_name or not self.email)
+
+    def validate(self):
+        return email_validate(self.email)

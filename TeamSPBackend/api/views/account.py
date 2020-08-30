@@ -52,6 +52,7 @@ def login(request, body, *args, **kwargs):
 
     session_data = dict(
         id=user.user_id,
+        name=user.get_name(),
         role=user.role,
         is_login=True,
     )
@@ -65,6 +66,25 @@ def login(request, body, *args, **kwargs):
     )
     resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
     resp['data'] = data
+    return make_json_response(HttpResponse, resp)
+
+
+@require_http_methods(['POST'])
+def logout(request, *args, **kwargs):
+    """
+
+    :param request:
+    :param args:
+    :param kwargs:
+    :return:
+    """
+    user = request.session.get('user')
+    if user is None:
+        resp = init_http_response(RespCode.not_logged.value.key, RespCode.not_logged.value.msg)
+        return make_json_response(HttpResponse, resp)
+
+    request.session.flush()
+    resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
     return make_json_response(HttpResponse, resp)
 
 
@@ -160,7 +180,6 @@ def update_account(request, body, *args, **kwargs):
     user = request.session.get('user')
     user_id = user['id']
 
-    # body = dict(json.loads(request.body))
     update_account_dto = UpdateAccountDTO()
     body_extract(body, update_account_dto)
     update_account_dto.encrypt()
@@ -207,7 +226,7 @@ def update_account(request, body, *args, **kwargs):
 
 @require_http_methods(['POST'])
 @check_user_login
-def delete(request):
+def delete(request, body, *args, **kwargs):
     """
     Delete Account
     Method: Post
@@ -217,11 +236,13 @@ def delete(request):
     user = request.session.get('user')
     role = user['role']
 
+    body = dict(ujson.loads(request.body))
+    account_id = body.get('id')
+
     if role is not Roles.admin.value.key:
         resp = init_http_response(RespCode.invalid_op.value.key, RespCode.invalid_op.value.msg)
         return make_json_response(HttpResponse, resp)
 
-    account_id = request.POST.get('id')
     try:
         account = Account.objects.get(account_id=account_id, status=Status.valid.value.key)
         user = User.objects.get(account_id=account_id, status=Status.valid.value.key)
@@ -266,7 +287,7 @@ def invite_accept(request):
         timestamp = mills_timestamp()
         if Account.objects.filter(username=username).exists():
             resp = {'code': -1, 'msg': 'username already exist'}
-            return HttpResponse(json.dumps(resp), content_type="application/json")
+            return HttpResponse(ujson.dumps(resp), content_type="application/json")
         else:
             account = Account(username=username, password=password, status=1, create_date=timestamp,)
             user = User(username=username, status=1, create_date=timestamp,)
@@ -274,4 +295,4 @@ def invite_accept(request):
             account.save()
             user.save()
             resp = {'code': 0, 'msg': 'invite accept'}
-            return HttpResponse(json.dumps(resp), content_type="application/json")
+            return HttpResponse(ujson.dumps(resp), content_type="application/json")

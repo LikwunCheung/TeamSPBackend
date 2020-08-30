@@ -7,12 +7,9 @@ from django.db import models
 class Invitation(models.Model):
 
     invitation_id = models.AutoField(db_column='id', primary_key=True)
-    subject_id = models.IntegerField(blank=False, null=False, db_index=True)
-    supervisor_id = models.IntegerField(blank=False, null=True)
     key = models.CharField(max_length=128, blank=False, null=False, db_index=True, unique=True)
-    first_name = models.CharField(max_length=50, blank=False, null=True)
-    last_name = models.CharField(max_length=50, blank=False, null=True)
     email = models.CharField(max_length=50, blank=False, null=False)
+    template = models.CharField(max_length=1024, blank=False, null=False)
     operator = models.IntegerField(blank=False, null=False)
     create_date = models.BigIntegerField(blank=False, null=False)
     send_date = models.BigIntegerField(blank=False, null=True)
@@ -22,6 +19,3 @@ class Invitation(models.Model):
 
     class Meta:
         db_table = 'invitation'
-
-    def get_name(self):
-        return self.first_name + ' ' + self.last_name
