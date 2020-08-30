@@ -309,14 +309,8 @@ def multi_get_team(request):
     if user.role == Roles.coordinator.value.key:
         subjects = Subject.objects.filter(coordinator_id=user.account_id)
         for subject in subjects:
-<<<<<<< HEAD
             filtered_teams.append(Team.objects.filter(
                 subject_id=subject.subject_code))
-            print(subject.subject_code)
-            print(filtered_teams)
-=======
-            filtered_teams.append(Team.objects.filter(subject_id=subject.subject_code))
->>>>>>> reworked_team
     # supervisors
     elif user.role == Roles.supervisor.value.key:
         filtered_teams.append(Team.objects.filter(
@@ -380,31 +374,31 @@ def update_team(request, body, team_id: int):
             supervisor_id = body['supervisor_id']
             supervisor = User.objects.get(account_id=supervisor_id)
         except ObjectDoesNotExist:
-            resp = init_http_response(RespCode.invalid_op.value.key, RespCode.invalid_op.value.msg)
+            resp = init_http_response(
+                RespCode.invalid_op.value.key, RespCode.invalid_op.value.msg)
             resp['supervisor'] = "Invalid supervisor_id"
             return HttpResponse(json.dumps(resp), content_type="application/json")
     # secondary_supervisor_id = request.POST.get('secondary_supervisor_id', None)
     if "secondary_supervisor_id" in body.keys():
         try:
             secondary_supervisor_id = body['secondary_supervisor_id']
-            secondary_supervisor = User.objects.get(account_id=secondary_supervisor_id)
+            secondary_supervisor = User.objects.get(
+                account_id=secondary_supervisor_id)
         except ObjectDoesNotExist:
-            resp = init_http_response(RespCode.invalid_op.value.key, RespCode.invalid_op.value.msg)
+            resp = init_http_response(
+                RespCode.invalid_op.value.key, RespCode.invalid_op.value.msg)
             resp['secondary_supervisor'] = "Invalid secondary_supervisor_id"
             return HttpResponse(json.dumps(resp), content_type="application/json")
     try:
         team = Team.objects.get(team_id=team_id)
     except ObjectDoesNotExist:
-<<<<<<< HEAD
         resp = init_http_response(
             RespCode.invalid_op.value.key, RespCode.invalid_op.value.msg)
-=======
-        resp = init_http_response(RespCode.invalid_op.value.key, RespCode.invalid_op.value.msg)
         resp['team'] = "Invalid team_id"
->>>>>>> reworked_team
         return make_json_response(HttpResponseBadRequest, resp)
 
-    resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
+    resp = init_http_response(
+        RespCode.success.value.key, RespCode.success.value.msg)
     if supervisor_id and team.supervisor_id != supervisor_id:
         team.supervisor_id = supervisor_id
         if team.secondary_supervisor_id == supervisor_id:
