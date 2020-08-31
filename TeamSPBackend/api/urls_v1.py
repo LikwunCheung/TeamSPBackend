@@ -41,7 +41,8 @@ urlpatterns = [
     path('confluence/groups', confluence.getAllGroups),
     path('confluence/groups/searchteam/<keyword>', confluence.searchTeam),
     path('confluence/groups/<group>/members', confluence.getGroupMembers),
-    path('confluence/users/<username>', confluence.getUserDetails)
+    path('confluence/users', confluence.getUserDetails),
+    path('confluence/supervisors', confluence.getAllSupervisors),
     # Jira Related API
     path('subject/project/team/jiracfd', helpJira.getJiraCFD),
     path('subject/project/team/jiraburn', helpJira.getJiraburn),

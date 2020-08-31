@@ -155,30 +155,53 @@ def getGroupMembers(request, group):
         return HttpResponse(json.dumps(resp), content_type="application/json")
 
 
-def getUserDetails(request, member):
+def getUserDetails(request):
     """Get a specific Confluence Space member's details
     Method: POST
     Request: member's username
     """
     username = request.POST.get('username', '')
     password = request.POST.get('password', '') 
-    try:
-        confluence = logIntoConfluence(username, password)
-        conf_resp = confluence.get_user_details_by_username(member)
-        data = {
-            'type': conf_resp['type'],
-            'username': conf_resp['username'],
-            'userKey': conf_resp['userKey'],
-            'profilePicture': conf_resp['profilePicture'],
-            'displayName': conf_resp['displayName']
-        }
-        resp = init_http_response(
-            RespCode.success.value.key, RespCode.success.value.msg)
-        resp['data'] = data
-        return HttpResponse(json.dumps(resp), content_type="application/json")
-    except:
-        resp = {'code': -1, 'msg': 'error'}
-        return HttpResponse(json.dumps(resp), content_type="application/json")
+    # try:
+    confluence = logIntoConfluence(username, password)
+    conf_resp = confluence.get_user_details_by_username("bach.le")
+    data = {
+        'type': conf_resp['type'],
+        'username': conf_resp['username'],
+        'userKey': conf_resp['userKey'],
+        'profilePicture': conf_resp['profilePicture'],
+        'displayName': conf_resp['displayName']
+    }
+    resp = init_http_response(
+        RespCode.success.value.key, RespCode.success.value.msg)
+    resp['data'] = data
+    return HttpResponse(json.dumps(resp), content_type="application/json")
+    # except:
+    #     resp = {'code': -1, 'msg': 'error'}
+    #     return HttpResponse(json.dumps(resp), content_type="application/json")
+
+def getAllSupervisors(request):
+    username = request.POST.get('username', '')
+    password = request.POST.get('password', '') 
+    # try:
+    confluence = logIntoConfluence(username, password)
+    conf_resp = confluence.get_group_members(group_name='confluence-users', start=0, limit=None)
+    data = []
+    for user in conf_resp:
+        data.append({
+            'type': user['type'],
+            # 'userKey': user['userKey'],
+            # 'profilePicture': user['profilePicture'],
+            'name': user['displayName'],
+            'email': user['username']
+        })
+    resp = init_http_response(
+        RespCode.success.value.key, RespCode.success.value.msg)
+    resp['data'] = data
+    return HttpResponse(json.dumps(resp), content_type="application/json")
+    # except:
+    #     resp = {'code': -1, 'msg': 'error'}
+    #     return HttpResponse(json.dumps(resp), content_type="application/json")
 
 
 def getPageContributors(request, *args, **kwargs):
