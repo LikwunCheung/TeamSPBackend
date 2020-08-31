@@ -9,13 +9,15 @@ import time
 from django.http.response import HttpResponse, HttpResponseRedirect, HttpResponseNotAllowed, HttpResponseBadRequest
 from TeamSPBackend.api.views import account
 from django.views.decorators.http import require_http_methods
+from TeamSPBackend.common.utils import check_user_login
+
 
 @require_http_methods(['POST'])
-def getJiraCFD(request):
+def get_jira_CFD(request):
     username = request.POST.get('username', '')
     password = request.POST.get('password', '')
     project = request.POST.get('team', '')
-    anaJira(username, password, project)
+    ana_jira(username, password, project)
     while not os.path.exists('TeamSPBackend/api/views/jira/cfd.png'):
         time.sleep(1)
 
@@ -24,23 +26,23 @@ def getJiraCFD(request):
         data = open('TeamSPBackend/api/views/jira/cfd.png','rb').read()
         return HttpResponse(data, content_type="image/png")
 
-def getJiraburn(request):
+def get_jira_burn(request):
     username = request.POST.get('username', '')
     password = request.POST.get('password', '')
     project = request.POST.get('team', '')
-    anaJira(username, password, project)
+    ana_jira(username, password, project)
     data = open('TeamSPBackend/api/views/jira/burnup.png','rb').read()
     return HttpResponse(data, content_type="image/png")
 
-def getJiraburnforecast(request):
+def get_jira_burn_forecast(request):
     username = request.POST.get('username', '')
     password = request.POST.get('password', '')
     project = request.POST.get('team', '')
-    anaJira(username, password, project)
+    ana_jira(username, password, project)
     data = open('TeamSPBackend/api/views/jira/burnup-forecast.png','rb').read()
     return HttpResponse(data, content_type="image/png")
 
-def anaJira(username, password, project):
+def ana_jira(username, password, project):
     with open('config.yaml', 'r') as file :
         filedata = file.read()
         filedata = filedata.replace('usernameplace', username)

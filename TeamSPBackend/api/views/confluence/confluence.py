@@ -3,20 +3,20 @@ import json
 import requests
 from requests.auth import HTTPBasicAuth
 
-from TeamSPBackend.common.utils import init_http_response
 from TeamSPBackend.common.choices import RespCode
 from django.views.decorators.http import require_http_methods
 from django.http.response import HttpResponse, HttpResponseRedirect, HttpResponseNotAllowed, HttpResponseBadRequest
+from TeamSPBackend.common.utils import make_json_response, init_http_response, check_user_login, check_body, body_extract, mills_timestamp, get_invitation_link
 
 @require_http_methods(['POST'])
-def getAllGroups(request):
+def get_all_groups(request):
     """Get all groups accessable by the logged in user
     Method: POST
     """
     username = request.POST.get('username', '')
     password = request.POST.get('password', '') 
     try:
-        confluence = logIntoConfluence(username, password)
+        confluence = log_into_confluence(username, password)
         conf_resp = confluence.get_all_groups()
         data = []
         for group in conf_resp:
@@ -33,7 +33,7 @@ def getAllGroups(request):
         return HttpResponse(json.dumps(resp), content_type="application/json")
 
 @require_http_methods(['POST'])
-def getSpace(request, space_key):
+def get_space(request, space_key):
     """Get a Confluence Space
     Method: POST
     Request: space_key
@@ -42,7 +42,7 @@ def getSpace(request, space_key):
     password = request.POST.get('password', '') 
     try:
         print('session looks like ' + str(request.session.items()))
-        confluence = logIntoConfluence(username, password)
+        confluence = log_into_confluence(username, password)
         conf_resp = confluence.get_space(
             space_key, expand='homepage')
         conf_homepage = conf_resp['homepage']
@@ -65,8 +65,8 @@ def getSpace(request, space_key):
         resp = {'code': -1, 'msg': 'error'}
         return HttpResponse(json.dumps(resp), content_type="application/json")
 
-
-def getPagesOfSpace(request, space_key):
+@require_http_methods(['POST'])
+def get_pages_of_space(request, space_key):
     """Get all the pages under the Confluence Space
     Method: POST
     Request: space
@@ -74,7 +74,7 @@ def getPagesOfSpace(request, space_key):
     username = request.POST.get('username', '')
     password = request.POST.get('password', '') 
     try:
-        confluence = logIntoConfluence(username, password)
+        confluence = log_into_confluence(username, password)
         conf_resp = confluence.get_all_pages_from_space(space_key)
         data = []
         for page in conf_resp:
@@ -93,12 +93,12 @@ def getPagesOfSpace(request, space_key):
 
     # Get Page Content by ID (HTML) (lower prio for now)
 
-
-def searchTeam(request, keyword):
+@require_http_methods(['POST'])
+def search_team(request, keyword):
     username = request.POST.get('username', '')
     password = request.POST.get('password', '') 
     try:
-        confluence = logIntoConfluence(username, password)
+        confluence = log_into_confluence(username, password)
         conf_resp = confluence.get_all_groups()
         data = []
         result = []
@@ -121,7 +121,7 @@ def searchTeam(request, keyword):
         return HttpResponse(json.dumps(resp), content_type="application/json")
 
 @require_http_methods(['POST'])
-def getGroupMembers(request, group):
+def get_group_members(request, group):
     
     """Get all the members under 'group_name' of the Confluence Space
     Method: POST
@@ -135,7 +135,7 @@ def getGroupMembers(request, group):
         password = request.POST.get('password', '')
         print(username)
         group_name = group
-        confluence = logIntoConfluence(username, password)
+        confluence = log_into_confluence(username, password)
         conf_resp = confluence.get_group_members(group_name)
         data = []
         for user in conf_resp:
@@ -154,8 +154,8 @@ def getGroupMembers(request, group):
         resp = {'code': -1, 'msg': 'error'}
         return HttpResponse(json.dumps(resp), content_type="application/json")
 
-
-def getUserDetails(request, member):
+@require_http_methods(['POST'])
+def get_user_details(request, member):
     """Get a specific Confluence Space member's details
     Method: POST
     Request: member's username
@@ -180,8 +180,30 @@ def getUserDetails(request, member):
         resp = {'code': -1, 'msg': 'error'}
         return HttpResponse(json.dumps(resp), content_type="application/json")
 
+@require_http_methods(['POST'])
+def get_subject_supervisors(request, subjectcode, year):
+    username = request.POST.get('username', '')
+    password = request.POST.get('password', '') 
+    try:
+        confluence = log_into_confluence(username, password)
+        conf_resp = confluence.get_all_groups()
+        data = []
+        for group in conf_resp:
+            if "staff" in group['name'] and year in group['name'] and subjectcode in group['name']:
+                data.append({
+                    'type': group['type'],
+                    'name': group['name']
+                })
+        resp = init_http_response(
+            RespCode.success.value.key, RespCode.success.value.msg)
+        resp['data'] = data
+        return HttpResponse(json.dumps(resp), content_type="application/json")
+    except:
+        resp = {'code': -1, 'msg': 'error'}
+        return HttpResponse(json.dumps(resp), content_type="application/json")
 
-def getPageContributors(request, *args, **kwargs):
+@require_http_methods(['POST'])
+def get_page_contributors(request, *args, **kwargs):
     """Get a Confluence page's contributors
     Method: Get
     Request: page_id
@@ -189,7 +211,7 @@ def getPageContributors(request, *args, **kwargs):
     username = request.POST.get('username', '')
     password = request.POST.get('password', '') 
     try:
-        confluence = logIntoConfluence(username, password)
+        confluence = log_into_confluence(username, password)
         page_id = kwargs['page_id']
         # Todo: change these to configurable inputs
         domain = "https://confluence.cis.unimelb.edu.au"
@@ -213,7 +235,7 @@ def getPageContributors(request, *args, **kwargs):
 
     # Get page by label
 
-def logIntoConfluence(username, password):
+def log_into_confluence(username, password):
     confluence = Confluence(
         url='https://confluence.cis.unimelb.edu.au:8443/',
         username=username,

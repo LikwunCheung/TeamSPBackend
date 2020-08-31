@@ -31,17 +31,18 @@ urlpatterns = [
     path('subject/project/getteam', team.getTeams),
 
     # Confluence Related API
-    path('confluence/spaces/<space_key>', confluence.getSpace),
-    path('confluence/spaces/<space_key>/pages', confluence.getPagesOfSpace),
+    path('confluence/spaces/<space_key>', confluence.get_space),
+    path('confluence/spaces/<space_key>/pages', confluence.get_pages_of_space),
     path('confluence/spaces/<space_key>/pages/<int:page_id>',
-         confluence.getPageContributors),
-    path('confluence/groups', confluence.getAllGroups),
-    path('confluence/groups/searchteam/<keyword>', confluence.searchTeam),
-    path('confluence/groups/<group>/members', confluence.getGroupMembers),
-    path('confluence/users/<username>', confluence.getUserDetails)
+        confluence.get_page_contributors),
+    path('confluence/groups', confluence.get_all_groups),
+    path('confluence/groups/searchteam/<keyword>', confluence.search_team),
+    path('confluence/groups/<group>/members', confluence.get_group_members),
+    path('confluence/users/<member>', confluence.get_user_details),
+    path('subject/<subjectcode>/<year>/supervisors', confluence.get_subject_supervisors),
     # Jira Related API
-    path('subject/project/team/jiracfd', helpJira.getJiraCFD),
-    path('subject/project/team/jiraburn', helpJira.getJiraburn),
-    path('subject/project/team/jiraburnforecast', helpJira.getJiraburnforecast)
+    path('subject/project/team/jiracfd', helpJira.get_jira_CFD),
+    path('subject/project/team/jiraburn', helpJira.get_jira_burn),
+    path('subject/project/team/jiraburnforecast', helpJira.get_jira_burn_forecast)
 
 ]
