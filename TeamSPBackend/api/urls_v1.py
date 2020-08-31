@@ -4,8 +4,9 @@ from django.urls import path
 
 from TeamSPBackend.api.views import team
 from TeamSPBackend.api.views.confluence import confluence
+from TeamSPBackend.api.views.jira import helpJira
 from .views.invitation import invitation_router, invite_accept
-from .views.account import account_router, login, logout, update_account, delete
+from .views.account import account_router, login, logout, update_account, delete, atl_login
 from .views.subject import subject_router, update_subject, delete_subject
 from .views.team import team_router, get_team_members
 
@@ -16,6 +17,7 @@ urlpatterns = [
 
     # Account Related API
     path('account/login', login),
+    path('account/atlassian/login', atl_login),
     path('account/logout', logout),
     path('account/update', update_account),
     path('account/delete', delete),
@@ -33,11 +35,18 @@ urlpatterns = [
     path('team/<int:team_id>/members', get_team_members),
 
     # Confluence Related API
-    path('confluence/spaces/<space_key>', confluence.getSpace),
-    path('confluence/spaces/<space_key>/pages', confluence.getPagesOfSpace),
+    path('confluence/spaces/<space_key>', confluence.get_space),
+    path('confluence/spaces/<space_key>/pages', confluence.get_pages_of_space),
     path('confluence/spaces/<space_key>/pages/<int:page_id>',
-         confluence.getPageContributors),
-    path('confluence/groups', confluence.getAllGroups),
-    path('confluence/groups/<group_name>/members', confluence.getGroupMembers),
-    path('confluence/users/<username>', confluence.getUserDetails),
+        confluence.get_page_contributors),
+    path('confluence/groups', confluence.get_all_groups),
+    path('confluence/groups/searchteam/<keyword>', confluence.search_team),
+    path('confluence/groups/<group>/members', confluence.get_group_members),
+    path('confluence/users/<member>', confluence.get_user_details),
+    path('subject/<subjectcode>/<year>/supervisors', confluence.get_subject_supervisors),
+    # Jira Related API
+    path('jira/<team>/jiracfd', helpJira.get_jira_CFD),
+    path('jira/<team>/jiraburn', helpJira.get_jira_burn),
+    path('jira/<team>/jiraburnforecast', helpJira.get_jira_burn_forecast)
+
 ]

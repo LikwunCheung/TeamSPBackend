@@ -14,7 +14,6 @@ from TeamSPBackend.api.dto.dto import LoginDTO, AddAccountDTO, UpdateAccountDTO
 
 logger = logging.getLogger('django')
 
-
 @require_http_methods(['POST', 'GET'])
 @check_user_login
 def account_router(request, *args, **kwargs):
@@ -35,6 +34,12 @@ def login(request, body, *args, **kwargs):
     """
 
     login_dto = LoginDTO()
+
+    #######
+    username = login_dto.username
+    password = login_dto.password
+    #######
+
     body_extract(body, login_dto)
 
     if not login_dto.validate():
@@ -59,6 +64,8 @@ def login(request, body, *args, **kwargs):
         name=user.get_name(),
         role=user.role,
         is_login=True,
+        atl_username = None,
+        atl_password = None,
     )
     request.session['user'] = session_data
 
@@ -171,6 +178,21 @@ def get_account(request):
     resp['data'] = data
     return make_json_response(HttpResponse, resp)
 
+@require_http_methods(['POST'])
+@check_user_login
+def atl_login(request, body, *args, **kwargs):
+    """
+    Update atlassian login info
+    Method: Post
+    Request: first_name,last_name,old_password,password
+    """
+
+    request.session['user']['atl_username'] = request.POST.get('atl_username')
+    request.session['user']['atl_password'] = request.POST.get('atl_password')
+    print("~~")
+    print(request.session['user']['atl_username'])
+    resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
+    return make_json_response(HttpResponse, resp)
 
 @require_http_methods(['POST'])
 @check_user_login
