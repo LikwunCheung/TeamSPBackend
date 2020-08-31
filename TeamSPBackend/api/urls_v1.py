@@ -4,12 +4,12 @@ from django.urls import path
 
 from TeamSPBackend.api.views import team
 from TeamSPBackend.api.views.confluence import confluence
+from TeamSPBackend.api.views.jira import helpJira
 from .views.invitation import invitation_router, invite_accept
-from .views.account import account_router, login, atl_login, logout, update_account, delete
+from .views.account import account_router, login, logout, update_account, delete, atl_login
 from .views.subject import subject_router, update_subject, delete_subject
 from .views.team import team_router, get_team_members
 
-from TeamSPBackend.api.views.jira import helpJira
 urlpatterns = [
     # Invitation Related API
     path('invite', invitation_router),
@@ -17,8 +17,8 @@ urlpatterns = [
 
     # Account Related API
     path('account/login', login),
-    path('account/logout', logout),
     path('account/atlassian/login', atl_login),
+    path('account/logout', logout),
     path('account/update', update_account),
     path('account/delete', delete),
     path('account', account_router),
