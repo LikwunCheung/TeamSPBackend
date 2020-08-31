@@ -1,4 +1,5 @@
 import ujson
+import logging
 
 from django.http import HttpResponse, HttpResponseNotAllowed, HttpResponse
 from django.views.decorators.http import require_http_methods
@@ -9,6 +10,9 @@ from TeamSPBackend.account.models import Account, User
 from TeamSPBackend.common.utils import init_http_response, make_json_response, check_user_login, body_extract, mills_timestamp, check_body
 from TeamSPBackend.common.choices import RespCode, Status, Roles
 from TeamSPBackend.api.dto.dto import LoginDTO, AddAccountDTO, UpdateAccountDTO
+
+
+logger = logging.getLogger('django')
 
 @require_http_methods(['POST', 'GET'])
 @check_user_login
@@ -57,6 +61,7 @@ def login(request, body, *args, **kwargs):
 
     session_data = dict(
         id=user.user_id,
+        name=user.get_name(),
         role=user.role,
         is_login=True,
         atl_username = None,
@@ -72,6 +77,25 @@ def login(request, body, *args, **kwargs):
     )
     resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
     resp['data'] = data
+    return make_json_response(HttpResponse, resp)
+
+
+@require_http_methods(['POST'])
+def logout(request, *args, **kwargs):
+    """
+
+    :param request:
+    :param args:
+    :param kwargs:
+    :return:
+    """
+    user = request.session.get('user')
+    if user is None:
+        resp = init_http_response(RespCode.not_logged.value.key, RespCode.not_logged.value.msg)
+        return make_json_response(HttpResponse, resp)
+
+    request.session.flush()
+    resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
     return make_json_response(HttpResponse, resp)
 
 
@@ -182,7 +206,6 @@ def update_account(request, body, *args, **kwargs):
     user = request.session.get('user')
     user_id = user['id']
 
-    # body = dict(json.loads(request.body))
     update_account_dto = UpdateAccountDTO()
     body_extract(body, update_account_dto)
     update_account_dto.encrypt()
@@ -209,6 +232,13 @@ def update_account(request, body, *args, **kwargs):
     if update_account_dto.last_name:
         user.last_name = update_account_dto.last_name
         user.update_date = timestamp
+    if update_account_dto.atl_username:
+        user.atl_username = update_account_dto.atl_username
+        user.update_date = timestamp
+    if update_account_dto.atl_password:
+        update_account_dto.encrypt_aes()
+        user.atl_password = update_account_dto.aes
+        user.update_date = timestamp
     if update_account_dto.old_password and update_account_dto.password \
             and update_account_dto.old_md5 == account.password:
         account.password = update_account_dto.md5
@@ -229,7 +259,7 @@ def update_account(request, body, *args, **kwargs):
 
 @require_http_methods(['POST'])
 @check_user_login
-def delete(request):
+def delete(request, body, *args, **kwargs):
     """
     Delete Account
     Method: Post
@@ -239,11 +269,13 @@ def delete(request):
     user = request.session.get('user')
     role = user['role']
 
+    body = dict(ujson.loads(request.body))
+    account_id = body.get('id')
+
     if role is not Roles.admin.value.key:
         resp = init_http_response(RespCode.invalid_op.value.key, RespCode.invalid_op.value.msg)
         return make_json_response(HttpResponse, resp)
 
-    account_id = request.POST.get('id')
     try:
         account = Account.objects.get(account_id=account_id, status=Status.valid.value.key)
         user = User.objects.get(account_id=account_id, status=Status.valid.value.key)
@@ -268,32 +300,3 @@ def delete(request):
 
     resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
     return make_json_response(HttpResponse, resp)
-
-
-@require_http_methods(['POST'])
-@check_user_login
-def invite_accept(request):
-    """
-    Accept Invitation and Create Account (WIP)
-    Method: Post
-    Request: key, username, password
-    """
-
-    if request.method == 'POST':
-
-        key = request.POST.get('key')
-        username = request.POST.get('username')
-        password = request.POST.get('password')
-
-        timestamp = mills_timestamp()
-        if Account.objects.filter(username=username).exists():
-            resp = {'code': -1, 'msg': 'username already exist'}
-            return HttpResponse(json.dumps(resp), content_type="application/json")
-        else:
-            account = Account(username=username, password=password, status=1, create_date=timestamp,)
-            user = User(username=username, status=1, create_date=timestamp,)
-
-            account.save()
-            user.save()
-            resp = {'code': 0, 'msg': 'invite accept'}
-            return HttpResponse(json.dumps(resp), content_type="application/json")
