@@ -5,7 +5,7 @@ from django.urls import path
 from TeamSPBackend.api.views import team
 from TeamSPBackend.api.views.confluence import confluence
 from .views.invitation import invitation_router, invite_accept
-from .views.account import account_router, login, logout, update_account, delete
+from .views.account import account_router, login, atl_login, logout, update_account, delete
 from .views.subject import subject_router, update_subject, delete_subject
 from .views.team import team_router, get_team_members
 
