@@ -5,7 +5,7 @@ from django.urls import path
 from TeamSPBackend.api.views import team
 from TeamSPBackend.api.views.confluence import confluence
 from .views.invitation import invitation_router
-from .views.account import account_router, login, update_account, delete, invite_accept
+from .views.account import account_router, atl_login, login, update_account, delete, invite_accept
 from .views.subject import subject_router, update_subject, delete_subject
 from TeamSPBackend.api.views.jira import helpJira
 urlpatterns = [
@@ -14,6 +14,7 @@ urlpatterns = [
 
     # Account Related API
     path('account/login', login),
+    path('account/atlassian/login', atl_login),
     path('account/update', update_account),
     path('account/delete', delete),
     path('account', account_router),
@@ -41,8 +42,8 @@ urlpatterns = [
     path('confluence/users/<member>', confluence.get_user_details),
     path('subject/<subjectcode>/<year>/supervisors', confluence.get_subject_supervisors),
     # Jira Related API
-    path('subject/project/team/jiracfd', helpJira.get_jira_CFD),
-    path('subject/project/team/jiraburn', helpJira.get_jira_burn),
-    path('subject/project/team/jiraburnforecast', helpJira.get_jira_burn_forecast)
+    path('jira/<team>/jiracfd', helpJira.get_jira_CFD),
+    path('jira/<team>/jiraburn', helpJira.get_jira_burn),
+    path('jira/<team>/jiraburnforecast', helpJira.get_jira_burn_forecast)
 
 ]
