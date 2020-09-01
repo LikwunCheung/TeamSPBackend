@@ -25,7 +25,8 @@ def team_router(request, *args):
             # Assign secondary supervisor for a specific team
             return update_team(request, team_id)  # done
         # Create team from request with supervisor_id
-        return create_team(request)  # Todo: might need to change for retrieving confluence data / front-end request with team info
+        return create_team(request)
+        # Todo: might need to change for retrieving confluence data / front-end request with team info
     elif request.method == 'GET':
         if team_id:
             # Get a specific team information
