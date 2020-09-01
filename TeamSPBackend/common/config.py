@@ -5,9 +5,25 @@ SINGLE_PAGE_LIMIT = 20
 
 SALT = 'Zsl2&(91bsd%^sa1LD'
 
+UTF8 = 'utf-8'
+PLAIN = 'plain'
+FROM = 'From'
+TO = 'To'
+SUBJECT = 'Subject'
+
 HOMEPAGE = 'http://localhost:3000'
 REGISTER_PAGE = '/RegisterPage'
 INVITATION_KEY = 'invite_key'
 
 PATTERN_COORDINATOR = '<Coordinator>'
 PATTERN_URL = '<URL>'
+
+GMAIL_ADDRESS = 'smtp.gmail.com'
+GMAIL_PROT = 587
+GMAIL_ACCOUNT = 'swen90013.2020.sp@gmail.com'
+GMAIL_PASSWORD = 'fvwdissshcpobsdl'
+
+PROXY_HOST = 'proxy.unimelb.edu.au'
+PROXY_PORT = 8000
+
+INVITATION_TITLE = 'Supervisor Invitation Link'
