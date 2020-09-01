@@ -7,6 +7,7 @@ from django.views.decorators.http import require_http_methods
 from TeamSPBackend.common.utils import check_user_login, make_json_response, init_http_response, check_body
 from TeamSPBackend.common.choices import RespCode, Roles
 from TeamSPBackend.account.models import Account
+from TeamSPBackend.api.views.confluence.confluence import get_team_members
 from TeamSPBackend.team.models import Team, Student, TeamMember
 from TeamSPBackend.subject.models import Subject
 from TeamSPBackend.account.models import User
@@ -24,8 +25,9 @@ def team_router(request, *args):
         if team_id:
             # Assign secondary supervisor for a specific team
             return update_team(request, team_id)  # done
-        # Create team from request with supervisor_id
-        return create_team(request)  # Todo: might need to change for retrieving confluence data / front-end request with team info
+        # Import team from confluence with supervisor_id
+        return import_team(request)
+        # Todo: might need to change for retrieving confluence data / front-end request with team info
     elif request.method == 'GET':
         if team_id:
             # Get a specific team information
@@ -34,6 +36,53 @@ def team_router(request, *args):
         return multi_get_team(request)  # done
     return HttpResponseNotAllowed(['POST'])
 
+
+"""
+Import team from confluence with supervisor_id
+
+Method: POST
+Url: localhost:8000/api/v1/team
+Params: 
+Request: team, subject, year, project
+        {
+            "team":                     "SWEN90013_2020_SP",
+            "subject":                  "SWEN90013",
+            "year":                     "2020",
+            "project":                  "SP"
+        }
+"""
+
+
+def import_team(request):
+    name = request.POST.get('team', None)
+    subject = request.POST.get('subject', None)
+    year = request.POST.get('year', None)
+    project = request.POST.get('project', None)
+    team_members = get_team_members(request, name)
+
+    if Team.objects.filter(name=name, subject_id=subject, year=year, project_name=project).exists():
+        resp = {'code': 0, 'msg': 'exist'}
+        return HttpResponse(json.dumps(resp), content_type="application/json")
+    else:
+        team = Team(name=name, subject_id=subject, year=year, project_name=project)
+        team.save()
+        team_id = team.team_id
+        for member in team_members:
+            student = Student(fullname=member.get('name'), email=member.get('email'))
+            student.save()
+            student_id = student.student_id
+            import_team_member(team_id, student_id)
+    resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
+    return HttpResponse(json.dumps(resp), content_type="application/json")
+
+
+# Add team member records
+def import_team_member(team_id, student_id):
+    if TeamMember.objects.filter(team_id=team_id, student_id=student_id).exists():
+        return False
+    else:
+        TeamMember(student_id=student_id, team_id=team_id).save()
+        return True
 
 """
 Create team from csv
@@ -468,8 +517,7 @@ def get_team_members(request, *args, **kwargs):
         student = Student.objects.get(student_id=member.student_id)
         member_data = {
             'student_id': student.student_id,
-            'first_name': student.first_name,
-            'last_name': student.last_name,
+            'fullname': student.first_name,
             'email': student.email
         }
         members.append(member_data)
