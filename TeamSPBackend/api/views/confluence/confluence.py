@@ -35,6 +35,7 @@ def get_all_groups(request):
         resp = {'code': -1, 'msg': 'error'}
         return HttpResponse(json.dumps(resp), content_type="application/json")
 
+
 @require_http_methods(['GET'])
 def get_space(request, space_key):
     """Get a Confluence Space
@@ -126,6 +127,7 @@ def search_team(request, keyword):
         resp = {'code': -1, 'msg': 'error'}
         return HttpResponse(json.dumps(resp), content_type="application/json")
 
+
 @require_http_methods(['GET'])
 def get_group_members(request, group):
     
@@ -167,7 +169,7 @@ def get_user_details(request, member):
     username = user['atl_username']
     password = user['atl_password']
     try:
-        confluence = logIntoConfluence(username, password)
+        confluence = log_into_confluence(username, password)
         conf_resp = confluence.get_user_details_by_username(member)
         data = {
             'type': conf_resp['type'],
@@ -256,3 +258,25 @@ def log_into_confluence(username, password):
         password=password
     )
     return confluence
+
+
+def get_team_members(request, group):
+    try:
+        user = request.session.get('user')
+        username = user['atl_username']
+        password = user['atl_password']
+        group_name = group
+        confluence = log_into_confluence(username, password)
+        conf_resp = confluence.get_group_members(group_name)
+        data = []
+        for user in conf_resp:
+            data.append({
+                # 'type': user['type'],
+                # 'userKey': user['userKey'],
+                # 'profilePicture': user['profilePicture'],
+                'name': user['displayName'],
+                'email': user['username'] + "@student.unimelb.edu.au"
+            })
+        return data
+    except:
+        return None

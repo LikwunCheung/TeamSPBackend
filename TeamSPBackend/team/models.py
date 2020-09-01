@@ -4,10 +4,9 @@ from TeamSPBackend.account.models import Account
 
 
 class Student(models.Model):
-    student_id = models.IntegerField(primary_key=True)
+    student_id = models.AutoField(primary_key=True)
     # student_number = models.IntegerField()
-    first_name = models.CharField(max_length=30, unique=True)
-    last_name = models.CharField(max_length=30, unique=True)
+    fullname = models.CharField(max_length=50, unique=True)
     email = models.EmailField(max_length=254, unique=True)
 
     class Meta:
