@@ -16,6 +16,8 @@ def get_all_groups(request):
     user = request.session.get('user')
     username = user['atl_username']
     password = user['atl_password']
+    print(username)
+    print(password)
     try:
         confluence = log_into_confluence(username, password)
         conf_resp = confluence.get_all_groups()

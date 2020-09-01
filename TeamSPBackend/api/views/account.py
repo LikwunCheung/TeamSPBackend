@@ -1,11 +1,13 @@
-import ujson
+import json
 import logging
+import requests
 
 from django.http import HttpResponse, HttpResponseNotAllowed, HttpResponse
 from django.views.decorators.http import require_http_methods
 from django.db.models import Q, ObjectDoesNotExist
 from django.db import transaction
 
+from atlassian import Confluence
 from TeamSPBackend.account.models import Account, User
 from TeamSPBackend.common.utils import init_http_response, make_json_response, check_user_login, body_extract, mills_timestamp, check_body
 from TeamSPBackend.common.choices import RespCode, Status, Roles
@@ -186,13 +188,23 @@ def atl_login(request, body, *args, **kwargs):
     Method: Post
     Request: first_name,last_name,old_password,password
     """
-
-    request.session['user']['atl_username'] = request.POST.get('atl_username')
-    request.session['user']['atl_password'] = request.POST.get('atl_password')
-    print("~~")
-    print(request.session['user']['atl_username'])
-    resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
-    return make_json_response(HttpResponse, resp)
+    try:
+        data = json.loads(request.body)
+        request.session['user']['atl_username'] = data['atl_username']
+        request.session['user']['atl_password'] = data['atl_password']
+        confluence = Confluence(
+            url='https://confluence.cis.unimelb.edu.au:8443/',
+            username=request.session['user']['atl_username'],
+            password=request.session['user']['atl_password']
+        )
+        conf_resp = confluence.get_all_groups()
+        print("~~")
+        print(request.session['user']['atl_username'])
+        resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
+        return make_json_response(HttpResponse, resp)
+    except requests.exceptions.HTTPError as e:
+        resp = init_http_response(RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
+        return make_json_response(HttpResponse, resp) 
 
 @require_http_methods(['POST'])
 @check_user_login
