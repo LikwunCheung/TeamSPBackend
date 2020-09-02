@@ -68,7 +68,7 @@ def send_email(coordinator, address, content):
 
 class SendEmailPool(threading.Thread):
 
-    def __init__(self, size=0):
+    def __init__(self, size=128):
         self.count = 0
         self.size = size
         self.pool = Queue(self.size)
@@ -99,5 +99,6 @@ class SendEmailPool(threading.Thread):
             invite.save()
 
     def run(self):
-        self.count += 1
-        self.consume()
+        while True:
+            self.count += 1
+            self.consume()
