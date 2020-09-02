@@ -24,7 +24,7 @@ def init_smtp():
             s = SMTP(host=UNI_ADDRESS, port=UNI_PORT, timeout=10)
             s.ehlo()
             s.starttls()
-            s.login(GMAIL_ACCOUNT, GMAIL_PASSWORD)
+            # s.login(GMAIL_ACCOUNT, GMAIL_PASSWORD)
         except Exception as e:
             print(e)
             try:
