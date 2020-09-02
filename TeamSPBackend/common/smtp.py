@@ -54,7 +54,7 @@ def send_email(coordinator, address, content):
 
         message = MIMEText(content, PLAIN, UTF8)
         message[FROM] = Header(coordinator, UTF8)
-        # message[SENDER] = Header(coordinator, UTF8)
+        message[SENDER] = Header(coordinator, UTF8)
         message[TO] = Header(address, UTF8)
         message[SUBJECT] = Header(INVITATION_TITLE, UTF8)
 
