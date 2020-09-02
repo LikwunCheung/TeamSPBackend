@@ -97,6 +97,8 @@ class SendEmailPool(threading.Thread):
             invite.status = InvitationStatus.sent.value.key
             invite.send_date = mills_timestamp()
             invite.save()
+        else:
+            self.pool.put(task)
 
     def run(self):
         while True:
