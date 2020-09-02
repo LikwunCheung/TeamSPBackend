@@ -170,8 +170,6 @@ def invite_accept(request, body, *args, **kwargs):
     Method: Post
     Request: key, username, password
     """
-    print(body)
-
     invite_accept_dto = InviteAcceptDTO()
     body_extract(body, invite_accept_dto)
 

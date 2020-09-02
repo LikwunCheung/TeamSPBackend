@@ -2,7 +2,7 @@
 
 import socks
 
-from xsmtplib.xsmtplib import SMTP
+from smtplib import SMTP
 
 from TeamSPBackend.common import *
 from TeamSPBackend.common.utils import mills_timestamp
@@ -18,22 +18,24 @@ connected = False
 def init_smtp():
     global connected, s
 
-    logger.info(u'[SMTP] Initialize SMTP Service: ' + GMAIL_ADDRESS + ':' + str(GMAIL_PROT))
     try:
         try:
-            s = SMTP(host=GMAIL_ADDRESS, port=GMAIL_PROT, proxy_host=PROXY_HOST, proxy_port=PROXY_PORT,
-                     proxy_type=socks.PROXY_TYPE_SOCKS4, timeout=10)
+            logger.info(u'[SMTP] Initialize SMTP Service: ' + UNI_ADDRESS + ':' + str(UNI_PORT))
+            s = SMTP(host=UNI_ADDRESS, port=UNI_PORT, timeout=10)
+            s.ehlo()
+            s.starttls()
         except Exception as e:
             print(e)
             try:
-                s = SMTP(host=GMAIL_ADDRESS, port=GMAIL_PROT, timeout=10)
+                logger.info(u'[SMTP] Initialize SMTP Service: ' + GMAIL_ADDRESS + ':' + str(GMAIL_PORT))
+                s = SMTP(host=GMAIL_ADDRESS, port=GMAIL_PORT, timeout=10)
+                s.ehlo()
+                s.starttls()
+                s.login(GMAIL_ACCOUNT, GMAIL_PASSWORD)
             except Exception as e:
                 print(e)
                 return
 
-        s.ehlo()
-        s.starttls()
-        s.login(GMAIL_ACCOUNT, GMAIL_PASSWORD)
         connected = True
         logger.info(u'[SMTP] Initialize SMTP Service Success!')
     except Exception as e:
@@ -43,7 +45,7 @@ def init_smtp():
 def send_email(coordinator, address, content):
     global connected, s
 
-    if not connected or s is None:
+    if not connected or not isinstance(s, SMTP):
         return False
 
     try:
@@ -54,7 +56,7 @@ def send_email(coordinator, address, content):
         message[TO] = Header(address, UTF8)
         message[SUBJECT] = Header(INVITATION_TITLE, UTF8)
 
-        s.sendmail(GMAIL_ACCOUNT, address, message.as_string())
+        s.sendmail(UNI_ACCOUNT, address, message.as_string())
         return True
     except Exception as e:
         print(e)
