@@ -36,7 +36,7 @@ def init_smtp():
             except Exception as e:
                 print(e)
                 return
-
+        s.set_debuglevel(1)
         connected = True
         logger.info(u'[SMTP] Initialize SMTP Service Success!')
     except Exception as e:
@@ -50,10 +50,11 @@ def send_email(coordinator, address, content):
         return False
 
     try:
-        logger.info(u'[SMTP] Sending Email: %s %s %s' % (coordinator, address, content))
+        # logger.info(u'[SMTP] Sending Email: %s %s %s' % (coordinator, address, content))
 
         message = MIMEText(content, PLAIN, UTF8)
         message[FROM] = Header(coordinator, UTF8)
+        # message[SENDER] = Header(coordinator, UTF8)
         message[TO] = Header(address, UTF8)
         message[SUBJECT] = Header(INVITATION_TITLE, UTF8)
 

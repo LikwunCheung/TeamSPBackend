@@ -9,6 +9,7 @@ UTF8 = 'utf-8'
 PLAIN = 'plain'
 FROM = 'From'
 TO = 'To'
+SENDER = 'Sender'
 SUBJECT = 'Subject'
 
 HOMEPAGE = 'http://localhost:3000'
@@ -20,7 +21,7 @@ PATTERN_URL = '<URL>'
 
 UNI_ADDRESS = 'smtp.unimelb.edu.au'
 UNI_PORT = 25
-UNI_ACCOUNT = 'SWEN90013SP'
+UNI_ACCOUNT = 'swen90013.sp@unimelb.edu.au'
 
 GMAIL_ADDRESS = 'smtp.gmail.com'
 GMAIL_PORT = 587
