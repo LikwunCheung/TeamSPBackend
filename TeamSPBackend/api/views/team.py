@@ -53,12 +53,20 @@ Request: team, subject, year, project
 """
 
 
-def import_team(request):
-    name = request.POST.get('team', None)
-    subject = request.POST.get('subject', None)
-    year = request.POST.get('year', None)
-    project = request.POST.get('project', None)
-    team_members = get_team_members(request, name)
+@check_body
+def import_team(request, body):
+    print(request)
+    print(body)
+    if "team" in body.keys() and "subject" in body.keys()\
+            and "year" in body.keys() and "project" in body.keys():
+        name = body['team']
+        subject = body['subject']
+        year = body['year']
+        project = body['project']
+        team_members = get_team_members(request, name)
+    else:
+        resp = {'code': -1, 'msg': 'insufficient parameters'}
+        return HttpResponse(json.dumps(resp), content_type="application/json")
 
     if Team.objects.filter(name=name, subject_id=subject, year=year, project_name=project).exists():
         resp = {'code': 0, 'msg': 'exist'}
@@ -68,7 +76,7 @@ def import_team(request):
         team.save()
         team_id = team.team_id
         for member in team_members:
-            student = Student(fullname=member.get('name'), email=member.get('email'))
+            student = Student(fullname=member['name'], email=member['email'])
             student.save()
             student_id = student.student_id
             import_team_member(team_id, student_id)
@@ -130,27 +138,27 @@ Request:
             }
 """
 
-
-def create_team(request):
-    try:
-        name = request.POST.get('name')
-        description = request.POST.get('description')
-        # supervisor = Account.objects.get(username = request.POST.get('supervisor'))
-        supervisor_id = request.POST.get('supervisor_id')
-        year = request.POST.get('year')
-        # member_id = request.POST.get('member_id')
-        # duration = request.POST.get('duration')
-        project_name = request.POST.get('project_name')
-        timestamp = int(now().timestamp())
-        # expired = timestamp + 60 * 60 * 24 * int(duration)
-        team = Team(name=name, description=description, supervisor_id=supervisor_id,
-                    year=year, create_date=timestamp, project_name=project_name)
-        team.save()
-        resp = {'code': 0, 'msg': 'create successfully'}
-        return HttpResponse(json.dumps(resp), content_type="application/json")
-    except ObjectDoesNotExist:
-        resp = {'code': -1, 'msg': 'error'}
-        return HttpResponse(json.dumps(resp), content_type="application/json")
+#
+# def create_team(request):
+#     try:
+#         name = request.POST.get('name')
+#         description = request.POST.get('description')
+#         # supervisor = Account.objects.get(username = request.POST.get('supervisor'))
+#         supervisor_id = request.POST.get('supervisor_id')
+#         year = request.POST.get('year')
+#         # member_id = request.POST.get('member_id')
+#         # duration = request.POST.get('duration')
+#         project_name = request.POST.get('project_name')
+#         timestamp = int(now().timestamp())
+#         # expired = timestamp + 60 * 60 * 24 * int(duration)
+#         team = Team(name=name, description=description, supervisor_id=supervisor_id,
+#                     year=year, create_date=timestamp, project_name=project_name)
+#         team.save()
+#         resp = {'code': 0, 'msg': 'create successfully'}
+#         return HttpResponse(json.dumps(resp), content_type="application/json")
+#     except ObjectDoesNotExist:
+#         resp = {'code': -1, 'msg': 'error'}
+#         return HttpResponse(json.dumps(resp), content_type="application/json")
 
 
 """
@@ -159,22 +167,22 @@ Method: Post
 Request: team_id, student_id
 """
 
-
-def team_member(request):
-    try:
-        student_id = request.POST.get('student_id')
-        team_id = request.POST.get('team_id')
-        if TeamMember.objects.filter(team_id=team_id, student_id=student_id).exists():
-            resp = {'code': 0, 'msg': 'exist'}
-            return HttpResponse(json.dumps(resp), content_type="application/json")
-        else:
-            TeamMember(student_id=student_id, team_id=team_id).save()
-            resp = {'code': 1, 'msg': 'add student to team'}
-            return HttpResponse(json.dumps(resp), content_type="application/json")
-    except:
-        resp = {'code': -1, 'msg': 'error'}
-        return HttpResponse(json.dumps(resp), content_type="application/json")
-
+#
+# def team_member(request):
+#     try:
+#         student_id = request.POST.get('student_id')
+#         team_id = request.POST.get('team_id')
+#         if TeamMember.objects.filter(team_id=team_id, student_id=student_id).exists():
+#             resp = {'code': 0, 'msg': 'exist'}
+#             return HttpResponse(json.dumps(resp), content_type="application/json")
+#         else:
+#             TeamMember(student_id=student_id, team_id=team_id).save()
+#             resp = {'code': 1, 'msg': 'add student to team'}
+#             return HttpResponse(json.dumps(resp), content_type="application/json")
+#     except:
+#         resp = {'code': -1, 'msg': 'error'}
+#         return HttpResponse(json.dumps(resp), content_type="application/json")
+#
 
 """
 Get a specific team information (not needed for now)
