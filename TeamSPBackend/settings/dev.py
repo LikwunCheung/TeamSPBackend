@@ -8,6 +8,7 @@ ALLOWED_HOSTS = ['*']
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
 SESSION_COOKIE_NAME = "session_id"
+SESSION_COOKIE_SAMESITE = None
 
 DATABASES = {
     # 'default': {

@@ -4,11 +4,34 @@ from .base_setting import *
 
 DEBUG = True
 
+CORS_ALLOW_CREDENTIALS = True
+CORS_ORIGIN_ALLOW_ALL = True
+CORS_ORIGIN_WHITELIST = ('http://localhost:3000', 'http://172.26.88.107:8081', 'http://172.26.88.107')
+CORS_ALLOW_METHODS = (
+    'DELETE', 'GET', 'POST', 'OPTIONS', 'PATCH', 'PUT',
+)
+
+CORS_ALLOW_HEADERS = (
+    'XMLHttpRequest',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+    'dnt',
+    'X_FILENAME',
+)
+
+CSRF_COOKIE_SAMESITE = None
+
 ALLOWED_HOSTS = ['*']
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
 SESSION_COOKIE_NAME = "session_id"
 SESSION_COOKIE_AGE = 60 * 60 * 24
+SESSION_COOKIE_SAMESITE = None
 
 DATABASES = {
     # 'default': {

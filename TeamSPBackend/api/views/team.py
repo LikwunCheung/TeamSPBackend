@@ -7,6 +7,7 @@ from django.views.decorators.http import require_http_methods
 from TeamSPBackend.common.utils import check_user_login, make_json_response, init_http_response, check_body
 from TeamSPBackend.common.choices import RespCode, Roles
 from TeamSPBackend.account.models import Account
+from TeamSPBackend.api.views.confluence.confluence import get_team_members
 from TeamSPBackend.team.models import Team, Student, TeamMember
 from TeamSPBackend.subject.models import Subject
 from TeamSPBackend.account.models import User
@@ -24,9 +25,9 @@ def team_router(request, *args):
         if team_id:
             # Assign secondary supervisor for a specific team
             return update_team(request, team_id)  # done
-        # Create team from request with supervisor_id
+        # Import team from confluence with supervisor_id
+        return import_team(request)
         # Todo: might need to change for retrieving confluence data / front-end request with team info
-        return create_team(request)
     elif request.method == 'GET':
         if team_id:
             # Get a specific team information
@@ -34,6 +35,64 @@ def team_router(request, *args):
         # Get teams information
         return multi_get_team(request)  # done
     return HttpResponseNotAllowed(['POST'])
+
+
+"""
+Import team from confluence with supervisor_id
+
+Method: POST
+Url: localhost:8000/api/v1/team
+Params:
+Request: team, subject, year, project
+        {
+            "team":                     "SWEN90013_2020_SP",
+            "subject":                  "SWEN90013",
+            "year":                     "2020",
+            "project":                  "SP"
+        }
+"""
+
+
+@check_body
+def import_team(request, body):
+    print(request)
+    print(body)
+    if "team" in body.keys() and "subject" in body.keys()\
+            and "year" in body.keys() and "project" in body.keys():
+        name = body['team']
+        subject = body['subject']
+        year = body['year']
+        project = body['project']
+        team_members = get_team_members(request, name)
+    else:
+        resp = {'code': -1, 'msg': 'insufficient parameters'}
+        return HttpResponse(json.dumps(resp), content_type="application/json")
+
+    if Team.objects.filter(name=name, subject_id=subject, year=year, project_name=project).exists():
+        resp = {'code': 0, 'msg': 'exist'}
+        return HttpResponse(json.dumps(resp), content_type="application/json")
+    else:
+        team = Team(name=name, subject_id=subject,
+                    year=year, project_name=project)
+        team.save()
+        team_id = team.team_id
+        for member in team_members:
+            student = Student(fullname=member['name'], email=member['email'])
+            student.save()
+            student_id = student.student_id
+            import_team_member(team_id, student_id)
+    resp = init_http_response(
+        RespCode.success.value.key, RespCode.success.value.msg)
+    return HttpResponse(json.dumps(resp), content_type="application/json")
+
+
+# Add team member records
+def import_team_member(team_id, student_id):
+    if TeamMember.objects.filter(team_id=team_id, student_id=student_id).exists():
+        return False
+    else:
+        TeamMember(student_id=student_id, team_id=team_id).save()
+        return True
 
 
 """
@@ -51,11 +110,11 @@ Request: csv_file
 #     return HttpResponse(json.dumps(resp), content_type="application/json")
 
 """
-Create team from request with supervisor_id 
+Create team from request with supervisor_id
 Method: Post
 Url: localhost:8000/api/v1/team
 Params: None
-Request: 
+Request:
             {
                 "name":                #team_name,
                 "description":         #team_description,
@@ -82,27 +141,27 @@ Request:
             }
 """
 
-
-def create_team(request):
-    try:
-        name = request.POST.get('name')
-        description = request.POST.get('description')
-        # supervisor = Account.objects.get(username = request.POST.get('supervisor'))
-        supervisor_id = request.POST.get('supervisor_id')
-        year = request.POST.get('year')
-        # member_id = request.POST.get('member_id')
-        # duration = request.POST.get('duration')
-        project_name = request.POST.get('project_name')
-        timestamp = int(now().timestamp())
-        # expired = timestamp + 60 * 60 * 24 * int(duration)
-        team = Team(name=name, description=description, supervisor_id=supervisor_id,
-                    year=year, create_date=timestamp, project_name=project_name)
-        team.save()
-        resp = {'code': 0, 'msg': 'create successfully'}
-        return HttpResponse(json.dumps(resp), content_type="application/json")
-    except ObjectDoesNotExist:
-        resp = {'code': -1, 'msg': 'error'}
-        return HttpResponse(json.dumps(resp), content_type="application/json")
+#
+# def create_team(request):
+#     try:
+#         name = request.POST.get('name')
+#         description = request.POST.get('description')
+#         # supervisor = Account.objects.get(username = request.POST.get('supervisor'))
+#         supervisor_id = request.POST.get('supervisor_id')
+#         year = request.POST.get('year')
+#         # member_id = request.POST.get('member_id')
+#         # duration = request.POST.get('duration')
+#         project_name = request.POST.get('project_name')
+#         timestamp = int(now().timestamp())
+#         # expired = timestamp + 60 * 60 * 24 * int(duration)
+#         team = Team(name=name, description=description, supervisor_id=supervisor_id,
+#                     year=year, create_date=timestamp, project_name=project_name)
+#         team.save()
+#         resp = {'code': 0, 'msg': 'create successfully'}
+#         return HttpResponse(json.dumps(resp), content_type="application/json")
+#     except ObjectDoesNotExist:
+#         resp = {'code': -1, 'msg': 'error'}
+#         return HttpResponse(json.dumps(resp), content_type="application/json")
 
 
 """
@@ -111,22 +170,22 @@ Method: Post
 Request: team_id, student_id
 """
 
-
-def team_member(request):
-    try:
-        student_id = request.POST.get('student_id')
-        team_id = request.POST.get('team_id')
-        if TeamMember.objects.filter(team_id=team_id, student_id=student_id).exists():
-            resp = {'code': 0, 'msg': 'exist'}
-            return HttpResponse(json.dumps(resp), content_type="application/json")
-        else:
-            TeamMember(student_id=student_id, team_id=team_id).save()
-            resp = {'code': 1, 'msg': 'add student to team'}
-            return HttpResponse(json.dumps(resp), content_type="application/json")
-    except:
-        resp = {'code': -1, 'msg': 'error'}
-        return HttpResponse(json.dumps(resp), content_type="application/json")
-
+#
+# def team_member(request):
+#     try:
+#         student_id = request.POST.get('student_id')
+#         team_id = request.POST.get('team_id')
+#         if TeamMember.objects.filter(team_id=team_id, student_id=student_id).exists():
+#             resp = {'code': 0, 'msg': 'exist'}
+#             return HttpResponse(json.dumps(resp), content_type="application/json")
+#         else:
+#             TeamMember(student_id=student_id, team_id=team_id).save()
+#             resp = {'code': 1, 'msg': 'add student to team'}
+#             return HttpResponse(json.dumps(resp), content_type="application/json")
+#     except:
+#         resp = {'code': -1, 'msg': 'error'}
+#         return HttpResponse(json.dumps(resp), content_type="application/json")
+#
 
 """
 Get a specific team information (not needed for now)
@@ -349,7 +408,7 @@ Assign supervisor or secondary supervisor for a specific team
 Method: Post
 Url: localhost:8000/api/v1/team/<team_id>
 Params: team_id
-Request: 
+Request:
         {
             "supervisor_id":                    #supervisor_id
             "secondary_supervisor_id":          #secondary_supervisor_id
@@ -481,8 +540,7 @@ def get_team_members(request, *args, **kwargs):
         student = Student.objects.get(student_id=member.student_id)
         member_data = {
             'student_id': student.student_id,
-            'first_name': student.first_name,
-            'last_name': student.last_name,
+            'fullname': student.first_name,
             'email': student.email
         }
         members.append(member_data)

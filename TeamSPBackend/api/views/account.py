@@ -1,15 +1,20 @@
-import ujson
+import json
+import logging
+import requests
 
 from django.http import HttpResponse, HttpResponseNotAllowed, HttpResponse
 from django.views.decorators.http import require_http_methods
 from django.db.models import Q, ObjectDoesNotExist
 from django.db import transaction
 
+from atlassian import Confluence
 from TeamSPBackend.account.models import Account, User
 from TeamSPBackend.common.utils import init_http_response, make_json_response, check_user_login, body_extract, mills_timestamp, check_body
 from TeamSPBackend.common.choices import RespCode, Status, Roles
 from TeamSPBackend.api.dto.dto import LoginDTO, AddAccountDTO, UpdateAccountDTO
 
+
+logger = logging.getLogger('django')
 
 @require_http_methods(['POST', 'GET'])
 @check_user_login
@@ -31,6 +36,12 @@ def login(request, body, *args, **kwargs):
     """
 
     login_dto = LoginDTO()
+
+    #######
+    username = login_dto.username
+    password = login_dto.password
+    #######
+
     body_extract(body, login_dto)
 
     if not login_dto.validate():
@@ -55,6 +66,8 @@ def login(request, body, *args, **kwargs):
         name=user.get_name(),
         role=user.role,
         is_login=True,
+        atl_username = None,
+        atl_password = None,
     )
     request.session['user'] = session_data
 
@@ -167,6 +180,31 @@ def get_account(request):
     resp['data'] = data
     return make_json_response(HttpResponse, resp)
 
+@require_http_methods(['POST'])
+@check_user_login
+def atl_login(request, body, *args, **kwargs):
+    """
+    Update atlassian login info
+    Method: Post
+    Request: first_name,last_name,old_password,password
+    """
+    try:
+        data = json.loads(request.body)
+        request.session['user']['atl_username'] = data['atl_username']
+        request.session['user']['atl_password'] = data['atl_password']
+        confluence = Confluence(
+            url='https://confluence.cis.unimelb.edu.au:8443/',
+            username=request.session['user']['atl_username'],
+            password=request.session['user']['atl_password']
+        )
+        conf_resp = confluence.get_all_groups()
+        print("~~")
+        print(request.session['user']['atl_username'])
+        resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
+        return make_json_response(HttpResponse, resp)
+    except requests.exceptions.HTTPError as e:
+        resp = init_http_response(RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
+        return make_json_response(HttpResponse, resp) 
 
 @require_http_methods(['POST'])
 @check_user_login
@@ -205,6 +243,13 @@ def update_account(request, body, *args, **kwargs):
         user.update_date = timestamp
     if update_account_dto.last_name:
         user.last_name = update_account_dto.last_name
+        user.update_date = timestamp
+    if update_account_dto.atl_username:
+        user.atl_username = update_account_dto.atl_username
+        user.update_date = timestamp
+    if update_account_dto.atl_password:
+        update_account_dto.encrypt_aes()
+        user.atl_password = update_account_dto.aes
         user.update_date = timestamp
     if update_account_dto.old_password and update_account_dto.password \
             and update_account_dto.old_md5 == account.password:
@@ -267,32 +312,3 @@ def delete(request, body, *args, **kwargs):
 
     resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
     return make_json_response(HttpResponse, resp)
-
-
-@require_http_methods(['POST'])
-@check_user_login
-def invite_accept(request):
-    """
-    Accept Invitation and Create Account (WIP)
-    Method: Post
-    Request: key, username, password
-    """
-
-    if request.method == 'POST':
-
-        key = request.POST.get('key')
-        username = request.POST.get('username')
-        password = request.POST.get('password')
-
-        timestamp = mills_timestamp()
-        if Account.objects.filter(username=username).exists():
-            resp = {'code': -1, 'msg': 'username already exist'}
-            return HttpResponse(ujson.dumps(resp), content_type="application/json")
-        else:
-            account = Account(username=username, password=password, status=1, create_date=timestamp,)
-            user = User(username=username, status=1, create_date=timestamp,)
-
-            account.save()
-            user.save()
-            resp = {'code': 0, 'msg': 'invite accept'}
-            return HttpResponse(ujson.dumps(resp), content_type="application/json")
