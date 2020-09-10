@@ -67,7 +67,7 @@ def get_issues_one_student(request, team, student_id):
 
     student = Student.objects.get(student_id=student_id)
     student_email = student.email
-    student_username s= student_email.split('@')[0]
+    student_username = student_email.split('@')[0]
 
     # ############# for manually test only
     # student_username = 'xinbos'
@@ -123,6 +123,30 @@ def get_issues_one_student(request, team, student_id):
         'count_issues_in_review': count_issues_in_review,
         'count_issues_done': count_issues_done,
         'count_issues_review': count_issues_review
+    }
+    resp = init_http_response(
+        RespCode.success.value.key, RespCode.success.value.msg)
+    resp['data'] = data
+    return HttpResponse(json.dumps(resp), content_type="application/json")
+
+@require_http_methods(['GET'])
+def get_total_issues_team(request, team):
+    user = request.session.get('user')
+    username = user['atl_username']
+    password = user['atl_password']
+
+    jira = Jira(
+    url='https://jira.cis.unimelb.edu.au:8444',
+    username=username,
+    password=password)
+
+    jql_request = 'project = project_name'
+    jql_request = jql_request.replace('project_name', team)
+    issues = jira.jql(jql_request)
+    count_issues_total = issues['total']
+
+    data = {
+        'issues_total': count_issues_total
     }
     resp = init_http_response(
         RespCode.success.value.key, RespCode.success.value.msg)
