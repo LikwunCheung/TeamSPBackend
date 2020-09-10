@@ -27,7 +27,7 @@ def subject_router(request, *args, **kwargs):
         if not subject_id:
             return multi_get_subject(request)
         return get_subject(request, subject_id)
-    return HttpResponseNotAllowed(['POST'])
+    return HttpResponseNotAllowed(['POST', 'GET'])
 
 
 def get_subject(request, subject_id: int):

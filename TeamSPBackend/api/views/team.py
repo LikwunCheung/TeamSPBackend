@@ -5,8 +5,11 @@ from django.http.response import HttpResponseBadRequest
 from django.http import HttpResponse, HttpResponseNotAllowed
 from django.views.decorators.http import require_http_methods
 from django.db import transaction
+from django.db.models import Q, ObjectDoesNotExist
 
 from TeamSPBackend.api.dto.dto import AddTeamDTO
+
+from TeamSPBackend.common.config import SINGLE_PAGE_LIMIT
 from TeamSPBackend.common.utils import check_user_login, make_json_response, init_http_response, check_body, body_extract, mills_timestamp
 from TeamSPBackend.common.choices import RespCode, Roles, get_keys
 from TeamSPBackend.account.models import Account
@@ -14,7 +17,6 @@ from TeamSPBackend.api.views.confluence.confluence import get_members
 from TeamSPBackend.team.models import Team, Student, TeamMember
 from TeamSPBackend.subject.models import Subject
 from TeamSPBackend.account.models import User
-from django.db.models import ObjectDoesNotExist
 
 logger = logging.getLogger('django')
 
@@ -23,9 +25,8 @@ logger = logging.getLogger('django')
 @check_user_login()
 def team_router(request, *args, **kwargs):
     team_id = None
-    for arg in args:
-        if isinstance(arg, dict):
-            team_id = arg.get('team_id', None)
+    if isinstance(kwargs, dict):
+        team_id = kwargs.get('team_id', None)
     if request.method == 'POST':
         if team_id:
             # Assign secondary supervisor for a specific team
@@ -39,7 +40,7 @@ def team_router(request, *args, **kwargs):
             return get_team_members(request, team_id)  # done
         # Get teams information
         return multi_get_team(request)  # done
-    return HttpResponseNotAllowed(['POST'])
+    return HttpResponseNotAllowed(['POST', 'GET'])
 
 
 """
@@ -371,56 +372,76 @@ def get_teams_data(filtered_teams):
     return teams
 
 
-def multi_get_team(request):
+def multi_get_team(request, *args, **kwargs):
     """
-        Get multiple teams
+    Get multiple teams
 
-        :param request: supervisor_id/coordinator_id
-        :return:
-        """
-    account_id = request.GET.get('account_id', None)
+    :param request: supervisor_id/coordinator_id
+    :return:
+    """
+
+    user = request.session.get('user', {})
+    user_id = user['id']
+    user_role = user['role']
+
     offset = int(request.POST.get('offset', 0))
     has_more = 0
-    filtered_teams = []
-    teams = []
-    try:
-        user = User.objects.get(account_id=account_id)
-    except ObjectDoesNotExist:
-        resp = init_http_response(RespCode.invalid_op.value.key, RespCode.invalid_op.value.msg)
-        return make_json_response(HttpResponseBadRequest, resp)
-    # coordinators
-    if user.role == Roles.coordinator.value.key:
-        subjects = Subject.objects.filter(coordinator_id=user.account_id)
-        for subject in subjects:
-            filtered_teams.append(Team.objects.filter(subject_id=subject.subject_code))
-    # supervisors
-    elif user.role == Roles.supervisor.value.key:
-        filtered_teams.append(Team.objects.filter(supervisor_id=user.account_id))
-        filtered_teams.append(Team.objects.filter(secondary_supervisor_id=user.account_id))
-    # admins
-    else:
-        filtered_teams.append(Team.objects.all())
-    teams.append(get_teams_data(filtered_teams))
-    # TODO: paging
-    # kwargs = dict()
-    # if ids:
-    #     kwargs['team_id__in'] = [int(x) for x in ids.split(',')]
-    # if code:
-    #     kwargs['subject_code__contains'] = code
-    # if name:
-    #     kwargs['name__contains'] = name
-    #
-    # teams = Team.objects.filter(teams).order_by('team_id')[offset: offset + SINGLE_PAGE_LIMIT + 1]
-    #
-    # if len(teams) > SINGLE_PAGE_LIMIT:
-    #     teams = teams[: SINGLE_PAGE_LIMIT]
-    #     has_more = 1
-    # offset += len(teams)
 
-    body = {
-        'teams': teams
-    }
-    return HttpResponse(json.dumps(body), content_type="application/json")
+    teams = list()
+    if user_role == Roles.coordinator.value.key:
+        subjects = Subject.objects.filter(coordinator_id=user_id)
+        subject_codes = [subject.subject_code for subject in subjects]
+        teams = Team.objects.filter(subject_code__in=subject_codes)
+
+    elif user_role == Roles.supervisor.value.key:
+        teams = Team.objects.filter(Q(supervisor_id=user_id) | Q(secondary_supervisor_id=user_id))
+
+    elif user_role == Roles.admin.value.key:
+        teams = Team.objects.all()
+
+    teams = teams[offset: offset + SINGLE_PAGE_LIMIT + 1]
+    if len(teams) > SINGLE_PAGE_LIMIT:
+        teams = teams[: SINGLE_PAGE_LIMIT]
+        has_more = 1
+    offset += len(teams)
+
+    supervisor_ids = list()
+    supervisors = dict()
+    for team in teams:
+        if team.supervisor_id is not None:
+            supervisor_ids.append(team.supervisor_id)
+        if team.secondary_supervisor_id is not None:
+            supervisor_ids.append(team.secondary_supervisor_id)
+
+    if len(supervisor_ids) > 0:
+        supervisors_temp = User.objects.filter(user_id__in=supervisor_ids)
+        for supervisor in supervisors_temp:
+            supervisors[supervisor.user_id] = supervisor
+
+    data = dict(
+        teams=[dict(
+            id=team.team_id,
+            name=team.name,
+            project_name=team.project_name,
+            year=team.year,
+            supervisor=dict(
+                id=supervisors[team.supervisor_id].user_id,
+                name=supervisors[team.supervisor_id].get_name(),
+                email=supervisors[team.supervisor_id].email
+            ) if team.supervisor_id in supervisors else None,
+            secondary_supervisor=dict(
+                id=supervisors[team.secondary_supervisor_id].user_id,
+                name=supervisors[team.secondary_supervisor_id].get_name(),
+                email=supervisors[team.secondary_supervisor_id].email
+            ) if team.secondary_supervisor_id in supervisors else None,
+        ) for team in teams],
+        offset=offset,
+        has_more=has_more,
+    )
+
+    resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
+    resp['data'] = data
+    return make_json_response(HttpResponse, resp)
 
 
 """
@@ -440,12 +461,12 @@ Request:
 @check_body
 def update_team(request, body, team_id: int):
     """
-            Post secondary_supervisor_id
+    Post secondary_supervisor_id
 
-            :param request:
-            :param team_id:
-            :return:
-            """
+    :param request:
+    :param team_id:
+    :return:
+    """
     supervisor_id = None
     secondary_supervisor_id = None
 
@@ -488,7 +509,7 @@ def update_team(request, body, team_id: int):
         team.save()
         resp['secondary_supervisor'] = "Update successfully"
 
-    return HttpResponse(json.dumps(resp), content_type="application/json")
+    return HttpResponse(ujson.dumps(resp), content_type="application/json")
 
 
 """
