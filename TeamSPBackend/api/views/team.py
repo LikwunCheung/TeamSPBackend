@@ -7,7 +7,7 @@ from django.views.decorators.http import require_http_methods
 from TeamSPBackend.common.utils import check_user_login, make_json_response, init_http_response, check_body
 from TeamSPBackend.common.choices import RespCode, Roles
 from TeamSPBackend.account.models import Account
-from TeamSPBackend.api.views.confluence.confluence import get_team_members
+from TeamSPBackend.api.views.confluence.confluence import get_members
 from TeamSPBackend.team.models import Team, Student, TeamMember
 from TeamSPBackend.subject.models import Subject
 from TeamSPBackend.account.models import User
@@ -55,15 +55,18 @@ Request: team, subject, year, project
 
 @check_body
 def import_team(request, body):
-    print(request)
-    print(body)
+    # print(request)
+    # print(body)
     if "team" in body.keys() and "subject" in body.keys()\
             and "year" in body.keys() and "project" in body.keys():
         name = body['team']
         subject = body['subject']
         year = body['year']
         project = body['project']
-        team_members = get_team_members(request, name)
+        team_members = get_members(request, name)
+        # print(team_members)
+        if not team_members:
+            return
     else:
         resp = {'code': -1, 'msg': 'insufficient parameters'}
         return HttpResponse(json.dumps(resp), content_type="application/json")
@@ -76,6 +79,7 @@ def import_team(request, body):
         team.save()
         team_id = team.team_id
         for member in team_members:
+            # print(member)
             student = Student(fullname=member['name'], email=member['email'])
             student.save()
             student_id = student.student_id
@@ -487,6 +491,7 @@ def get_team_members(request, *args, **kwargs):
     for arg in args:
         if isinstance(arg, dict):
             team_id = arg.get('team_id', None)
+            print("FUN_get_team_members: ", team_id)
     # Queryset list of team members
     team_members = []
     # Result list for members: supervisor, secondary_supervisor, and team members
