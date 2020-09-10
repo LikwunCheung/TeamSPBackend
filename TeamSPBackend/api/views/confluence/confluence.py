@@ -279,5 +279,6 @@ def get_members(request, group):
                 'email': user['username'] + "@student.unimelb.edu.au"
             })
         return data
-    except:
+    except Exception as e:
+        print(e)
         return None

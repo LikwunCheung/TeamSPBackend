@@ -21,6 +21,7 @@ class RespCode(Enum):
     invalid_op = Choice(-6, 'invalid operation')
     subject_existed = Choice(-7, 'existed subject')
     permission_deny = Choice(-8, 'permission deny')
+    team_existed = Choice(-9, 'existed team')
 
 
 class InvitationStatus(Enum):

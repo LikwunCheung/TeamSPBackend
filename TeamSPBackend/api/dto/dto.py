@@ -125,3 +125,16 @@ class InviteAcceptDTO(object):
     def encrypt(self):
         self.password = self.password + SALT
         self.md5 = hashlib.sha3_256(self.password.encode()).hexdigest()
+
+
+class AddTeamDTO(object):
+
+    def __init__(self):
+        self.team = None
+        self.subject = None
+        self.year = None
+        self.project = None
+
+    def not_empty(self):
+        return not (not self.team or not self.subject or not self.year or not self.project)
+

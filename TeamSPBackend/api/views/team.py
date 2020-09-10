@@ -1,11 +1,14 @@
-import json
-from TeamSPBackend.common.config import SINGLE_PAGE_LIMIT
+import ujson
+import logging
+
 from django.http.response import HttpResponseBadRequest
 from django.http import HttpResponse, HttpResponseNotAllowed
-from django.utils.timezone import now
 from django.views.decorators.http import require_http_methods
-from TeamSPBackend.common.utils import check_user_login, make_json_response, init_http_response, check_body
-from TeamSPBackend.common.choices import RespCode, Roles
+from django.db import transaction
+
+from TeamSPBackend.api.dto.dto import AddTeamDTO
+from TeamSPBackend.common.utils import check_user_login, make_json_response, init_http_response, check_body, body_extract, mills_timestamp
+from TeamSPBackend.common.choices import RespCode, Roles, get_keys
 from TeamSPBackend.account.models import Account
 from TeamSPBackend.api.views.confluence.confluence import get_members
 from TeamSPBackend.team.models import Team, Student, TeamMember
@@ -13,10 +16,12 @@ from TeamSPBackend.subject.models import Subject
 from TeamSPBackend.account.models import User
 from django.db.models import ObjectDoesNotExist
 
+logger = logging.getLogger('django')
+
 
 @require_http_methods(['POST', 'GET'])
 @check_user_login()
-def team_router(request, *args):
+def team_router(request, *args, **kwargs):
     team_id = None
     for arg in args:
         if isinstance(arg, dict):
@@ -53,39 +58,59 @@ Request: team, subject, year, project
 """
 
 
+@check_user_login(get_keys([Roles.admin, Roles.coordinator]))
 @check_body
-def import_team(request, body):
-    # print(request)
-    # print(body)
-    if "team" in body.keys() and "subject" in body.keys()\
-            and "year" in body.keys() and "project" in body.keys():
-        name = body['team']
-        subject = body['subject']
-        year = body['year']
-        project = body['project']
-        team_members = get_members(request, name)
-        # print(team_members)
-        if not team_members:
-            return
-    else:
-        resp = {'code': -1, 'msg': 'insufficient parameters'}
-        return HttpResponse(json.dumps(resp), content_type="application/json")
+def import_team(request, body, *args, **kwargs):
+    """
+    Import team from confluence with supervisor_id
 
-    if Team.objects.filter(name=name, subject_id=subject, year=year, project_name=project).exists():
-        resp = {'code': 0, 'msg': 'exist'}
-        return HttpResponse(json.dumps(resp), content_type="application/json")
-    else:
-        team = Team(name=name, subject_id=subject, year=year, project_name=project)
-        team.save()
-        team_id = team.team_id
-        for member in team_members:
-            # print(member)
-            student = Student(fullname=member['name'], email=member['email'])
-            student.save()
-            student_id = student.student_id
-            import_team_member(team_id, student_id)
+    :param request:
+    :param body:
+    :param args:
+    :param kwargs:
+    :return:
+    """
+
+    add_team_dto = AddTeamDTO()
+    body_extract(body, add_team_dto)
+
+    # Check parameters
+    if not add_team_dto.not_empty():
+        resp = init_http_response(RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
+        return make_json_response(HttpResponse, resp)
+
+    team_members = get_members(request, add_team_dto.team)
+    if not team_members:
+        logger.info('Empty team member: %s', add_team_dto.team)
+        resp = init_http_response(RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
+        return make_json_response(HttpResponse, resp)
+
+    # If the team existed
+    if Team.objects.filter(name=add_team_dto.team).exists():
+        resp = init_http_response(RespCode.team_existed.value.key, RespCode.team_existed.value.msg)
+        return make_json_response(HttpResponse, resp)
+
+    try:
+        with transaction.atomic():
+            team = Team(name=add_team_dto.team, subject_code=add_team_dto.subject, year=add_team_dto.year,
+                        project_name=add_team_dto.project, create_date=mills_timestamp())
+            team.save()
+
+            for member in team_members:
+                try:
+                    student = Student.objects.get(email=member['email'])
+                except ObjectDoesNotExist as e:
+                    student = Student(fullname=member['name'], email=member['email'])
+                    student.save()
+                import_team_member(team.team_id, student.student_id)
+
+    except Exception as e:
+        logger.error(e)
+        resp = init_http_response(RespCode.server_error.value.key, RespCode.server_error.value.msg)
+        return make_json_response(HttpResponse, resp)
+
     resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
-    return HttpResponse(json.dumps(resp), content_type="application/json")
+    return make_json_response(HttpResponse, resp)
 
 
 # Add team member records
