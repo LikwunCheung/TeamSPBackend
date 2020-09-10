@@ -260,14 +260,15 @@ def log_into_confluence(username, password):
     return confluence
 
 
-def get_team_members(request, group):
+def get_members(request, group):
     try:
+        # print(request)
         user = request.session.get('user')
         username = user['atl_username']
         password = user['atl_password']
-        group_name = group
         confluence = log_into_confluence(username, password)
-        conf_resp = confluence.get_group_members(group_name)
+        conf_resp = confluence.get_group_members(group)
+        # print(conf_resp)
         data = []
         for user in conf_resp:
             data.append({
