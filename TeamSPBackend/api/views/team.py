@@ -15,7 +15,7 @@ from django.db.models import ObjectDoesNotExist
 
 
 @require_http_methods(['POST', 'GET'])
-@check_user_login
+@check_user_login()
 def team_router(request, *args):
     team_id = None
     for arg in args:
@@ -477,7 +477,7 @@ Request:
 
 
 @require_http_methods(['GET'])
-@check_user_login
+@check_user_login()
 def get_team_members(request, *args, **kwargs):
     """
         Get certain team members

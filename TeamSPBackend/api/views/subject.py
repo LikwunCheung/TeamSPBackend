@@ -12,14 +12,15 @@ from TeamSPBackend.common.config import SINGLE_PAGE_LIMIT
 from TeamSPBackend.subject.models import Subject
 from TeamSPBackend.account.models import User
 from TeamSPBackend.api.dto.dto import *
+from TeamSPBackend.team.models import Team
 
 
 @require_http_methods(['POST', 'GET'])
+@check_user_login()
 def subject_router(request, *args, **kwargs):
     subject_id = None
-    for arg in args:
-        if isinstance(arg, dict):
-            subject_id = arg.get('id', None)
+    if isinstance(kwargs, dict):
+        subject_id = kwargs.get('id', None)
     if request.method == 'POST':
         return add_subject(request)
     elif request.method == 'GET':
@@ -29,7 +30,6 @@ def subject_router(request, *args, **kwargs):
     return HttpResponseNotAllowed(['POST'])
 
 
-@check_user_login
 def get_subject(request, subject_id: int):
     """
     Get certain subject
@@ -41,10 +41,13 @@ def get_subject(request, subject_id: int):
 
     try:
         subject = Subject.objects.get(subject_id=subject_id)
+        print(subject)
         coordinator = User.objects.get(user_id=subject.coordinator_id) if subject.coordinator_id else None
+        teams = Team.objects.filter(subject_id=subject_id)
     except ObjectDoesNotExist as e:
+        print(e)
         resp = init_http_response(RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
-        return make_json_response(HttpResponseBadRequest, resp)
+        return make_json_response(HttpResponse, resp)
 
     data = dict(
         id=subject.subject_id,
@@ -58,7 +61,7 @@ def get_subject(request, subject_id: int):
             status=coordinator.status,
         ),
         supervisors=[],
-        teams=[],
+        teams=[team.team_id for team in teams],
         status=subject.status,
     )
 
@@ -67,8 +70,8 @@ def get_subject(request, subject_id: int):
     return make_json_response(HttpResponse, resp)
 
 
-@check_user_login
-def multi_get_subject(request):
+@check_user_login()
+def multi_get_subject(request, *args, **kwargs):
     """
     Multi get subject
 
@@ -120,7 +123,7 @@ def multi_get_subject(request):
         coord_dict[coordinator.user_id] = coordinator
 
     data = dict(
-        ids=[x.id for x in subjects],
+        ids=[x.subject_id for x in subjects],
         has_more=has_more,
         offset=offset,
     )
@@ -149,6 +152,10 @@ def add_subject(request, body, *args, **kwargs):
     # if the subject code existed
     if Subject.objects.filter(subject_code=add_subject_dto.code).exists():
         resp = init_http_response(RespCode.subject_existed.value.key, RespCode.subject_existed.value.msg)
+        return make_json_response(HttpResponseBadRequest, resp)
+
+    if not User.objects.filter(user_id=add_subject_dto.coordinator_id).exists():
+        resp = init_http_response(RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
         return make_json_response(HttpResponseBadRequest, resp)
 
     subject = Subject(subject_code=add_subject_dto.code, name=add_subject_dto.name,

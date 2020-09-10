@@ -10,14 +10,15 @@ from django.db import transaction
 from atlassian import Confluence
 from TeamSPBackend.account.models import Account, User
 from TeamSPBackend.common.utils import init_http_response, make_json_response, check_user_login, body_extract, mills_timestamp, check_body
-from TeamSPBackend.common.choices import RespCode, Status, Roles
+from TeamSPBackend.common.choices import RespCode, Status, Roles, get_keys
 from TeamSPBackend.api.dto.dto import LoginDTO, AddAccountDTO, UpdateAccountDTO
 
 
 logger = logging.getLogger('django')
 
+
 @require_http_methods(['POST', 'GET'])
-@check_user_login
+@check_user_login()
 def account_router(request, *args, **kwargs):
     if request.method == 'POST':
         return add_account(request)
@@ -176,7 +177,7 @@ def get_account(request):
 
 
 @require_http_methods(['POST'])
-@check_user_login
+@check_user_login()
 @check_body
 def atl_login(request, body, *args, **kwargs):
     """
@@ -204,7 +205,7 @@ def atl_login(request, body, *args, **kwargs):
 
 
 @require_http_methods(['POST'])
-@check_user_login
+@check_user_login()
 @check_body
 def update_account(request, body, *args, **kwargs):
     """
@@ -267,23 +268,15 @@ def update_account(request, body, *args, **kwargs):
 
 
 @require_http_methods(['POST'])
-@check_user_login
+@check_user_login(get_keys([Roles.coordinator, Roles.admin]))
+@check_body
 def delete(request, body, *args, **kwargs):
     """
     Delete Account
     Method: Post
     Request: accountId
     """
-
-    user = request.session.get('user')
-    role = user['role']
-
-    body = dict(ujson.loads(request.body))
     account_id = body.get('id')
-
-    if role is not Roles.admin.value.key:
-        resp = init_http_response(RespCode.invalid_op.value.key, RespCode.invalid_op.value.msg)
-        return make_json_response(HttpResponse, resp)
 
     try:
         account = Account.objects.get(account_id=account_id, status=Status.valid.value.key)
