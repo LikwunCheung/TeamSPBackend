@@ -1,14 +1,14 @@
-import json
 import logging
 import requests
 
-from django.http import HttpResponse, HttpResponseNotAllowed, HttpResponse
+from django.http import HttpResponseNotAllowed, HttpResponse
 from django.views.decorators.http import require_http_methods
 from django.db.models import Q, ObjectDoesNotExist
 from django.db import transaction
 
 from atlassian import Confluence
 from TeamSPBackend.account.models import Account, User
+from TeamSPBackend.common.config import SINGLE_PAGE_LIMIT
 from TeamSPBackend.common.utils import init_http_response, make_json_response, check_user_login, body_extract, mills_timestamp, check_body
 from TeamSPBackend.common.choices import RespCode, Status, Roles, get_keys
 from TeamSPBackend.api.dto.dto import LoginDTO, AddAccountDTO, UpdateAccountDTO
@@ -25,6 +25,17 @@ def account_router(request, *args, **kwargs):
     elif request.method == 'GET':
         return get_account(request)
     return HttpResponseNotAllowed(['POST'])
+
+
+@require_http_methods(['GET'])
+@check_user_login(get_keys([Roles.coordinator, Roles.admin]))
+def supervisor_router(request, *args, **kwargs):
+    supervisor_id = None
+    if isinstance(kwargs, dict):
+        supervisor_id = kwargs.get('id', None)
+    if supervisor_id:
+        return get_supervisor(request, supervisor_id, *args, **kwargs)
+    return multi_get_supervisor(request, *args, **kwargs)
 
 
 @require_http_methods(['POST'])
@@ -301,4 +312,60 @@ def delete(request, body, *args, **kwargs):
         return make_json_response(HttpResponse, resp)
 
     resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
+    return make_json_response(HttpResponse, resp)
+
+
+def get_supervisor(request, supervisor_id, *args, **kwargs):
+    """
+
+    :param request:
+    :param supervisor_id:
+    :param args:
+    :param kwargs:
+    :return:
+    """
+
+    try:
+        supervisor = User.objects.get(user_id=supervisor_id, role=Roles.supervisor.value.key, status=Status.valid.value.key)
+    except ObjectDoesNotExist as e:
+        print(e)
+        resp = init_http_response(RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
+        return make_json_response(HttpResponse, resp)
+
+    data = dict(
+        id=supervisor.user_id,
+        name=supervisor.get_name(),
+        email=supervisor.email,
+    )
+    resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
+    resp['data'] = data
+    return make_json_response(HttpResponse, resp)
+
+
+def multi_get_supervisor(request, *args, **kwargs):
+    """
+
+    :param request:
+    :param args:
+    :param kwargs:
+    :return:
+    """
+
+    offset = int(request.GET.get('offset', 0))
+    has_more = 0
+
+    supervisors = User.objects.filter(role=Roles.supervisor.value.key, status=Status.valid.value.key)\
+        .only('user_id')[offset: offset + SINGLE_PAGE_LIMIT + 1]
+    if len(supervisors) > SINGLE_PAGE_LIMIT:
+        supervisors = supervisors[: SINGLE_PAGE_LIMIT]
+        has_more = 1
+    offset += len(supervisors)
+
+    data = dict(
+        supervisors=[supervisor.user_id for supervisor in supervisors],
+        offset=offset,
+        has_more=has_more,
+    )
+    resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
+    resp['data'] = data
     return make_json_response(HttpResponse, resp)

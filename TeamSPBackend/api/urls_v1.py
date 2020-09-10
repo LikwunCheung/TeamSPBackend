@@ -6,7 +6,7 @@ from TeamSPBackend.api.views import team
 from TeamSPBackend.api.views.confluence import confluence
 from TeamSPBackend.api.views.jira import helpJira
 from .views.invitation import invitation_router, invite_accept
-from .views.account import account_router, login, logout, update_account, delete, atl_login
+from .views.account import account_router, login, logout, update_account, delete, atl_login, supervisor_router
 from .views.subject import subject_router, update_subject, delete_subject
 from .views.team import team_router, get_team_members
 
@@ -22,6 +22,10 @@ urlpatterns = [
     path('account/update', update_account),
     path('account/delete', delete),
     path('account', account_router),
+
+    # Supervisor Related API
+    path('supervisor/<int:id>', supervisor_router),
+    path('supervisor', supervisor_router),
 
     # Subject Related API
     path('subject/<int:id>/update', update_subject),
