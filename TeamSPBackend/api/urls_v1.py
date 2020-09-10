@@ -47,6 +47,6 @@ urlpatterns = [
     # Jira Related API
     path('jira/<team>/jiracfd', helpJira.get_jira_CFD),
     path('jira/<team>/jiraburn', helpJira.get_jira_burn),
-    path('jira/<team>/jiraburnforecast', helpJira.get_jira_burn_forecast)
-
+    path('jira/<team>/jiraburnforecast', helpJira.get_jira_burn_forecast),
+    path('jira/<team>/<student_id>', helpJira.get_issues_one_student)
 ]
