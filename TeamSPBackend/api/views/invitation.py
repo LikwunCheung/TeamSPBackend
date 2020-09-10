@@ -17,7 +17,7 @@ from TeamSPBackend.api.dto.dto import InviteAcceptDTO
 
 
 @require_http_methods(['POST', 'GET'])
-@check_user_login
+@check_user_login()
 def invitation_router(request, *args, **kwargs):
     print(request.COOKIES)
     if request.method == 'POST':
@@ -170,8 +170,6 @@ def invite_accept(request, body, *args, **kwargs):
     Method: Post
     Request: key, username, password
     """
-    print(body)
-
     invite_accept_dto = InviteAcceptDTO()
     body_extract(body, invite_accept_dto)
 

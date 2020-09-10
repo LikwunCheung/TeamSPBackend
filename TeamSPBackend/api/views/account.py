@@ -1,29 +1,41 @@
-import json
 import logging
 import requests
 
-from django.http import HttpResponse, HttpResponseNotAllowed, HttpResponse
+from django.http import HttpResponseNotAllowed, HttpResponse
 from django.views.decorators.http import require_http_methods
 from django.db.models import Q, ObjectDoesNotExist
 from django.db import transaction
 
 from atlassian import Confluence
 from TeamSPBackend.account.models import Account, User
+from TeamSPBackend.common.config import SINGLE_PAGE_LIMIT
 from TeamSPBackend.common.utils import init_http_response, make_json_response, check_user_login, body_extract, mills_timestamp, check_body
-from TeamSPBackend.common.choices import RespCode, Status, Roles
+from TeamSPBackend.common.choices import RespCode, Status, Roles, get_keys
 from TeamSPBackend.api.dto.dto import LoginDTO, AddAccountDTO, UpdateAccountDTO
 
 
 logger = logging.getLogger('django')
 
+
 @require_http_methods(['POST', 'GET'])
-@check_user_login
+@check_user_login()
 def account_router(request, *args, **kwargs):
     if request.method == 'POST':
         return add_account(request)
     elif request.method == 'GET':
         return get_account(request)
     return HttpResponseNotAllowed(['POST'])
+
+
+@require_http_methods(['GET'])
+@check_user_login(get_keys([Roles.coordinator, Roles.admin]))
+def supervisor_router(request, *args, **kwargs):
+    supervisor_id = None
+    if isinstance(kwargs, dict):
+        supervisor_id = kwargs.get('id', None)
+    if supervisor_id:
+        return get_supervisor(request, supervisor_id, *args, **kwargs)
+    return multi_get_supervisor(request, *args, **kwargs)
 
 
 @require_http_methods(['POST'])
@@ -36,12 +48,6 @@ def login(request, body, *args, **kwargs):
     """
 
     login_dto = LoginDTO()
-
-    #######
-    username = login_dto.username
-    password = login_dto.password
-    #######
-
     body_extract(body, login_dto)
 
     if not login_dto.validate():
@@ -66,8 +72,8 @@ def login(request, body, *args, **kwargs):
         name=user.get_name(),
         role=user.role,
         is_login=True,
-        atl_username = None,
-        atl_password = None,
+        atl_username=None,
+        atl_password=None,
     )
     request.session['user'] = session_data
 
@@ -180,8 +186,10 @@ def get_account(request):
     resp['data'] = data
     return make_json_response(HttpResponse, resp)
 
+
 @require_http_methods(['POST'])
-@check_user_login
+@check_user_login()
+@check_body
 def atl_login(request, body, *args, **kwargs):
     """
     Update atlassian login info
@@ -189,25 +197,26 @@ def atl_login(request, body, *args, **kwargs):
     Request: first_name,last_name,old_password,password
     """
     try:
-        data = json.loads(request.body)
-        request.session['user']['atl_username'] = data['atl_username']
-        request.session['user']['atl_password'] = data['atl_password']
+        request.session['user']['atl_username'] = body['atl_username']
+        request.session['user']['atl_password'] = body['atl_password']
         confluence = Confluence(
             url='https://confluence.cis.unimelb.edu.au:8443/',
             username=request.session['user']['atl_username'],
             password=request.session['user']['atl_password']
         )
+
         conf_resp = confluence.get_all_groups()
         print("~~")
         print(request.session['user']['atl_username'])
         resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
         return make_json_response(HttpResponse, resp)
     except requests.exceptions.HTTPError as e:
-        resp = init_http_response(RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
+        resp = init_http_response(RespCode.server_error.value.key, RespCode.server_error.value.msg)
         return make_json_response(HttpResponse, resp) 
 
+
 @require_http_methods(['POST'])
-@check_user_login
+@check_user_login()
 @check_body
 def update_account(request, body, *args, **kwargs):
     """
@@ -270,23 +279,15 @@ def update_account(request, body, *args, **kwargs):
 
 
 @require_http_methods(['POST'])
-@check_user_login
+@check_user_login(get_keys([Roles.coordinator, Roles.admin]))
+@check_body
 def delete(request, body, *args, **kwargs):
     """
     Delete Account
     Method: Post
     Request: accountId
     """
-
-    user = request.session.get('user')
-    role = user['role']
-
-    body = dict(ujson.loads(request.body))
     account_id = body.get('id')
-
-    if role is not Roles.admin.value.key:
-        resp = init_http_response(RespCode.invalid_op.value.key, RespCode.invalid_op.value.msg)
-        return make_json_response(HttpResponse, resp)
 
     try:
         account = Account.objects.get(account_id=account_id, status=Status.valid.value.key)
@@ -311,4 +312,60 @@ def delete(request, body, *args, **kwargs):
         return make_json_response(HttpResponse, resp)
 
     resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
+    return make_json_response(HttpResponse, resp)
+
+
+def get_supervisor(request, supervisor_id, *args, **kwargs):
+    """
+
+    :param request:
+    :param supervisor_id:
+    :param args:
+    :param kwargs:
+    :return:
+    """
+
+    try:
+        supervisor = User.objects.get(user_id=supervisor_id, role=Roles.supervisor.value.key, status=Status.valid.value.key)
+    except ObjectDoesNotExist as e:
+        print(e)
+        resp = init_http_response(RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
+        return make_json_response(HttpResponse, resp)
+
+    data = dict(
+        id=supervisor.user_id,
+        name=supervisor.get_name(),
+        email=supervisor.email,
+    )
+    resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
+    resp['data'] = data
+    return make_json_response(HttpResponse, resp)
+
+
+def multi_get_supervisor(request, *args, **kwargs):
+    """
+
+    :param request:
+    :param args:
+    :param kwargs:
+    :return:
+    """
+
+    offset = int(request.GET.get('offset', 0))
+    has_more = 0
+
+    supervisors = User.objects.filter(role=Roles.supervisor.value.key, status=Status.valid.value.key)\
+        .only('user_id')[offset: offset + SINGLE_PAGE_LIMIT + 1]
+    if len(supervisors) > SINGLE_PAGE_LIMIT:
+        supervisors = supervisors[: SINGLE_PAGE_LIMIT]
+        has_more = 1
+    offset += len(supervisors)
+
+    data = dict(
+        supervisors=[supervisor.user_id for supervisor in supervisors],
+        offset=offset,
+        has_more=has_more,
+    )
+    resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
+    resp['data'] = data
     return make_json_response(HttpResponse, resp)

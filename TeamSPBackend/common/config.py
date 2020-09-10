@@ -9,6 +9,7 @@ UTF8 = 'utf-8'
 PLAIN = 'plain'
 FROM = 'From'
 TO = 'To'
+SENDER = 'Sender'
 SUBJECT = 'Subject'
 
 HOMEPAGE = 'http://localhost:3000'
@@ -18,8 +19,12 @@ INVITATION_KEY = 'invite_key'
 PATTERN_COORDINATOR = '<Coordinator>'
 PATTERN_URL = '<URL>'
 
+UNI_ADDRESS = 'smtp.unimelb.edu.au'
+UNI_PORT = 25
+UNI_ACCOUNT = 'swen90013.sp@unimelb.edu.au'
+
 GMAIL_ADDRESS = 'smtp.gmail.com'
-GMAIL_PROT = 587
+GMAIL_PORT = 587
 GMAIL_ACCOUNT = 'swen90013.2020.sp@gmail.com'
 GMAIL_PASSWORD = 'fvwdissshcpobsdl'
 

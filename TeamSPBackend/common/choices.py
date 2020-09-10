@@ -21,6 +21,7 @@ class RespCode(Enum):
     invalid_op = Choice(-6, 'invalid operation')
     subject_existed = Choice(-7, 'existed subject')
     permission_deny = Choice(-8, 'permission deny')
+    team_existed = Choice(-9, 'existed team')
 
 
 class InvitationStatus(Enum):
@@ -52,6 +53,12 @@ class Roles(Enum):
 def get_message(choices, index):
     key = list(choices)[index]
     return choices[key].value.msg
+
+
+def get_keys(choices):
+    if not isinstance(choices, list):
+        raise ValueError('incorrect choice')
+    return [x.value.key for x in choices]
 
 
 if __name__ == "__main__":

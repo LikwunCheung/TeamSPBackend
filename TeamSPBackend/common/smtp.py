@@ -2,7 +2,7 @@
 
 import socks
 
-from xsmtplib.xsmtplib import SMTP
+from smtplib import SMTP
 
 from TeamSPBackend.common import *
 from TeamSPBackend.common.utils import mills_timestamp
@@ -18,22 +18,25 @@ connected = False
 def init_smtp():
     global connected, s
 
-    logger.info(u'[SMTP] Initialize SMTP Service: ' + GMAIL_ADDRESS + ':' + str(GMAIL_PROT))
     try:
         try:
-            s = SMTP(host=GMAIL_ADDRESS, port=GMAIL_PROT, proxy_host=PROXY_HOST, proxy_port=PROXY_PORT,
-                     proxy_type=socks.PROXY_TYPE_SOCKS4, timeout=10)
+            logger.info(u'[SMTP] Initialize SMTP Service: ' + UNI_ADDRESS + ':' + str(UNI_PORT))
+            s = SMTP(host=UNI_ADDRESS, port=UNI_PORT, timeout=10)
+            s.ehlo()
+            s.starttls()
+            # s.login(GMAIL_ACCOUNT, GMAIL_PASSWORD)
         except Exception as e:
             print(e)
             try:
-                s = SMTP(host=GMAIL_ADDRESS, port=GMAIL_PROT, timeout=10)
+                logger.info(u'[SMTP] Initialize SMTP Service: ' + GMAIL_ADDRESS + ':' + str(GMAIL_PORT))
+                s = SMTP(host=GMAIL_ADDRESS, port=GMAIL_PORT, timeout=10)
+                s.ehlo()
+                s.starttls()
+                s.login(GMAIL_ACCOUNT, GMAIL_PASSWORD)
             except Exception as e:
                 print(e)
                 return
-
-        s.ehlo()
-        s.starttls()
-        s.login(GMAIL_ACCOUNT, GMAIL_PASSWORD)
+        s.set_debuglevel(1)
         connected = True
         logger.info(u'[SMTP] Initialize SMTP Service Success!')
     except Exception as e:
@@ -43,27 +46,29 @@ def init_smtp():
 def send_email(coordinator, address, content):
     global connected, s
 
-    if not connected or s is None:
+    if not connected or not isinstance(s, SMTP):
         return False
 
     try:
-        logger.info(u'[SMTP] Sending Email: %s %s %s' % (coordinator, address, content))
+        # logger.info(u'[SMTP] Sending Email: %s %s %s' % (coordinator, address, content))
 
         message = MIMEText(content, PLAIN, UTF8)
         message[FROM] = Header(coordinator, UTF8)
+        message[SENDER] = Header(coordinator, UTF8)
         message[TO] = Header(address, UTF8)
         message[SUBJECT] = Header(INVITATION_TITLE, UTF8)
 
-        s.sendmail(GMAIL_ACCOUNT, address, message.as_string())
+        s.sendmail(UNI_ACCOUNT, address, message.as_string())
         return True
     except Exception as e:
         print(e)
+        init_smtp()
         return False
 
 
 class SendEmailPool(threading.Thread):
 
-    def __init__(self, size=0):
+    def __init__(self, size=128):
         self.count = 0
         self.size = size
         self.pool = Queue(self.size)
@@ -92,7 +97,10 @@ class SendEmailPool(threading.Thread):
             invite.status = InvitationStatus.sent.value.key
             invite.send_date = mills_timestamp()
             invite.save()
+        else:
+            self.pool.put(task)
 
     def run(self):
-        self.count += 1
-        self.consume()
+        while True:
+            self.count += 1
+            self.consume()
