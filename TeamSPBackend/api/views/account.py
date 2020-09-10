@@ -36,12 +36,6 @@ def login(request, body, *args, **kwargs):
     """
 
     login_dto = LoginDTO()
-
-    #######
-    username = login_dto.username
-    password = login_dto.password
-    #######
-
     body_extract(body, login_dto)
 
     if not login_dto.validate():
@@ -66,8 +60,8 @@ def login(request, body, *args, **kwargs):
         name=user.get_name(),
         role=user.role,
         is_login=True,
-        atl_username = None,
-        atl_password = None,
+        atl_username=None,
+        atl_password=None,
     )
     request.session['user'] = session_data
 
@@ -180,8 +174,10 @@ def get_account(request):
     resp['data'] = data
     return make_json_response(HttpResponse, resp)
 
+
 @require_http_methods(['POST'])
 @check_user_login
+@check_body
 def atl_login(request, body, *args, **kwargs):
     """
     Update atlassian login info
@@ -189,22 +185,23 @@ def atl_login(request, body, *args, **kwargs):
     Request: first_name,last_name,old_password,password
     """
     try:
-        data = json.loads(request.body)
-        request.session['user']['atl_username'] = data['atl_username']
-        request.session['user']['atl_password'] = data['atl_password']
+        request.session['user']['atl_username'] = body['atl_username']
+        request.session['user']['atl_password'] = body['atl_password']
         confluence = Confluence(
             url='https://confluence.cis.unimelb.edu.au:8443/',
             username=request.session['user']['atl_username'],
             password=request.session['user']['atl_password']
         )
+
         conf_resp = confluence.get_all_groups()
         print("~~")
         print(request.session['user']['atl_username'])
         resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
         return make_json_response(HttpResponse, resp)
     except requests.exceptions.HTTPError as e:
-        resp = init_http_response(RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
+        resp = init_http_response(RespCode.server_error.value.key, RespCode.server_error.value.msg)
         return make_json_response(HttpResponse, resp) 
+
 
 @require_http_methods(['POST'])
 @check_user_login

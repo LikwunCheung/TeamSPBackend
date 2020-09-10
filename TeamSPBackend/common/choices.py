@@ -54,5 +54,11 @@ def get_message(choices, index):
     return choices[key].value.msg
 
 
+def get_keys(choices):
+    if not isinstance(choices, list):
+        raise ValueError('incorrect choice')
+    return [x.value.key for x in choices]
+
+
 if __name__ == "__main__":
     pass

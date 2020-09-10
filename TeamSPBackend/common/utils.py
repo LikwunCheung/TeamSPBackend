@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 
 import base64
+import sys
+
 from Crypto.Cipher import AES
 
-from django.http.response import HttpResponseForbidden, HttpResponseBadRequest, HttpResponse, HttpResponseRedirect
+from django.http.response import HttpResponse
 
 from TeamSPBackend.common import *
 from TeamSPBackend.common.choices import RespCode
@@ -41,17 +43,17 @@ def check_body(func):
             body = dict(ujson.loads(request.body))
             logger.info(body)
         except ValueError or json.JSONDecodeError as e:
-            resp = init_http_response(
-                RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
+            resp = init_http_response(RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
             return make_json_response(HttpResponse, resp)
 
         return func(request, body, *args, **kwargs)
     return wrapper
 
 
-def check_user_login(func):
+def check_user_login(func, roles=None):
     """
     Disable for testing
+    :param roles:
     :param func:
     :return:
     """
@@ -60,6 +62,13 @@ def check_user_login(func):
         if not user or 'id' not in user or 'is_login' not in user:
             resp = init_http_response(RespCode.not_logged.value.key, RespCode.not_logged.value.msg)
             return make_json_response(HttpResponse, resp)
+
+        if roles is not None:
+            if not isinstance(roles, list):
+                raise ValueError('%s: incorrect roles', sys._getframe().f_back.f_code.co_name)
+            if user.role not in roles:
+                resp = init_http_response(RespCode.permission_deny.value.key, RespCode.permission_deny.value.msg)
+                return make_json_response(HttpResponse, resp)
 
         request.session.set_expiry(SESSION_REFRESH)
         return func(request, args, kwargs)
@@ -119,4 +128,4 @@ def decrypt_aes(key):
     if key is None:
         return None
     aes = AES.new(auto_fill(SALT), AES.MODE_ECB)
-    return aes.decrypt(base64.decodebytes(key))
+    return str(aes.decrypt(base64.decodebytes(key))).rstrip('\0')
