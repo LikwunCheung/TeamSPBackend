@@ -43,6 +43,7 @@ def check_body(func):
             body = dict(ujson.loads(request.body))
             logger.info(body)
         except ValueError or json.JSONDecodeError as e:
+            logger.info(request.body)
             resp = init_http_response(RespCode.incorrect_body.value.key, RespCode.incorrect_body.value.msg)
             return make_json_response(HttpResponse, resp)
 

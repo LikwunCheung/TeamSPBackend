@@ -59,7 +59,7 @@ Request: team, subject, year, project
 """
 
 
-@check_user_login(get_keys([Roles.admin, Roles.coordinator]))
+# @check_user_login(get_keys([Roles.admin, Roles.coordinator]))
 @check_body
 def import_team(request, body, *args, **kwargs):
     """
