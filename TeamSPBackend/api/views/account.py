@@ -197,8 +197,15 @@ def atl_login(request, body, *args, **kwargs):
     Request: first_name,last_name,old_password,password
     """
     try:
-        request.session['user']['atl_username'] = body['atl_username']
-        request.session['user']['atl_password'] = body['atl_password']
+        user = request.session.get('user', {})
+        if 'atl_username' in user and 'atl_password' in user:
+            resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
+            return make_json_response(HttpResponse, resp)
+
+        user['atl_username'] = body['atl_username']
+        user['atl_password'] = body['atl_password']
+        request.session['user'] = user
+
         confluence = Confluence(
             url='https://confluence.cis.unimelb.edu.au:8443/',
             username=request.session['user']['atl_username'],
