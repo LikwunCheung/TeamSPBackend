@@ -99,6 +99,7 @@ def get_pages_of_space(request, space_key):
 
     # Get Page Content by ID (HTML) (lower prio for now)
 
+
 @require_http_methods(['GET'])
 def search_team(request, keyword):
     user = request.session.get('user')

@@ -43,7 +43,8 @@ def check_body(func):
             body = dict(ujson.loads(request.body))
             logger.info(body)
         except ValueError or json.JSONDecodeError as e:
-            resp = init_http_response(RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
+            logger.info(request.body)
+            resp = init_http_response(RespCode.incorrect_body.value.key, RespCode.incorrect_body.value.msg)
             return make_json_response(HttpResponse, resp)
 
         return func(request, body, *args, **kwargs)
@@ -68,6 +69,7 @@ def check_user_login(roles=None):
                 if not isinstance(roles, list):
                     raise ValueError('check_user_login: incorrect roles')
                 if user['role'] not in roles:
+                    logger.info('permission deny %s', func)
                     resp = init_http_response(RespCode.permission_deny.value.key, RespCode.permission_deny.value.msg)
                     return make_json_response(HttpResponse, resp)
 

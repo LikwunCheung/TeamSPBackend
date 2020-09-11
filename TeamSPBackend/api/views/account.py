@@ -72,6 +72,7 @@ def login(request, body, *args, **kwargs):
         name=user.get_name(),
         role=user.role,
         is_login=True,
+        atl_login=False,
         atl_username=None,
         atl_password=None,
     )
@@ -197,8 +198,16 @@ def atl_login(request, body, *args, **kwargs):
     Request: first_name,last_name,old_password,password
     """
     try:
-        request.session['user']['atl_username'] = body['atl_username']
-        request.session['user']['atl_password'] = body['atl_password']
+        user = request.session.get('user', {})
+        if user['atl_login']:
+            resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
+            return make_json_response(HttpResponse, resp)
+
+        user['atl_username'] = body['atl_username']
+        user['atl_password'] = body['atl_password']
+        user['atl_login'] = True
+        request.session['user'] = user
+
         confluence = Confluence(
             url='https://confluence.cis.unimelb.edu.au:8443/',
             username=request.session['user']['atl_username'],
