@@ -145,8 +145,39 @@ def get_total_issues_team(request, team):
     issues = jira.jql(jql_request)
     count_issues_total = issues['total']
 
+    jql_request = 'project = project_name AND status = "To Do"'
+    jql_request = jql_request.replace('project_name', team)
+    issues = jira.jql(jql_request)
+    count_issues_to_do = issues['total']
+
+    jql_request = 'project = project_name AND status = "In Review"'
+    jql_request = jql_request.replace('project_name', team)
+    issues = jira.jql(jql_request)
+    count_issues_in_review = issues['total']
+
+    jql_request = 'project = project_name AND status = "Review"'
+    jql_request = jql_request.replace('project_name', team)
+    issues = jira.jql(jql_request)
+    count_issues_review = issues['total']
+
+    jql_request = 'project = project_name AND status = "Done"'
+    jql_request = jql_request.replace('project_name', team)
+    issues = jira.jql(jql_request)
+    count_issues_done = issues['total']
+
+    jql_request = 'project = project_name AND status = "In Progress"'
+    jql_request = jql_request.replace('project_name', team)
+    issues = jira.jql(jql_request)
+    count_issues_progress = issues['total']
+
     data = {
-        'issues_total': count_issues_total
+        'team': team,
+        'count_issues_total': count_issues_total,
+        'count_issues_to_do': count_issues_to_do,
+        'count_issues_progress': count_issues_progress,
+        'count_issues_in_review': count_issues_in_review,
+        'count_issues_done': count_issues_done,
+        'count_issues_review': count_issues_review
     }
     resp = init_http_response(
         RespCode.success.value.key, RespCode.success.value.msg)
