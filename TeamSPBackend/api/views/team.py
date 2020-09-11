@@ -30,16 +30,16 @@ def team_router(request, *args, **kwargs):
     if request.method == 'POST':
         if team_id:
             # Assign secondary supervisor for a specific team
-            return update_team(request, team_id)  # done
+            return update_team(request, team_id, *args, **kwargs)  # done
         # Import team from confluence with supervisor_id
-        return import_team(request)
+        return import_team(request, *args, **kwargs)
         # Todo: might need to change for retrieving confluence data / front-end request with team info
     elif request.method == 'GET':
         if team_id:
             # Get a specific team information
-            return get_team_members(request, team_id)  # done
+            return get_team_members(request, team_id, *args, **kwargs)  # done
         # Get teams information
-        return multi_get_team(request)  # done
+        return multi_get_team(request, *args, **kwargs)  # done
     return HttpResponseNotAllowed(['POST', 'GET'])
 
 
