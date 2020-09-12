@@ -9,45 +9,21 @@ from TeamSPBackend.account.models import Account, User
 from TeamSPBackend.common.config import SALT
 from TeamSPBackend.common.choices import Status
 from TeamSPBackend.common.utils import mills_timestamp
+from TeamSPBackend.test.utils import login_helpers
 
 sys.path.append('/Users/keri/git/TeamSPBackend/TeamSPBackend' + '/..')
-
-
-def encrypt(password):
-    password = password + SALT
-    md5 = hashlib.sha3_256(password.encode()).hexdigest()
-    return md5
 
 
 class CreateTeamTestCase(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        # create account
-        timestamp = mills_timestamp()
-        username = "username"
-        password = "password"
-        email = "test@gmail.com"
-        status = Status.valid.value.key
-        create_date = timestamp
-        update_date = timestamp
-        first_name = "Zach"
-        last_name = "Ho"
-        role = 0
-        md5 = encrypt(password)
-        account = Account(username=username, email=email, password=md5,
-                          status=status, create_date=create_date, update_date=update_date)
-        account.save()
-
-        # create user
-        user = User(account_id=account.account_id, username=username, first_name=first_name, last_name=last_name,
-                    role=role, status=status, create_date=create_date, update_date=update_date, email=email)
-        user.save()
+        login_helpers.createAdmin()
 
     def test_create_team(self):
         # Login first
-        username = "username"
-        password = "password"
+        username = "admin"
+        password = "admin"
         credentials = {
             'username': username,
             'password': password
