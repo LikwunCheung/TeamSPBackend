@@ -7,52 +7,28 @@ from TeamSPBackend.team.models import Team
 from TeamSPBackend.account.models import Account, User
 
 
-def createAdmin():
-    # create account
-    timestamp = mills_timestamp()
-    username = "admin"
-    password = "admin"
-    email = "admin@gmail.com"
-    status = Status.valid.value.key
-    create_date = timestamp
-    update_date = timestamp
-    first_name = "admin"
-    last_name = "test"
-    role = Roles.admin.value.key
-    md5 = encrypt(password)
-    account = Account(username=username, email=email, password=md5,
-                      status=status, create_date=create_date, update_date=update_date)
-    account.save()
-
-    # create user
-    user = User(account_id=account.account_id, username=username, first_name=first_name, last_name=last_name,
-                role=role, status=status, create_date=create_date, update_date=update_date, email=email)
-    user.save()
-
-
-def createSupervisor(first_name, last_name):
-    timestamp = mills_timestamp()
-    username = first_name
-    password = "supervisor"
-    email = username + "@gmail.com"
-    status = Status.valid.value.key
-    create_date = timestamp
-    update_date = timestamp
-    first_name = first_name
-    last_name = last_name
-    role = Roles.supervisor.value.key
-    md5 = encrypt(password)
-    account = Account(username=username, email=email, password=md5,
-                      status=status, create_date=create_date, update_date=update_date)
-    account.save()
-
-    # create user
-    user = User(account_id=account.account_id, username=username, first_name=first_name, last_name=last_name,
-                role=role, status=status, create_date=create_date, update_date=update_date, email=email)
-    user.save()
-
-
 def encrypt(password):
     password = password + SALT
     md5 = hashlib.sha3_256(password.encode()).hexdigest()
     return md5
+
+
+def login(client):
+    # login first
+    username = "admin"
+    password = "admin"
+    credentials = {
+        'username': username,
+        'password': password
+    }
+    response = client.post('/api/v1/account/login',
+                           data=credentials, content_type="application/json")
+    user = User.objects.get(username=username)
+    session_data = dict(
+        id=user.user_id,
+        name=user.get_name(),
+        role=user.role,
+        is_login=True,
+    )
+    session = client.session
+    session['user'] = session_data

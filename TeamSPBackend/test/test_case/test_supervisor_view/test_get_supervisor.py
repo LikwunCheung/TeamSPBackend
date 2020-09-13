@@ -4,9 +4,10 @@ import sys
 import hashlib
 import names
 
-from TeamSPBackend.test.utils import login_helpers
+from TeamSPBackend.test.utils import login_helpers, object_creation_helpers
 from TeamSPBackend.account.models import User
 from TeamSPBackend.api.views.account import get_supervisor
+from TeamSPBackend.common.choices import Roles
 
 sys.path.append('/Users/keri/git/TeamSPBackend/TeamSPBackend' + '/..')
 
@@ -15,27 +16,11 @@ class GetSupervisorTestCase(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        login_helpers.createAdmin()
+        object_creation_helpers.createGenericAdmin()
 
     def setUp(self):
         # login first
-        username = "admin"
-        password = "admin"
-        credentials = {
-            'username': username,
-            'password': password
-        }
-        response = self.client.post('/api/v1/account/login',
-                                    data=credentials, content_type="application/json")
-        user = User.objects.get(username=username)
-        session_data = dict(
-            id=user.user_id,
-            name=user.get_name(),
-            role=user.role,
-            is_login=True,
-        )
-        session = self.client.session
-        session['user'] = session_data
+        login_helpers.login(self.client)
 
         # Create 3 supervisors
         self.supervisors_names = {}
@@ -43,9 +28,13 @@ class GetSupervisorTestCase(TestCase):
         for i in range(3):
             first_name = names.get_first_name()
             last_name = names.get_last_name()
+            email = first_name + "@gmail.com"
+            userDetails = {'first_name': first_name,
+                           'last_name': last_name, 'email': email}
             self.supervisors_names[str(i +
                                        2)] = {'first_name': first_name, 'last_name': last_name, 'full_name': first_name + ' ' + last_name}
-            login_helpers.createSupervisor(first_name, last_name)
+            object_creation_helpers.createUser(
+                Roles.supervisor, userDetails)
 
     def test_get_supervisor(self):
 
