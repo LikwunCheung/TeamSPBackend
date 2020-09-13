@@ -59,7 +59,7 @@ Request: team, subject, year, project
 """
 
 
-@check_user_login(get_keys([Roles.admin, Roles.coordinator]))
+# @check_user_login(get_keys([Roles.admin, Roles.coordinator]))
 @check_body
 def import_team(request, body, *args, **kwargs):
     """
@@ -115,29 +115,9 @@ def import_team(request, body, *args, **kwargs):
             RespCode.server_error.value.key, RespCode.server_error.value.msg)
         return make_json_response(HttpResponse, resp)
 
-
-<< << << < HEAD
-   resp = init_http_response(RespCode.success.value.key,
-                             RespCode.success.value.msg)
-    return make_json_response(HttpResponse, resp)
-== == == =
-   if Team.objects.filter(name=name, subject_id=subject, year=year, project_name=project).exists():
-        resp = {'code': 0, 'msg': 'exist'}
-        return HttpResponse(json.dumps(resp), content_type="application/json")
-    else:
-        team = Team(name=name, subject_id=subject,
-                    year=year, project_name=project)
-        team.save()
-        team_id = team.team_id
-        for member in team_members:
-            student = Student(fullname=member['name'], email=member['email'])
-            student.save()
-            student_id = student.student_id
-            import_team_member(team_id, student_id)
     resp = init_http_response(
         RespCode.success.value.key, RespCode.success.value.msg)
-    return HttpResponse(json.dumps(resp), content_type="application/json")
->>>>>> > test/reworked_team
+    return make_json_response(HttpResponse, resp)
 
 
 # Add team member records
