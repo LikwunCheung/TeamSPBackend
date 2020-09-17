@@ -43,7 +43,7 @@ def get_subject(request, subject_id: int):
         subject = Subject.objects.get(subject_id=subject_id)
         print(subject)
         coordinator = User.objects.get(user_id=subject.coordinator_id) if subject.coordinator_id else None
-        teams = Team.objects.filter(subject_id=subject_id)
+        teams = Team.objects.filter(subject_code=subject.subject_code)
     except ObjectDoesNotExist as e:
         print(e)
         resp = init_http_response(RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
