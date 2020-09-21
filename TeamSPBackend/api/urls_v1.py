@@ -5,6 +5,7 @@ from django.urls import path
 from TeamSPBackend.api.views import team
 from TeamSPBackend.api.views.confluence import confluence
 from TeamSPBackend.api.views.jira import helpJira
+from TeamSPBackend.api.views.git import git
 from .views.invitation import invitation_router, invite_accept
 from .views.account import account_router, login, logout, update_account, delete, atl_login, supervisor_router
 from .views.subject import subject_router, update_subject, delete_subject
@@ -53,5 +54,8 @@ urlpatterns = [
     path('jira/<team>/jiraburn', helpJira.get_jira_burn),
     path('jira/<team>/jiraburnforecast', helpJira.get_jira_burn_forecast),
     path('jira/<team>/tickets/<student_id>', helpJira.get_issues_one_student),
-    path('jira/<team>/tickets', helpJira.get_total_issues_team)
+    path('jira/<team>/tickets', helpJira.get_total_issues_team),
+    # Git Related API
+    path('git/commit/total', git.getCommitTotal),
+    path('git/commit/individual', git.getCommmitperTeamMember)
 ]
