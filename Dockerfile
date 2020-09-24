@@ -3,6 +3,8 @@ FROM python:3.7
 MAINTAINER lihuanzhang
 
 ENV RUN_MODE=DEPLOY
+ENV http_proxy=proxy.unimelb.edu.au:8000
+ENV https_proxy=proxy.unimelb.edu.au:8000
 
 RUN apt-get update
 RUN apt-get -y upgrade

@@ -8,7 +8,7 @@ from Crypto.Cipher import AES
 from django.http.response import HttpResponse
 
 from TeamSPBackend.common import *
-from TeamSPBackend.common.choices import RespCode
+from TeamSPBackend.common.choices import RespCode, MyEnum
 from TeamSPBackend.common.config import SESSION_REFRESH, HOMEPAGE, REGISTER_PAGE, INVITATION_KEY, SALT
 
 
@@ -23,12 +23,16 @@ def make_redirect_response(func=HttpResponse, resp=None):
     return func(ujson.dumps(resp), content_type='application/json', status=302)
 
 
-def init_http_response(code, message):
+def init_http_response(code, message, data=None):
     return dict(
         code=code,
         message=message,
-        data=dict(),
+        data=data,
     )
+
+
+def init_http_response_my_enum(resp: MyEnum, data=None):
+    return init_http_response(resp.key, resp.msg, data)
 
 
 def check_body(func):
@@ -74,6 +78,7 @@ def check_user_login(roles=None):
                     return make_json_response(HttpResponse, resp)
 
             request.session.set_expiry(SESSION_REFRESH)
+            print('{} {} {}'.format(request, args, kwargs))
             return func(request, *args, **kwargs)
         return inner
     return decorator
