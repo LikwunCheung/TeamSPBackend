@@ -64,7 +64,7 @@ def pull_repo(repo):
 
 def get_commits(repo, author=None, branch=None, after=None, before=None):
     pull_repo(repo)
-    
+
     repo_path = REPO_PATH + convert(repo)
     path = COMMIT_DIR + '/' + convert(repo) + '.log'
 
