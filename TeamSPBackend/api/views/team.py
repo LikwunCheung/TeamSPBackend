@@ -23,7 +23,7 @@ logger = logging.getLogger('django')
 
 @require_http_methods(['POST', 'GET'])
 @check_user_login()
-def team_router(request, *args, **kwargs):
+def team_router(request, *args ** kwargs):
     team_id = None
     if isinstance(kwargs, dict):
         team_id = kwargs.get('team_id', None)
@@ -45,10 +45,9 @@ def team_router(request, *args, **kwargs):
 
 """
 Import team from confluence with supervisor_id
-
 Method: POST
 Url: localhost:8000/api/v1/team
-Params:
+Params: 
 Request: team, subject, year, project
         {
             "team":                     "SWEN90013_2020_SP",
@@ -64,7 +63,6 @@ Request: team, subject, year, project
 def import_team(request, body, *args, **kwargs):
     """
     Import team from confluence with supervisor_id
-
     :param request:
     :param body:
     :param args:
@@ -77,21 +75,18 @@ def import_team(request, body, *args, **kwargs):
 
     # Check parameters
     if not add_team_dto.not_empty():
-        resp = init_http_response(
-            RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
+        resp = init_http_response(RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
         return make_json_response(HttpResponse, resp)
 
     team_members = get_members(request, add_team_dto.team)
     if not team_members:
         logger.info('Empty team member: %s', add_team_dto.team)
-        resp = init_http_response(
-            RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
+        resp = init_http_response(RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
         return make_json_response(HttpResponse, resp)
 
     # If the team existed
     if Team.objects.filter(name=add_team_dto.team).exists():
-        resp = init_http_response(
-            RespCode.team_existed.value.key, RespCode.team_existed.value.msg)
+        resp = init_http_response(RespCode.team_existed.value.key, RespCode.team_existed.value.msg)
         return make_json_response(HttpResponse, resp)
 
     try:
@@ -104,19 +99,16 @@ def import_team(request, body, *args, **kwargs):
                 try:
                     student = Student.objects.get(email=member['email'])
                 except ObjectDoesNotExist as e:
-                    student = Student(
-                        fullname=member['name'], email=member['email'])
+                    student = Student(fullname=member['name'], email=member['email'])
                     student.save()
                 import_team_member(team.team_id, student.student_id)
 
     except Exception as e:
         logger.error(e)
-        resp = init_http_response(
-            RespCode.server_error.value.key, RespCode.server_error.value.msg)
+        resp = init_http_response(RespCode.server_error.value.key, RespCode.server_error.value.msg)
         return make_json_response(HttpResponse, resp)
 
-    resp = init_http_response(
-        RespCode.success.value.key, RespCode.success.value.msg)
+    resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
     return make_json_response(HttpResponse, resp)
 
 
@@ -144,11 +136,11 @@ Request: csv_file
 #     return HttpResponse(json.dumps(resp), content_type="application/json")
 
 """
-Create team from request with supervisor_id
+Create team from request with supervisor_id 
 Method: Post
 Url: localhost:8000/api/v1/team
 Params: None
-Request:
+Request: 
             {
                 "name":                #team_name,
                 "description":         #team_description,
@@ -223,7 +215,6 @@ Request: team_id, student_id
 
 """
 Get a specific team information (not needed for now)
-
 Method: Get
 Url: localhost:8000/api/v1/team/<int:team_id>
 Params: team_id
@@ -291,7 +282,6 @@ Request: None
 
 """
 Get teams information
-
 Method: Get
 Url: localhost:8000/api/v1/team
 Params: None
@@ -340,8 +330,7 @@ def get_teams_data(filtered_teams):
             except ObjectDoesNotExist:
                 supervisor_data = {}
             try:
-                secondary_supervisor = User.objects.get(
-                    account_id=team.secondary_supervisor_id)
+                secondary_supervisor = User.objects.get(account_id=team.secondary_supervisor_id)
                 secondary_supervisor_data = {
                     'secondary_supervisor_id': secondary_supervisor.account_id,
                     'first_name': secondary_supervisor.first_name,
@@ -383,7 +372,6 @@ def get_teams_data(filtered_teams):
 def multi_get_team(request, *args, **kwargs):
     """
     Get multiple teams
-
     :param request: supervisor_id/coordinator_id
     :return:
     """
@@ -402,8 +390,7 @@ def multi_get_team(request, *args, **kwargs):
         teams = Team.objects.filter(subject_code__in=subject_codes)
 
     elif user_role == Roles.supervisor.value.key:
-        teams = Team.objects.filter(
-            Q(supervisor_id=user_id) | Q(secondary_supervisor_id=user_id))
+        teams = Team.objects.filter(Q(supervisor_id=user_id) | Q(secondary_supervisor_id=user_id))
 
     elif user_role == Roles.admin.value.key:
         teams = Team.objects.all()
@@ -448,19 +435,17 @@ def multi_get_team(request, *args, **kwargs):
         has_more=has_more,
     )
 
-    resp = init_http_response(
-        RespCode.success.value.key, RespCode.success.value.msg)
+    resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
     resp['data'] = data
     return make_json_response(HttpResponse, resp)
 
 
 """
 Assign supervisor or secondary supervisor for a specific team
-
 Method: Post
 Url: localhost:8000/api/v1/team/<team_id>
 Params: team_id
-Request:
+Request: 
         {
             "supervisor_id":                    #supervisor_id
             "secondary_supervisor_id":          #secondary_supervisor_id
@@ -472,7 +457,6 @@ Request:
 def update_team(request, body, team_id: int):
     """
     Post secondary_supervisor_id
-
     :param request:
     :param team_id:
     :return:
@@ -485,31 +469,26 @@ def update_team(request, body, team_id: int):
             supervisor_id = body['supervisor_id']
             supervisor = User.objects.get(account_id=supervisor_id)
         except ObjectDoesNotExist:
-            resp = init_http_response(
-                RespCode.invalid_op.value.key, RespCode.invalid_op.value.msg)
+            resp = init_http_response(RespCode.invalid_op.value.key, RespCode.invalid_op.value.msg)
             resp['supervisor'] = "Invalid supervisor_id"
             return HttpResponse(json.dumps(resp), content_type="application/json")
     # secondary_supervisor_id = request.POST.get('secondary_supervisor_id', None)
     if "secondary_supervisor_id" in body.keys():
         try:
             secondary_supervisor_id = body['secondary_supervisor_id']
-            secondary_supervisor = User.objects.get(
-                account_id=secondary_supervisor_id)
+            secondary_supervisor = User.objects.get(account_id=secondary_supervisor_id)
         except ObjectDoesNotExist:
-            resp = init_http_response(
-                RespCode.invalid_op.value.key, RespCode.invalid_op.value.msg)
+            resp = init_http_response(RespCode.invalid_op.value.key, RespCode.invalid_op.value.msg)
             resp['secondary_supervisor'] = "Invalid secondary_supervisor_id"
             return HttpResponse(json.dumps(resp), content_type="application/json")
     try:
         team = Team.objects.get(team_id=team_id)
     except ObjectDoesNotExist:
-        resp = init_http_response(
-            RespCode.invalid_op.value.key, RespCode.invalid_op.value.msg)
+        resp = init_http_response(RespCode.invalid_op.value.key, RespCode.invalid_op.value.msg)
         resp['team'] = "Invalid team_id"
         return make_json_response(HttpResponseBadRequest, resp)
 
-    resp = init_http_response(
-        RespCode.success.value.key, RespCode.success.value.msg)
+    resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
     if supervisor_id and team.supervisor_id != supervisor_id:
         team.supervisor_id = supervisor_id
         if team.secondary_supervisor_id == supervisor_id:
@@ -529,7 +508,6 @@ def update_team(request, body, team_id: int):
 
 """
 Get all team members of a team
-
 Method: Get
 Url: localhost:8000/api/v1/team/<team_id>/members
 Params: team_id
@@ -542,7 +520,6 @@ Request:
 def get_team_members(request, *args, **kwargs):
     """
         Get certain team members
-
         :param request:
         :param team_id:
         :return:
@@ -557,8 +534,7 @@ def get_team_members(request, *args, **kwargs):
     team_members = []
     # Result list for members: supervisor, secondary_supervisor, and team members
     members = []
-    resp = init_http_response(
-        RespCode.success.value.key, RespCode.success.value.msg)
+    resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
     try:
         team = Team.objects.get(team_id=team_id)
         team_members.append(TeamMember.objects.filter(team_id=team_id))
@@ -577,8 +553,7 @@ def get_team_members(request, *args, **kwargs):
     except ObjectDoesNotExist:
         resp['supervisor'] = "supervisor not exist"
     try:
-        secondary_supervisor = User.objects.get(
-            account_id=team.secondary_supervisor_id)
+        secondary_supervisor = User.objects.get(account_id=team.secondary_supervisor_id)
         if secondary_supervisor:
             secondary_supervisor_data = {
                 'secondary_supervisor_id': secondary_supervisor.account_id,
@@ -603,4 +578,4 @@ def get_team_members(request, *args, **kwargs):
     }
 
     resp['data'] = data
-    return make_json_response(HttpResponse, resp)
+    return make_json_response(HttpResponse, resp),
