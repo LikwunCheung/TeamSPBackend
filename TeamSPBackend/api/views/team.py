@@ -23,7 +23,7 @@ logger = logging.getLogger('django')
 
 @require_http_methods(['POST', 'GET'])
 @check_user_login()
-def team_router(request, *args ** kwargs):
+def team_router(request, *args, **kwargs):
     team_id = None
     if isinstance(kwargs, dict):
         team_id = kwargs.get('team_id', None)
@@ -47,7 +47,7 @@ def team_router(request, *args ** kwargs):
 Import team from confluence with supervisor_id
 Method: POST
 Url: localhost:8000/api/v1/team
-Params: 
+Params:
 Request: team, subject, year, project
         {
             "team":                     "SWEN90013_2020_SP",
@@ -136,11 +136,11 @@ Request: csv_file
 #     return HttpResponse(json.dumps(resp), content_type="application/json")
 
 """
-Create team from request with supervisor_id 
+Create team from request with supervisor_id
 Method: Post
 Url: localhost:8000/api/v1/team
 Params: None
-Request: 
+Request:
             {
                 "name":                #team_name,
                 "description":         #team_description,
@@ -445,7 +445,7 @@ Assign supervisor or secondary supervisor for a specific team
 Method: Post
 Url: localhost:8000/api/v1/team/<team_id>
 Params: team_id
-Request: 
+Request:
         {
             "supervisor_id":                    #supervisor_id
             "secondary_supervisor_id":          #secondary_supervisor_id

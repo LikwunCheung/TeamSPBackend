@@ -46,15 +46,15 @@ class GetSubjectTestCase(TestCase):
         object_creation_helpers.createSubject(
             "SWEN90014", "Master Software Engineering Project", coordinator_2_id)
 
-    #  def test_get_subject(self):
-        #  """
-        #  Tests the function for the API: Get '/subject/<int:id>'
-        #  """
-        #  response = self.client.get('/api/v1/subject/1')
-        #  data = response.json()["data"]
-        #  subject_details = (data["subject_code"], data["subject_name"])
-        #  self.assertEqual(subject_details, ("SWEN90013", "Master Advanced Software Project"),
-        #  "Subject id 1 details are not correct")
+    def test_get_subject(self):
+        """
+        Tests the function for the API: Get '/subject/<int:id>'
+        """
+        response = self.client.get('/api/v1/subject/1')
+        data = response.json()["data"]
+        subject_details = (data["code"], data["name"])
+        self.assertEqual(subject_details, ("SWEN90013", "Master Advanced Software Project"),
+                         "Subject id 1 details are not correct")
 
     def test_multiget_subject(self):
         """
