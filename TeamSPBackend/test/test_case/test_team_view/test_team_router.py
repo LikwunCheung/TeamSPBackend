@@ -1,9 +1,9 @@
 from django.test import TestCase
-import sys
+#  import sys
 
 from TeamSPBackend.team.models import Team
 
-sys.path.append('/Users/keri/git/TeamSPBackend/TeamSPBackend' + '/..')
+#  sys.path.append('/Users/keri/git/TeamSPBackend/TeamSPBackend' + '/..')
 
 
 class TeamRouterTestCase(TestCase):

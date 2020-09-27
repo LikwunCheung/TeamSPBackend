@@ -1,6 +1,6 @@
 from django.test import TestCase, Client
 from django.http import HttpRequest
-import sys
+#  import sys
 import hashlib
 
 from TeamSPBackend.team.models import Team
@@ -8,7 +8,7 @@ from TeamSPBackend.api.views import team
 from TeamSPBackend.account.models import Account
 from TeamSPBackend.common.config import SALT
 
-sys.path.append('/Users/keri/git/TeamSPBackend/TeamSPBackend' + '/..')
+#  sys.path.append('/Users/keri/git/TeamSPBackend/TeamSPBackend' + '/..')
 
 
 class UpdateTeamTestCase(TestCase):

@@ -1,6 +1,6 @@
 from django.test import TestCase, Client
 from django.http import HttpRequest
-import sys
+#  import sys
 import hashlib
 import names
 
@@ -9,7 +9,7 @@ from TeamSPBackend.account.models import User
 from TeamSPBackend.api.views.account import get_supervisor
 from TeamSPBackend.common.choices import Roles
 
-sys.path.append('/Users/keri/git/TeamSPBackend/TeamSPBackend' + '/..')
+#  sys.path.append('/Users/keri/git/TeamSPBackend/TeamSPBackend' + '/..')
 
 
 class GetSupervisorTestCase(TestCase):

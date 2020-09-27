@@ -1,6 +1,6 @@
 from django.test import TestCase, Client
 from django.http import HttpRequest
-import sys
+#  import sys
 import hashlib
 
 from TeamSPBackend.team.models import Team
@@ -11,7 +11,7 @@ from TeamSPBackend.common.choices import Status
 from TeamSPBackend.common.utils import mills_timestamp
 from TeamSPBackend.test.utils import login_helpers
 
-sys.path.append('/Users/keri/git/TeamSPBackend/TeamSPBackend' + '/..')
+#  sys.path.append('/Users/keri/git/TeamSPBackend/TeamSPBackend' + '/..')
 
 
 class CreateTeamTestCase(TestCase):
