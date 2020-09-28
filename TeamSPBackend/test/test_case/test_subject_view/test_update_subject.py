@@ -8,7 +8,7 @@ from django.http import HttpRequest
 import names
 
 
-class GetSubjectTestCase(TestCase):
+class UpdateSubjectTestCase(TestCase):
 
     @classmethod
     def setUpTestData(cls):
@@ -25,15 +25,19 @@ class GetSubjectTestCase(TestCase):
         }
         session.save()
         object_creation_helpers.createUser(Roles.coordinator, session["coordinator_1_details"])
+        coordinator_1_id = User.objects.get(
+            email=session["coordinator_1_details"]["email"]).user_id
+        object_creation_helpers.createSubject(
+            "SWEN90013", "Master Advanced Software Project", coordinator_1_id)
 
-    def test_add_subject(self):
+    def test_update_subject_success(self):
         """
-        Tests the function for the API: Post '/subject'
+        Tests the function for the API: Post '/subject/<int:id>/update'
         """
-        coordinatorId = User.objects.get(email=self.client.session["coordinator_1_details"]["email"]).user_id
-        subjectData = {"code": "SWEN90013", "name": "geng geng", "coordinator_id": coordinatorId}
-        response = self.client.post('/api/v1/subject', data=subjectData, content_type="application/json")
+        subjectData = {
+            "name": "newName"
+        }
+        response = self.client.post('/api/v1/subject/1/update', data=subjectData, content_type="application/json")
 
-        createdSub = Subject.objects.get(subject_code="SWEN90013")
-
-        self.assertEqual(createdSub.name, "geng geng", "subject not created or subject name is not equal")
+        updatedSub = Subject.objects.get(subject_id=1)
+        self.assertEqual(updatedSub.name, "newName", "subject name is not updated")

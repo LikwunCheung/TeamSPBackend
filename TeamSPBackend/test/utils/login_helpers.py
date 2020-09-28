@@ -32,3 +32,4 @@ def login(client):
     )
     session = client.session
     session['user'] = session_data
+    session.save()

@@ -1,4 +1,4 @@
-from TeamSPBackend.common.choices import Roles
+from TeamSPBackend.common.choices import Roles, Status
 from TeamSPBackend.account.models import User
 from TeamSPBackend.subject.models import Subject
 from TeamSPBackend.test.utils import login_helpers, object_creation_helpers
@@ -8,7 +8,7 @@ from django.http import HttpRequest
 import names
 
 
-class GetSubjectTestCase(TestCase):
+class DeleteSubjecTestCase(TestCase):
 
     @classmethod
     def setUpTestData(cls):
@@ -25,15 +25,16 @@ class GetSubjectTestCase(TestCase):
         }
         session.save()
         object_creation_helpers.createUser(Roles.coordinator, session["coordinator_1_details"])
+        coordinator_1_id = User.objects.get(
+            email=session["coordinator_1_details"]["email"]).user_id
+        object_creation_helpers.createSubject(
+            "SWEN90013", "Master Advanced Software Project", coordinator_1_id)
 
-    def test_add_subject(self):
+    def test_delete_subject_success(self):
         """
-        Tests the function for the API: Post '/subject'
+        Tests the function for the API: Post '/subject/<int:id>/delete'
         """
-        coordinatorId = User.objects.get(email=self.client.session["coordinator_1_details"]["email"]).user_id
-        subjectData = {"code": "SWEN90013", "name": "geng geng", "coordinator_id": coordinatorId}
-        response = self.client.post('/api/v1/subject', data=subjectData, content_type="application/json")
+        response = self.client.post('/api/v1/subject/1/delete')
 
-        createdSub = Subject.objects.get(subject_code="SWEN90013")
-
-        self.assertEqual(createdSub.name, "geng geng", "subject not created or subject name is not equal")
+        sub = Subject.objects.get(subject_id=1)
+        self.assertEqual(sub.status, Status.invalid.value.key, "subject not deleted")
