@@ -46,7 +46,7 @@ urlpatterns = [
     path('confluence/spaces/<space_key>', confluence.get_space),
     path('confluence/spaces/<space_key>/pages', confluence.get_pages_of_space),
     path('confluence/spaces/<space_key>/pages/contributions',
-         page_contributions.get_all_page_contributions)
+         page_contributions.get_all_page_contributions),
     path('confluence/spaces/<space_key>/pages/<int:page_id>',
          confluence.get_page_contributors),
     path('confluence/groups', confluence.get_all_groups),
