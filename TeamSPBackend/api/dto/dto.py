@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
+
 import hashlib
 import base64
+import re
 
 from Crypto.Cipher import AES
 
@@ -138,3 +140,28 @@ class AddTeamDTO(object):
     def not_empty(self):
         return not (not self.team or not self.subject or not self.year or not self.project)
 
+
+class GitDTO(object):
+
+    def __init__(self):
+        self.url = None
+        self.branch = None
+        self.author = None
+        self.after = None
+        self.before = None
+
+    @property
+    def valid_url(self):
+        return self.url and re.match(r'^https://github.com(/\w+)+', self.url)
+
+    @property
+    def second_before(self):
+        if not self.before:
+            return None
+        return self.before // 1000
+
+    @property
+    def second_after(self):
+        if not self.after:
+            return None
+        return self.after // 1000

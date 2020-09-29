@@ -17,4 +17,7 @@ COPY . /app/
 
 EXPOSE 8081
 
+ENV http_proxy=proxy.unimelb.edu.au:8000
+ENV https_proxy=proxy.unimelb.edu.au:8000
+
 CMD ["python3", "manage.py", "runserver", "0:8081"]

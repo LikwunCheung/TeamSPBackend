@@ -9,10 +9,9 @@ from django.db import transaction
 from atlassian import Confluence
 from TeamSPBackend.account.models import Account, User
 from TeamSPBackend.common.config import SINGLE_PAGE_LIMIT
-from TeamSPBackend.common.utils import init_http_response, make_json_response, check_user_login, body_extract, mills_timestamp, check_body
+from TeamSPBackend.common.utils import make_json_response, check_user_login, body_extract, mills_timestamp, check_body, init_http_response_my_enum
 from TeamSPBackend.common.choices import RespCode, Status, Roles, get_keys
 from TeamSPBackend.api.dto.dto import LoginDTO, AddAccountDTO, UpdateAccountDTO
-
 
 logger = logging.getLogger('django')
 
@@ -51,19 +50,19 @@ def login(request, body, *args, **kwargs):
     body_extract(body, login_dto)
 
     if not login_dto.validate():
-        resp = init_http_response(RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
-        return make_json_response(HttpResponse, resp)
+        resp = init_http_response_my_enum(RespCode.invalid_parameter)
+        return make_json_response(resp=resp)
 
     login_dto.encrypt()
     account = None
     try:
         if login_dto.username:
-            account = Account.objects.get(username=login_dto.username, password=login_dto.md5, status=Status.valid.value.key)
+            account = Account.objects.get(username=login_dto.username, password=login_dto.md5, status=Status.valid.key)
         elif login_dto.email:
-            account = Account.objects.get(email=login_dto.email, password=login_dto.md5, status=Status.valid.value.key)
+            account = Account.objects.get(email=login_dto.email, password=login_dto.md5, status=Status.valid.key)
     except ObjectDoesNotExist:
-        resp = init_http_response(RespCode.login_fail.value.key, RespCode.login_fail.value.msg)
-        return make_json_response(HttpResponse, resp)
+        resp = init_http_response_my_enum(RespCode.login_fail)
+        return make_json_response(resp=resp)
 
     user = User.objects.get(account_id=account.account_id)
 
@@ -84,9 +83,8 @@ def login(request, body, *args, **kwargs):
         role=user.role,
         name=user.get_name()
     )
-    resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
-    resp['data'] = data
-    return make_json_response(HttpResponse, resp)
+    resp = init_http_response_my_enum(RespCode.success, data)
+    return make_json_response(resp=resp)
 
 
 @require_http_methods(['POST'])
@@ -100,12 +98,12 @@ def logout(request, *args, **kwargs):
     """
     user = request.session.get('user')
     if user is None:
-        resp = init_http_response(RespCode.not_logged.value.key, RespCode.not_logged.value.msg)
-        return make_json_response(HttpResponse, resp)
+        resp = init_http_response_my_enum(RespCode.not_logged)
+        return make_json_response(resp=resp)
 
     request.session.flush()
-    resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
-    return make_json_response(HttpResponse, resp)
+    resp = init_http_response_my_enum(RespCode.success)
+    return make_json_response(resp=resp)
 
 
 @check_body
@@ -120,12 +118,12 @@ def add_account(request, body, *args, **kwargs):
     body_extract(body, add_account_dto)
 
     if not add_account_dto.not_empty() or not add_account_dto.validate():
-        resp = init_http_response(RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
-        return make_json_response(HttpResponse, resp)
+        resp = init_http_response_my_enum(RespCode.invalid_parameter)
+        return make_json_response(resp=resp)
 
     if Account.objects.filter(Q(username=add_account_dto.username) | Q(email=add_account_dto.email)).exists():
-        resp = init_http_response(RespCode.account_existed.value.key, RespCode.account_existed.value.msg)
-        return make_json_response(HttpResponse, resp)
+        resp = init_http_response_my_enum(RespCode.account_existed)
+        return make_json_response(resp=resp)
 
     add_account_dto.encrypt()
     timestamp = mills_timestamp()
@@ -133,22 +131,22 @@ def add_account(request, body, *args, **kwargs):
     try:
         with transaction.atomic():
             account = Account(username=add_account_dto.username, email=add_account_dto.email,
-                              password=add_account_dto.md5, status=Status.valid.value.key, create_date=timestamp,
+                              password=add_account_dto.md5, status=Status.valid.key, create_date=timestamp,
                               update_date=timestamp)
             account.save()
 
             user = User(account_id=account.account_id, username=add_account_dto.username,
                         first_name=add_account_dto.first_name, last_name=add_account_dto.last_name,
-                        role=add_account_dto.role, status=Status.valid.value.key,
+                        role=add_account_dto.role, status=Status.valid.key,
                         create_date=timestamp, update_date=timestamp, email=add_account_dto.email)
             user.save()
     except Exception as e:
         print(e)
-        resp = init_http_response(RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
-        return make_json_response(HttpResponse, resp)
+        resp = init_http_response_my_enum(RespCode.invalid_parameter)
+        return make_json_response(resp=resp)
 
-    resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
-    return make_json_response(HttpResponse, resp)
+    resp = init_http_response_my_enum(RespCode.success)
+    return make_json_response(resp=resp)
 
 
 def get_account(request):
@@ -161,21 +159,21 @@ def get_account(request):
     user_id = user['id']
 
     try:
-        user = User.objects.get(user_id=user_id, status=Status.valid.value.key)
+        user = User.objects.get(user_id=user_id, status=Status.valid.key)
     except ObjectDoesNotExist:
-        resp = init_http_response(RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
-        return make_json_response(HttpResponse, resp)
+        resp = init_http_response_my_enum(RespCode.invalid_parameter)
+        return make_json_response(resp=resp)
 
     account_id = int(request.GET.get('id', user.account_id))
     if not account_id:
-        resp = init_http_response(RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
-        return make_json_response(HttpResponse, resp)
+        resp = init_http_response_my_enum(RespCode.invalid_parameter)
+        return make_json_response(resp=resp)
 
     try:
-        account = Account.objects.get(account_id=account_id, status=Status.valid.value.key)
+        account = Account.objects.get(account_id=account_id, status=Status.valid.key)
     except ObjectDoesNotExist:
-        resp = init_http_response(RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
-        return make_json_response(HttpResponse, resp)
+        resp = init_http_response_my_enum(RespCode.invalid_parameter)
+        return make_json_response(resp=resp)
 
     data = dict(
         username=account.username,
@@ -183,9 +181,8 @@ def get_account(request):
         first_name=user.first_name,
         last_name=user.last_name,
     )
-    resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
-    resp['data'] = data
-    return make_json_response(HttpResponse, resp)
+    resp = init_http_response_my_enum(RespCode.success, data)
+    return make_json_response(resp=resp)
 
 
 @require_http_methods(['POST'])
@@ -200,8 +197,8 @@ def atl_login(request, body, *args, **kwargs):
     try:
         user = request.session.get('user', {})
         if user['atl_login']:
-            resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
-            return make_json_response(HttpResponse, resp)
+            resp = init_http_response_my_enum(RespCode.success)
+            return make_json_response(resp=resp)
 
         user['atl_username'] = body['atl_username']
         user['atl_password'] = body['atl_password']
@@ -215,13 +212,14 @@ def atl_login(request, body, *args, **kwargs):
         )
 
         conf_resp = confluence.get_all_groups()
+
         print("~~")
         print(request.session['user']['atl_username'])
-        resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
-        return make_json_response(HttpResponse, resp)
+        resp = init_http_response_my_enum(RespCode.success)
+        return make_json_response(resp=resp)
     except requests.exceptions.HTTPError as e:
-        resp = init_http_response(RespCode.server_error.value.key, RespCode.server_error.value.msg)
-        return make_json_response(HttpResponse, resp) 
+        resp = init_http_response_my_enum(RespCode.server_error)
+        return make_json_response(resp=resp)
 
 
 @require_http_methods(['POST'])
@@ -241,16 +239,16 @@ def update_account(request, body, *args, **kwargs):
     update_account_dto.encrypt()
 
     try:
-        user = User.objects.get(user_id=user_id, status=Status.valid.value.key)
-        account = Account.objects.get(account_id=user.account_id, status=Status.valid.value.key)
+        user = User.objects.get(user_id=user_id, status=Status.valid.key)
+        account = Account.objects.get(account_id=user.account_id, status=Status.valid.key)
     except ObjectDoesNotExist:
-        resp = init_http_response(RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
-        return make_json_response(HttpResponse, resp)
+        resp = init_http_response_my_enum(RespCode.invalid_parameter)
+        return make_json_response(resp=resp)
 
     if (update_account_dto.old_password and update_account_dto.old_md5 != account.password) \
             or not update_account_dto.validate():
-        resp = init_http_response(RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
-        return make_json_response(HttpResponse, resp)
+        resp = init_http_response_my_enum(RespCode.invalid_parameter)
+        return make_json_response(resp=resp)
 
     timestamp = mills_timestamp()
     if update_account_dto.first_name:
@@ -280,11 +278,11 @@ def update_account(request, body, *args, **kwargs):
             account.save()
     except Exception as e:
         print(e)
-        resp = init_http_response(RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
-        return make_json_response(HttpResponse, resp)
+        resp = init_http_response_my_enum(RespCode.invalid_parameter)
+        return make_json_response(resp=resp)
 
-    resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
-    return make_json_response(HttpResponse, resp)
+    resp = init_http_response_my_enum(RespCode.success)
+    return make_json_response(resp=resp)
 
 
 @require_http_methods(['POST'])
@@ -299,29 +297,29 @@ def delete(request, body, *args, **kwargs):
     account_id = body.get('id')
 
     try:
-        account = Account.objects.get(account_id=account_id, status=Status.valid.value.key)
-        user = User.objects.get(account_id=account_id, status=Status.valid.value.key)
+        account = Account.objects.get(account_id=account_id, status=Status.valid.key)
+        user = User.objects.get(account_id=account_id, status=Status.valid.key)
     except ObjectDoesNotExist:
-        resp = init_http_response(RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
-        return make_json_response(HttpResponse, resp)
+        resp = init_http_response_my_enum(RespCode.invalid_parameter)
+        return make_json_response(resp=resp)
 
     timestamp = mills_timestamp()
 
     try:
         with transaction.atomic():
-            account.status = Status.invalid.value.key
+            account.status = Status.invalid.key
             account.update_date = timestamp
             account.save()
-            user.status = Status.invalid.value.key
+            user.status = Status.invalid.key
             user.update_date = timestamp
             user.save()
     except Exception as e:
         print(e)
-        resp = init_http_response(RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
-        return make_json_response(HttpResponse, resp)
+        resp = init_http_response_my_enum(RespCode.invalid_parameter)
+        return make_json_response(resp=resp)
 
-    resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
-    return make_json_response(HttpResponse, resp)
+    resp = init_http_response_my_enum(RespCode.success)
+    return make_json_response(resp=resp)
 
 
 def get_supervisor(request, supervisor_id, *args, **kwargs):
@@ -335,20 +333,18 @@ def get_supervisor(request, supervisor_id, *args, **kwargs):
     """
 
     try:
-        supervisor = User.objects.get(user_id=supervisor_id, role=Roles.supervisor.value.key, status=Status.valid.value.key)
+        supervisor = User.objects.get(user_id=supervisor_id, role=Roles.supervisor.key, status=Status.valid.key)
     except ObjectDoesNotExist as e:
-        print(e)
-        resp = init_http_response(RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
-        return make_json_response(HttpResponse, resp)
+        resp = init_http_response_my_enum(RespCode.invalid_parameter)
+        return make_json_response(resp=resp)
 
     data = dict(
         id=supervisor.user_id,
         name=supervisor.get_name(),
         email=supervisor.email,
     )
-    resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
-    resp['data'] = data
-    return make_json_response(HttpResponse, resp)
+    resp = init_http_response_my_enum(RespCode.success, data)
+    return make_json_response(resp=resp)
 
 
 def multi_get_supervisor(request, *args, **kwargs):
@@ -363,7 +359,7 @@ def multi_get_supervisor(request, *args, **kwargs):
     offset = int(request.GET.get('offset', 0))
     has_more = 0
 
-    supervisors = User.objects.filter(role=Roles.supervisor.value.key, status=Status.valid.value.key)\
+    supervisors = User.objects.filter(role=Roles.supervisor.key, status=Status.valid.key)\
         .only('user_id')[offset: offset + SINGLE_PAGE_LIMIT + 1]
     if len(supervisors) > SINGLE_PAGE_LIMIT:
         supervisors = supervisors[: SINGLE_PAGE_LIMIT]
@@ -375,6 +371,5 @@ def multi_get_supervisor(request, *args, **kwargs):
         offset=offset,
         has_more=has_more,
     )
-    resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
-    resp['data'] = data
-    return make_json_response(HttpResponse, resp)
+    resp = init_http_response_my_enum(RespCode.success, data)
+    return make_json_response(resp=resp)

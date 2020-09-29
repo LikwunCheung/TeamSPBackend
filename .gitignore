@@ -135,3 +135,6 @@ dmypy.json
 # Pipfile & Pipfile.lock (since Docker is used officially)
 Pipfile
 Pipfile.lock
+
+*/resource/repo/*
+*/resource/commit_log/*
