@@ -27,6 +27,7 @@ class Team(models.Model):
     create_date = models.BigIntegerField(blank=False, null=False)
     # expired = models.BigIntegerField(blank=False, null=False, db_index=True)
     project_name = models.CharField(max_length=30)
+    slack_oauth_token = models.CharField(max_length=100)
 
     class Meta:
         db_table = 'team'
