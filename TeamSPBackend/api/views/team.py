@@ -66,7 +66,8 @@ def import_team(request, body):
         team_members = get_members(request, name)
         # print(team_members)
         if not team_members:
-            return
+            resp = {'code': -1, 'msg': 'no team member found'}
+            return HttpResponse(json.dumps(resp), content_type="application/json")
     else:
         resp = {'code': -1, 'msg': 'insufficient parameters'}
         return HttpResponse(json.dumps(resp), content_type="application/json")
@@ -333,14 +334,8 @@ def get_teams_data(filtered_teams):
                 'id': team.team_id,
                 'name': team.name,
                 'project_name': team.project_name,
-                # 'description': team.description,
-                # 'subject_id': team.subject_id,
-                # 'year': team.year,
                 'supervisor': supervisor_data,
-                'secondary_supervisor': secondary_supervisor_data,
-                # 'create_date': team.create_date,
-                # 'expired': team.expired,
-                # 'member': members_data
+                'secondary_supervisor': secondary_supervisor_data
             }
             teams.append(team_data)
     return teams
