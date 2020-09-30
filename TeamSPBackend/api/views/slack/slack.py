@@ -1,6 +1,5 @@
 from slack import WebClient
-from TeamSPBackend.api.views.slack.settings import SLACK_CLIENT_ID, SLACK_CLIENT_SECRET, SLACK_VERIFICATION_TOKEN,\
-    SLACK_BOT_USER_TOKEN
+from TeamSPBackend.api.views.slack.settings import SLACK_CLIENT_ID
 from django.views.decorators.http import require_http_methods
 from TeamSPBackend.common.utils import check_user_login, make_json_response, init_http_response, check_body
 from TeamSPBackend.common.choices import RespCode, Roles
