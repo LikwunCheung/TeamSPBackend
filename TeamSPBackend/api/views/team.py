@@ -45,10 +45,9 @@ def team_router(request, *args, **kwargs):
 
 """
 Import team from confluence with supervisor_id
-
 Method: POST
 Url: localhost:8000/api/v1/team
-Params: 
+Params:
 Request: team, subject, year, project
         {
             "team":                     "SWEN90013_2020_SP",
@@ -64,7 +63,6 @@ Request: team, subject, year, project
 def import_team(request, body, *args, **kwargs):
     """
     Import team from confluence with supervisor_id
-
     :param request:
     :param body:
     :param args:
@@ -122,6 +120,7 @@ def import_team_member(team_id, student_id):
         TeamMember(student_id=student_id, team_id=team_id).save()
         return True
 
+
 """
 Create team from csv
 Method: Post
@@ -137,11 +136,11 @@ Request: csv_file
 #     return HttpResponse(json.dumps(resp), content_type="application/json")
 
 """
-Create team from request with supervisor_id 
+Create team from request with supervisor_id
 Method: Post
 Url: localhost:8000/api/v1/team
 Params: None
-Request: 
+Request:
             {
                 "name":                #team_name,
                 "description":         #team_description,
@@ -216,7 +215,6 @@ Request: team_id, student_id
 
 """
 Get a specific team information (not needed for now)
-
 Method: Get
 Url: localhost:8000/api/v1/team/<int:team_id>
 Params: team_id
@@ -284,7 +282,6 @@ Request: None
 
 """
 Get teams information
-
 Method: Get
 Url: localhost:8000/api/v1/team
 Params: None
@@ -375,7 +372,6 @@ def get_teams_data(filtered_teams):
 def multi_get_team(request, *args, **kwargs):
     """
     Get multiple teams
-
     :param request: supervisor_id/coordinator_id
     :return:
     """
@@ -446,11 +442,10 @@ def multi_get_team(request, *args, **kwargs):
 
 """
 Assign supervisor or secondary supervisor for a specific team
-
 Method: Post
 Url: localhost:8000/api/v1/team/<team_id>
 Params: team_id
-Request: 
+Request:
         {
             "supervisor_id":                    #supervisor_id
             "secondary_supervisor_id":          #secondary_supervisor_id
@@ -462,7 +457,6 @@ Request:
 def update_team(request, body, team_id: int):
     """
     Post secondary_supervisor_id
-
     :param request:
     :param team_id:
     :return:
@@ -514,7 +508,6 @@ def update_team(request, body, team_id: int):
 
 """
 Get all team members of a team
-
 Method: Get
 Url: localhost:8000/api/v1/team/<team_id>/members
 Params: team_id
@@ -527,7 +520,6 @@ Request:
 def get_team_members(request, *args, **kwargs):
     """
         Get certain team members
-
         :param request:
         :param team_id:
         :return:
@@ -586,4 +578,4 @@ def get_team_members(request, *args, **kwargs):
     }
 
     resp['data'] = data
-    return make_json_response(HttpResponse, resp)
+    return make_json_response(HttpResponse, resp),
