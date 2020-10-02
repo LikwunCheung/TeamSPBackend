@@ -34,6 +34,8 @@ class RespCode(MyEnum):
     permission_deny = Choice(-8, 'permission deny')
     team_existed = Choice(-9, 'existed team')
     incorrect_body = Choice(-10, 'incorrect body')
+    confluence_api_error = Choice(-11, "confluence python api error")
+    config_not_found = Choice(-12, "confluence config file not found")
 
 
 class InvitationStatus(MyEnum):

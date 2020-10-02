@@ -1,0 +1,10 @@
+---
+common:
+  host: https://confluence.cis.unimelb.edu.au
+  port: 8443
+  path: /rest/api
+
+api:
+  get-page-contributors:
+    path: /content/{page_id}/history
+    query: expand=contributors.publishers.users
