@@ -1,6 +1,5 @@
 from slack import WebClient
 import time
-from TeamSPBackend.api.views.slack.settings import SLACK_CLIENT_ID
 from django.views.decorators.http import require_http_methods
 from TeamSPBackend.common.utils import check_user_login, make_json_response, init_http_response, check_body
 from TeamSPBackend.common.choices import RespCode, Roles
@@ -37,7 +36,7 @@ from django.db.models import ObjectDoesNotExist
 #     if exists == False:
 #         # create the channel since it doesn't exist
 #         # create_channel()
-
+SLACK_CLIENT_ID = '965258290579.1356270476084'
 MESSAGES_PER_PAGE = 200
 START_DATE = 0
 END_DATE = 0
