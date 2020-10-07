@@ -11,7 +11,18 @@ class Choice(object):
         self.msg = msg
 
 
-class RespCode(Enum):
+class MyEnum(Enum):
+
+    @property
+    def key(self):
+        return self.value.key
+
+    @property
+    def msg(self):
+        return self.value.msg
+
+
+class RespCode(MyEnum):
     success = Choice(0, 'success')
     server_error = Choice(-1, 'server error')
     invalid_parameter = Choice(-2, 'invalid parameter')
@@ -21,9 +32,13 @@ class RespCode(Enum):
     invalid_op = Choice(-6, 'invalid operation')
     subject_existed = Choice(-7, 'existed subject')
     permission_deny = Choice(-8, 'permission deny')
+    team_existed = Choice(-9, 'existed team')
+    incorrect_body = Choice(-10, 'incorrect body')
+    confluence_api_error = Choice(-11, "confluence python api error")
+    config_not_found = Choice(-12, "confluence config file not found")
 
 
-class InvitationStatus(Enum):
+class InvitationStatus(MyEnum):
     waiting = Choice(0, 'waiting for invitation')
     sent = Choice(1, 'invitation sent')
     accepted = Choice(2, 'invitation accepted')
@@ -31,19 +46,19 @@ class InvitationStatus(Enum):
     expired = Choice(4, 'invitation expired')
 
 
-class InvitationRespCode(Enum):
+class InvitationRespCode(MyEnum):
     success = Choice(0, 'success')
     invalid_email = Choice(-1, 'invalid email')
     send_fail = Choice(-2, 'send invitation fail')
     existed = Choice(-3, 'invitation existed')
 
 
-class Status(Enum):
+class Status(MyEnum):
     invalid = Choice(0, 'invalid')
     valid = Choice(1, 'valid')
 
 
-class Roles(Enum):
+class Roles(MyEnum):
     admin = Choice(0, 'administrator')
     supervisor = Choice(1, 'supervisor')
     coordinator = Choice(2, 'coordinator')
@@ -51,7 +66,13 @@ class Roles(Enum):
 
 def get_message(choices, index):
     key = list(choices)[index]
-    return choices[key].value.msg
+    return choices[key].msg
+
+
+def get_keys(choices):
+    if not isinstance(choices, list):
+        raise ValueError('incorrect choice')
+    return [x.value.key for x in choices]
 
 
 if __name__ == "__main__":

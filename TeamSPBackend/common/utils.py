@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 
 import base64
+
+from functools import wraps
 from Crypto.Cipher import AES
 
-from django.http.response import HttpResponseForbidden, HttpResponseBadRequest, HttpResponse, HttpResponseRedirect
+from django.http.response import HttpResponse
 
 from TeamSPBackend.common import *
-from TeamSPBackend.common.choices import RespCode
+from TeamSPBackend.common.choices import RespCode, MyEnum
 from TeamSPBackend.common.config import SESSION_REFRESH, HOMEPAGE, REGISTER_PAGE, INVITATION_KEY, SALT
 
 
@@ -21,12 +23,16 @@ def make_redirect_response(func=HttpResponse, resp=None):
     return func(ujson.dumps(resp), content_type='application/json', status=302)
 
 
-def init_http_response(code, message):
+def init_http_response(code, message, data=None):
     return dict(
         code=code,
         message=message,
-        data=dict(),
+        data=data,
     )
+
+
+def init_http_response_my_enum(resp: MyEnum, data=None):
+    return init_http_response(resp.key, resp.msg, data)
 
 
 def check_body(func):
@@ -41,29 +47,41 @@ def check_body(func):
             body = dict(ujson.loads(request.body))
             logger.info(body)
         except ValueError or json.JSONDecodeError as e:
-            resp = init_http_response(
-                RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
+            logger.info(request.body)
+            resp = init_http_response(RespCode.incorrect_body.value.key, RespCode.incorrect_body.value.msg)
             return make_json_response(HttpResponse, resp)
 
         return func(request, body, *args, **kwargs)
     return wrapper
 
 
-def check_user_login(func):
+def check_user_login(roles=None):
     """
     Disable for testing
-    :param func:
+    :param roles:
     :return:
     """
-    def wrapper(request, *args, **kwargs):
-        user = request.session.get('user', {})
-        if not user or 'id' not in user or 'is_login' not in user:
-            resp = init_http_response(RespCode.not_logged.value.key, RespCode.not_logged.value.msg)
-            return make_json_response(HttpResponse, resp)
+    def decorator(func):
+        @wraps(func)
+        def inner(request, *args, **kwargs):
+            user = request.session.get('user', {})
+            if not user or 'id' not in user or 'is_login' not in user:
+                resp = init_http_response(RespCode.not_logged.value.key, RespCode.not_logged.value.msg)
+                return make_json_response(HttpResponse, resp)
 
-        request.session.set_expiry(SESSION_REFRESH)
-        return func(request, args, kwargs)
-    return wrapper
+            if roles is not None:
+                if not isinstance(roles, list):
+                    raise ValueError('check_user_login: incorrect roles')
+                if user['role'] not in roles:
+                    logger.info('permission deny %s', func)
+                    resp = init_http_response(RespCode.permission_deny.value.key, RespCode.permission_deny.value.msg)
+                    return make_json_response(HttpResponse, resp)
+
+            request.session.set_expiry(SESSION_REFRESH)
+            print('{} {} {}'.format(request, args, kwargs))
+            return func(request, *args, **kwargs)
+        return inner
+    return decorator
 
 
 def check_user_role(func, role):
@@ -119,4 +137,4 @@ def decrypt_aes(key):
     if key is None:
         return None
     aes = AES.new(auto_fill(SALT), AES.MODE_ECB)
-    return aes.decrypt(base64.decodebytes(key))
+    return str(aes.decrypt(base64.decodebytes(key))).rstrip('\0')
