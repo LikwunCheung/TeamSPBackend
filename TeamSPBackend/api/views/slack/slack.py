@@ -122,8 +122,16 @@ def get_member_data(request, team_id: int, user_id: int):
     res = {}
     total_number = 0
     for c in channels:
+        channel_massage_num = 0
         messages = get_channel_messages(client, c[0])
-        print(c[1], len(messages))
-        res[c[1]] = len(messages)
-        total_number += len(messages)
+        for m in messages:
+            if m['user'] == member['user']['id']:
+                channel_massage_num += 1
+        res[c[1]] = channel_massage_num
+        total_number += channel_massage_num
+    res["total-number"] = total_number
+    print(res)
     print(member)
+    resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
+    resp['data'] = res
+    return HttpResponse(json.dumps(resp), content_type="application/json")
