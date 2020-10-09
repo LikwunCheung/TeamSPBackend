@@ -410,9 +410,9 @@ def multi_get_team(request, *args, **kwargs):
             supervisor_ids.append(team.secondary_supervisor_id)
 
     if len(supervisor_ids) > 0:
-        supervisors_temp = User.objects.filter(user_id__in=supervisor_ids)
+        supervisors_temp = User.objects.filter(account_id__in=supervisor_ids)
         for supervisor in supervisors_temp:
-            supervisors[supervisor.user_id] = supervisor
+            supervisors[supervisor.account_id] = supervisor
 
     data = dict(
         teams=[dict(
