@@ -7,10 +7,10 @@ from django.views.decorators.http import require_http_methods
 from django.db import transaction
 from django.db.models import Q, ObjectDoesNotExist
 
-from TeamSPBackend.api.dto.dto import AddTeamDTO
+from TeamSPBackend.api.dto.dto import AddTeamDTO, UpdateTeamDTO
 
 from TeamSPBackend.common.config import SINGLE_PAGE_LIMIT
-from TeamSPBackend.common.utils import check_user_login, make_json_response, init_http_response, check_body, body_extract, mills_timestamp
+from TeamSPBackend.common.utils import check_user_login, make_json_response, init_http_response, check_body, body_extract, mills_timestamp, init_http_response_my_enum
 from TeamSPBackend.common.choices import RespCode, Roles, get_keys
 from TeamSPBackend.account.models import Account
 from TeamSPBackend.api.views.confluence.confluence import get_members
@@ -26,7 +26,7 @@ logger = logging.getLogger('django')
 def team_router(request, *args, **kwargs):
     team_id = None
     if isinstance(kwargs, dict):
-        team_id = kwargs.get('team_id', None)
+        team_id = kwargs.get('id', None)
     if request.method == 'POST':
         if team_id:
             # Assign secondary supervisor for a specific team
@@ -454,56 +454,27 @@ Request:
 
 
 @check_body
-def update_team(request, body, team_id: int):
-    """
-    Post secondary_supervisor_id
-    :param request:
-    :param team_id:
-    :return:
-    """
-    supervisor_id = None
-    secondary_supervisor_id = None
+def update_team(request, body, *args, **kwargs):
 
-    if "supervisor_id" in body.keys():
-        try:
-            supervisor_id = body['supervisor_id']
-            supervisor = User.objects.get(account_id=supervisor_id)
-        except ObjectDoesNotExist:
-            resp = init_http_response(RespCode.invalid_op.value.key, RespCode.invalid_op.value.msg)
-            resp['supervisor'] = "Invalid supervisor_id"
-            return HttpResponse(json.dumps(resp), content_type="application/json")
-    # secondary_supervisor_id = request.POST.get('secondary_supervisor_id', None)
-    if "secondary_supervisor_id" in body.keys():
-        try:
-            secondary_supervisor_id = body['secondary_supervisor_id']
-            secondary_supervisor = User.objects.get(account_id=secondary_supervisor_id)
-        except ObjectDoesNotExist:
-            resp = init_http_response(RespCode.invalid_op.value.key, RespCode.invalid_op.value.msg)
-            resp['secondary_supervisor'] = "Invalid secondary_supervisor_id"
-            return HttpResponse(json.dumps(resp), content_type="application/json")
+    team_id = kwargs.get('id')
+    update_team_dto = UpdateTeamDTO()
+    body_extract(body, update_team_dto)
+
     try:
         team = Team.objects.get(team_id=team_id)
-    except ObjectDoesNotExist:
-        resp = init_http_response(RespCode.invalid_op.value.key, RespCode.invalid_op.value.msg)
-        resp['team'] = "Invalid team_id"
-        return make_json_response(HttpResponseBadRequest, resp)
+    except ObjectDoesNotExist as e:
+        resp = init_http_response_my_enum(RespCode.invalid_parameter)
+        return make_json_response(resp=resp)
 
-    resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
-    if supervisor_id and team.supervisor_id != supervisor_id:
-        team.supervisor_id = supervisor_id
-        if team.secondary_supervisor_id == supervisor_id:
-            team.secondary_supervisor_id = None
-        team.save()
-        resp['supervisor'] = "Update successfully"
+    if update_team_dto.supervisor_id:
+        team.supervisor_id = update_team_dto.supervisor_id
+    if update_team_dto.secondary_supervisor_id:
+        team.secondary_supervisor_id = update_team_dto.secondary_supervisor_id
 
-    if secondary_supervisor_id and team.secondary_supervisor_id != secondary_supervisor_id:
-        team.secondary_supervisor_id = secondary_supervisor_id
-        if team.supervisor_id == secondary_supervisor_id:
-            team.supervisor_id = None
-        team.save()
-        resp['secondary_supervisor'] = "Update successfully"
+    team.save()
+    resp = init_http_response_my_enum(RespCode.success)
+    return make_json_response(resp=resp)
 
-    return HttpResponse(ujson.dumps(resp), content_type="application/json")
 
 
 """

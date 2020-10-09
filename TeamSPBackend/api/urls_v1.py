@@ -36,8 +36,8 @@ urlpatterns = [
 
     # Team Related API
     path('team', team_router),
-    path('team/<int:team_id>', team_router),
-    path('team/<int:team_id>/members', get_team_members),
+    path('team/<int:id>', team_router),
+    path('team/<int:id>/members', get_team_members),
 
     # Git Related API
     path('git/commit', get_git_commits),
