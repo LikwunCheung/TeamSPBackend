@@ -16,13 +16,14 @@ class Student(models.Model):
 class Team(models.Model):
     team_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=64, unique=True)
-    description = models.CharField(max_length=512)
+    # description = models.CharField(max_length=512)
     subject_code = models.CharField(max_length=128)
     supervisor_id = models.IntegerField()
     secondary_supervisor_id = models.IntegerField()
     year = models.IntegerField()
     create_date = models.BigIntegerField(blank=False, null=False)
     project_name = models.CharField(max_length=64)
+    slack_oauth_token = models.CharField(max_length=100)
 
     class Meta:
         db_table = 'team'

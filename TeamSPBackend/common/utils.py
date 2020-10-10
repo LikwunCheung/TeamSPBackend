@@ -78,7 +78,7 @@ def check_user_login(roles=None):
                     return make_json_response(HttpResponse, resp)
 
             request.session.set_expiry(SESSION_REFRESH)
-            print('{} {} {}'.format(request, args, kwargs))
+            # print('{} {} {}'.format(request, args, kwargs))
             return func(request, *args, **kwargs)
         return inner
     return decorator

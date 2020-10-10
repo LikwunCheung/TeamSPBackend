@@ -141,6 +141,13 @@ class AddTeamDTO(object):
         return not (not self.team or not self.subject or not self.year or not self.project)
 
 
+class UpdateTeamDTO(object):
+
+    def __init__(self):
+        self.supervisor_id = None
+        self.secondary_supervisor_id = None
+
+
 class GitDTO(object):
 
     def __init__(self):
