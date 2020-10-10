@@ -53,5 +53,5 @@ urlpatterns = [
     # Slack Related API
     # path('slack', slack_router),
     path('slack/<int:team_id>', get_team_data),
-    path('slack/<int:team_id>/member/<int:user_id>', get_member_data)
+    path('slack/<int:team_id>/member/<int:student_id>', get_member_data)
 ]

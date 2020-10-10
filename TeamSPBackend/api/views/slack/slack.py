@@ -5,8 +5,7 @@ from TeamSPBackend.common.utils import check_user_login, make_json_response, ini
 from TeamSPBackend.common.choices import RespCode, Roles
 from django.http import HttpResponse, HttpResponseNotAllowed
 import json
-from TeamSPBackend.team.models import Team
-from TeamSPBackend.account.models import User
+from TeamSPBackend.team.models import Team, Student
 from django.db.models import ObjectDoesNotExist
 
 # Slack Settings
@@ -107,16 +106,16 @@ def get_team_data(request, team_id: int):
     return HttpResponse(json.dumps(resp), content_type="application/json")
 
 
-def get_member_data(request, team_id: int, user_id: int):
+def get_member_data(request, team_id: int, student_id: int):
     print("call get_individual_data api")
     try:
-        user = User.objects.get(user_id=user_id)
+        student = Student.objects.get(student_id=student_id)
     except ObjectDoesNotExist:
         resp = init_http_response(RespCode.invalid_op.value.key, RespCode.invalid_op.value.msg)
-        resp['user'] = "Invalid user_id"
+        resp['student'] = "Invalid student_id"
         return HttpResponse(json.dumps(resp), content_type="application/json")
     client = check_oauth(team_id)
-    member = client.users_lookupByEmail(email=user.email)
+    member = client.users_lookupByEmail(email=student.email)
     channels = get_all_channels(client)
     print(channels)
     res = {}
