@@ -8,6 +8,7 @@ from django.views.decorators.http import require_http_methods
 from django.http.response import HttpResponse, HttpResponseRedirect, HttpResponseNotAllowed, HttpResponseBadRequest
 from TeamSPBackend.common.utils import make_json_response, init_http_response, check_user_login, check_body, body_extract, mills_timestamp
 
+
 @require_http_methods(['GET'])
 def get_all_groups(request):
     """Get all groups accessable by the logged in user
@@ -70,6 +71,7 @@ def get_space(request, space_key):
         resp = {'code': -1, 'msg': 'error'}
         return HttpResponse(json.dumps(resp), content_type="application/json")
 
+
 @require_http_methods(['GET'])
 def get_pages_of_space(request, space_key):
     """Get all the pages under the Confluence Space
@@ -99,6 +101,7 @@ def get_pages_of_space(request, space_key):
 
     # Get Page Content by ID (HTML) (lower prio for now)
 
+
 @require_http_methods(['GET'])
 def search_team(request, keyword):
     user = request.session.get('user')
@@ -120,7 +123,7 @@ def search_team(request, keyword):
                     'name': element['name']
                 })
         resp = init_http_response(
-        RespCode.success.value.key, RespCode.success.value.msg)
+            RespCode.success.value.key, RespCode.success.value.msg)
         resp['data'] = result
         return HttpResponse(json.dumps(resp), content_type="application/json")
     except:
@@ -130,7 +133,6 @@ def search_team(request, keyword):
 
 @require_http_methods(['GET'])
 def get_group_members(request, group):
-    
     """Get all the members under 'group_name' of the Confluence Space
     Method: GET
     Request: group_name
@@ -159,6 +161,7 @@ def get_group_members(request, group):
         resp = {'code': -1, 'msg': 'error'}
         return HttpResponse(json.dumps(resp), content_type="application/json")
 
+
 @require_http_methods(['GET'])
 def get_user_details(request, member):
     """Get a specific Confluence Space member's details
@@ -186,6 +189,7 @@ def get_user_details(request, member):
         resp = {'code': -1, 'msg': 'error'}
         return HttpResponse(json.dumps(resp), content_type="application/json")
 
+
 @require_http_methods(['GET'])
 def get_subject_supervisors(request, subjectcode, year):
 
@@ -208,7 +212,7 @@ def get_subject_supervisors(request, subjectcode, year):
                 # 'profilePicture': user['profilePicture'],
                 'name': each['displayName'],
                 'email': each['username']
-            })        
+            })
         resp = init_http_response(
             RespCode.success.value.key, RespCode.success.value.msg)
         resp['data'] = data
@@ -216,6 +220,7 @@ def get_subject_supervisors(request, subjectcode, year):
     except:
         resp = {'code': -1, 'msg': 'error'}
         return HttpResponse(json.dumps(resp), content_type="application/json")
+
 
 @require_http_methods(['GET'])
 def get_page_contributors(request, *args, **kwargs):
@@ -235,7 +240,7 @@ def get_page_contributors(request, *args, **kwargs):
         url = f"{domain}:{port}/rest/api/content/{page_id}/history"
         parameters = {"expand": "contributors.publishers.users"}
         conf_resp = requests.get(
-            url, params=parameters, auth=HTTPBasicAuth('yho4', 'mil1maci')).json()
+            url, params=parameters, auth=HTTPBasicAuth(username, password)).json()
         data = {
             "createdBy": conf_resp["createdBy"],
             "createdDate": conf_resp["createdDate"],
@@ -249,7 +254,6 @@ def get_page_contributors(request, *args, **kwargs):
         resp = {'code': -1, 'msg': 'error'}
         return HttpResponse(json.dumps(resp), content_type="application/json")
 
-    # Get page by label
 
 def log_into_confluence(username, password):
     confluence = Confluence(
@@ -279,5 +283,6 @@ def get_members(request, group):
                 'email': user['username'] + "@student.unimelb.edu.au"
             })
         return data
-    except:
+    except Exception as e:
+        print(e)
         return None

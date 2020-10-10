@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
+
 import hashlib
 import base64
+import re
 
 from Crypto.Cipher import AES
 
@@ -125,3 +127,41 @@ class InviteAcceptDTO(object):
     def encrypt(self):
         self.password = self.password + SALT
         self.md5 = hashlib.sha3_256(self.password.encode()).hexdigest()
+
+
+class AddTeamDTO(object):
+
+    def __init__(self):
+        self.team = None
+        self.subject = None
+        self.year = None
+        self.project = None
+
+    def not_empty(self):
+        return not (not self.team or not self.subject or not self.year or not self.project)
+
+
+class GitDTO(object):
+
+    def __init__(self):
+        self.url = None
+        self.branch = None
+        self.author = None
+        self.after = None
+        self.before = None
+
+    @property
+    def valid_url(self):
+        return self.url and re.match(r'^https://github.com(/\w+)+', self.url)
+
+    @property
+    def second_before(self):
+        if not self.before:
+            return None
+        return self.before // 1000
+
+    @property
+    def second_after(self):
+        if not self.after:
+            return None
+        return self.after // 1000
