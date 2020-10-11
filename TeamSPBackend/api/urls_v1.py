@@ -63,9 +63,13 @@ urlpatterns = [
     path('jira/<team>/jiraburnforecast', helpJira.get_jira_burn_forecast),
     path('jira/<team>/tickets/<student_id>', helpJira.get_issues_one_student),
     path('jira/<team>/tickets', helpJira.get_total_issues_team),
+    path('jira/<team>/sprintdates', helpJira.get_sprints_dates),
+    path('jira/<team>/issuespersprint', helpJira.get_issues_per_sprint),
+    path('jira/<team>/comments/<student_id>', helpJira.get_comment_count_one_student),
   
     # Slack Related API
     # path('slack', slack_router),
     path('slack/<int:team_id>', get_team_data),
     path('slack/<int:team_id>/member/<int:student_id>', get_member_data)
-]
+    
+
