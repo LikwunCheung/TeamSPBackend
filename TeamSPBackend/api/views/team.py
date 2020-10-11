@@ -356,14 +356,8 @@ def get_teams_data(filtered_teams):
                 'id': team.team_id,
                 'name': team.name,
                 'project_name': team.project_name,
-                # 'description': team.description,
-                # 'subject_id': team.subject_id,
-                # 'year': team.year,
                 'supervisor': supervisor_data,
-                'secondary_supervisor': secondary_supervisor_data,
-                # 'create_date': team.create_date,
-                # 'expired': team.expired,
-                # 'member': members_data
+                'secondary_supervisor': secondary_supervisor_data
             }
             teams.append(team_data)
     return teams

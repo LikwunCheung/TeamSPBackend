@@ -9,6 +9,7 @@ from .views.invitation import invitation_router, invite_accept
 from .views.account import account_router, login, logout, update_account, delete, atl_login, supervisor_router
 from .views.subject import subject_router, update_subject, delete_subject
 from .views.team import team_router, get_team_members
+from .views.slack.slack import get_team_data, get_member_data
 from .views.git import get_git_commits
 
 urlpatterns = [
@@ -62,4 +63,9 @@ urlpatterns = [
     path('jira/<team>/jiraburnforecast', helpJira.get_jira_burn_forecast),
     path('jira/<team>/tickets/<student_id>', helpJira.get_issues_one_student),
     path('jira/<team>/tickets', helpJira.get_total_issues_team),
+  
+    # Slack Related API
+    # path('slack', slack_router),
+    path('slack/<int:team_id>', get_team_data),
+    path('slack/<int:team_id>/member/<int:student_id>', get_member_data)
 ]
