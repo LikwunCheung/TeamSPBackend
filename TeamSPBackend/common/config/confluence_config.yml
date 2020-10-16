@@ -5,6 +5,8 @@ common:
   path: /rest/api
 
 api:
-  get-page-contributors:
-    path: /content/{page_id}/history
-    query: expand=contributors.publishers.users
+  get-all-page-contributors:
+    path: /space/{space_key}/content/page
+    query:
+      expand: history.contributors.publishers.users
+      limit: 200
