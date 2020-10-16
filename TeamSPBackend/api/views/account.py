@@ -196,13 +196,13 @@ def atl_login(request, body, *args, **kwargs):
     """
     try:
         user = request.session.get('user', {})
-        if user['atl_login']:
-            resp = init_http_response_my_enum(RespCode.success)
-            return make_json_response(resp=resp)
+        # if user['atl_login']:
+        #     resp = init_http_response_my_enum(RespCode.success)
+        #     return make_json_response(resp=resp)
 
         user['atl_username'] = body['atl_username']
         user['atl_password'] = body['atl_password']
-        user['atl_login'] = True
+        # user['atl_login'] = True
         request.session['user'] = user
 
         confluence = Confluence(
@@ -213,8 +213,8 @@ def atl_login(request, body, *args, **kwargs):
 
         conf_resp = confluence.get_all_groups()
 
-        print("~~")
-        print(request.session['user']['atl_username'])
+        # print("~~")
+        # print(request.session['user']['atl_username'])
         resp = init_http_response_my_enum(RespCode.success)
         return make_json_response(resp=resp)
     except requests.exceptions.HTTPError as e:
