@@ -24,6 +24,16 @@ class Team(models.Model):
     create_date = models.BigIntegerField(blank=False, null=False)
     project_name = models.CharField(max_length=64)
     slack_oauth_token = models.CharField(max_length=100)
+    sprint_start_0 = models.BigIntegerField()
+    sprint_end_0 = models.BigIntegerField()
+    sprint_start_1 = models.BigIntegerField()
+    sprint_end_1 = models.BigIntegerField()
+    sprint_start_2 = models.BigIntegerField()
+    sprint_end_2 = models.BigIntegerField()
+    sprint_start_3 = models.BigIntegerField()
+    sprint_end_3 = models.BigIntegerField()
+    sprint_start_4 = models.BigIntegerField()
+    sprint_end_4 = models.BigIntegerField()
 
     class Meta:
         db_table = 'team'
