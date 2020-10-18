@@ -66,23 +66,7 @@ def get_channel_messages(client, channel, oldest, latest):
     return messages_all
 
 
-def check_oauth(token):
-    # create a Slack client using the token
-    if token:
-        client = WebClient(token=token)
-        return client
-    else:
-        # Todo: Oauth v2
-        return None
-        # print("Need Authorization")
-        # resp = init_http_response(RespCode.invalid_op.value.key, RespCode.invalid_op.value.msg)
-        # resp['token'] = "Need Authorization"
-        # return HttpResponse(json.dumps(resp), content_type="application/json")
-
-
-def get_team_data(request, team_id: int):
-    print("call get_team_data api")
-
+def check_oauth(team_id):
     # retrieve Slack configuration
     try:
         team_configuration = TeamConfiguration.objects.get(team_id=team_id)
@@ -98,13 +82,21 @@ def get_team_data(request, team_id: int):
         resp['data'] = "Need access to Slack workspace"
         return HttpResponse(json.dumps(resp), content_type="application/json")
 
-    # call Slack api to get all Slack channels
-    client = check_oauth(token)
-    channels = get_all_channels(client)
-    print(channels)
+    # create a Slack client using the token
+    if token:
+        client = WebClient(token=token)
+        return client
+    else:
+        # Todo: Oauth v2
+        return None
+        # print("Need Authorization")
+        # resp = init_http_response(RespCode.invalid_op.value.key, RespCode.invalid_op.value.msg)
+        # resp['token'] = "Need Authorization"
+        # return HttpResponse(json.dumps(resp), content_type="application/json")
 
-    sprint_num = int(request.GET.get("sprint_num"))
-    print(sprint_num)
+
+def get_sprint_time(team_id, sprint_num):
+    # retrieve sprint time from team table
     try:
         team = Team.objects.get(team_id=team_id)
     except ObjectDoesNotExist:
@@ -115,10 +107,25 @@ def get_team_data(request, team_id: int):
     # retrieve sprint time from team table
     sprint = [team.sprint_start_0, team.sprint_end_0, team.sprint_start_1, team.sprint_end_1, team.sprint_start_2,
               team.sprint_end_2, team.sprint_start_3, team.sprint_end_3, team.sprint_start_4, team.sprint_end_4]
+    return sprint
 
-    start_time = sprint[sprint_num*2]
-    end_time = sprint[sprint_num*2+1]
 
+def get_team_data(request, team_id: int):
+    print("call get_team_data api")
+
+    # call Slack api to get all Slack channels
+    client = check_oauth(team_id)
+    channels = get_all_channels(client)
+    print(channels)
+
+    # get sprint number from request
+    sprint_num = int(request.GET.get("sprint_num"))
+    print(sprint_num)
+
+    # get sprint start time and end time
+    sprint = get_sprint_time(team_id, sprint_num)
+    start_time = sprint[sprint_num * 2]
+    end_time = sprint[sprint_num * 2 + 1]
     print(start_time, end_time)
 
     res = {}
