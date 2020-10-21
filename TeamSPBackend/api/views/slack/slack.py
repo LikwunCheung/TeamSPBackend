@@ -6,29 +6,11 @@ from TeamSPBackend.common.choices import RespCode, Roles
 from django.http import HttpResponse, HttpResponseNotAllowed
 import json
 from TeamSPBackend.team.models import Team, Student, TeamConfiguration
-from TeamSPBackend.slack.models import SlackTeam
+from TeamSPBackend.slack.models import SlackTeam, SlackMember
 from django.db.models import ObjectDoesNotExist
 
 # Slack Settings
-SLACK_CLIENT_ID = '965258290579.1356270476084'
 MESSAGES_PER_PAGE = 200
-START_DATE = 0
-END_DATE = 0
-
-
-# @require_http_methods(['POST', 'GET'])
-# @check_user_login
-# def slack_router(request, *args):
-#     team_id = None
-#     for arg in args:
-#         if isinstance(arg, dict):
-#             team_id = arg.get('team_id', None)
-#     if request.method == 'POST':
-#         if team_id:
-#             return
-#     elif request.method == 'GET':
-#         if team_id:
-#             return
 
 
 def get_all_channels(client):
@@ -95,7 +77,7 @@ def check_oauth(team_id):
         # return HttpResponse(json.dumps(resp), content_type="application/json")
 
 
-def get_sprint_time(team_id, sprint_num):
+def get_sprint_time(team_id):
     # retrieve sprint time from team table
     try:
         team = Team.objects.get(team_id=team_id)
@@ -113,7 +95,7 @@ def get_sprint_time(team_id, sprint_num):
 def get_team_data(request, team_id: int):
     print("call get_team_data api")
 
-    # call Slack api to get all Slack channels
+    # call Slack api to get all Slack channels before the end of the sprint
     client = check_oauth(team_id)
     channels = get_all_channels(client)
     print(channels)
@@ -123,7 +105,7 @@ def get_team_data(request, team_id: int):
     print(sprint_num)
 
     # get sprint start time and end time
-    sprint = get_sprint_time(team_id, sprint_num)
+    sprint = get_sprint_time(team_id)
     start_time = sprint[sprint_num * 2]
     end_time = sprint[sprint_num * 2 + 1]
     print(start_time, end_time)
@@ -151,10 +133,20 @@ def get_team_data(request, team_id: int):
                 tmp[c[1]] = len(messages)
             for r in results:
                 r.message_num += tmp[r.channel_name]
+                tmp.pop(r.channel_name)
                 res[r.channel_name] = r.message_num
                 total_number += res[r.channel_name]
                 r.time = time.time()
                 r.save()
+            # save new created channels
+            print(tmp)
+            for (channel, num) in tmp.items():
+                print(channel, num)
+                res[channel] = num
+                total_number += num
+                slack_team = SlackTeam(team_id=team_id, channel_name=channel, message_num=num, sprint_num=sprint_num,
+                                       time=time.time())
+                slack_team.save()
             res["total-number"] = total_number
             print(res)
             resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
@@ -179,29 +171,94 @@ def get_team_data(request, team_id: int):
 
 def get_member_data(request, team_id: int, student_id: int):
     print("call get_individual_data api")
+
+    # Retrieve student record
     try:
         student = Student.objects.get(student_id=student_id)
     except ObjectDoesNotExist:
         resp = init_http_response(RespCode.invalid_op.value.key, RespCode.invalid_op.value.msg)
         resp['student'] = "Invalid student_id"
         return HttpResponse(json.dumps(resp), content_type="application/json")
+
+    # call Slack api to get all Slack channels
     client = check_oauth(team_id)
     member = client.users_lookupByEmail(email=student.email)
     channels = get_all_channels(client)
     print(channels)
+
+    # get sprint number from request
+    sprint_num = int(request.GET.get("sprint_num"))
+    print(sprint_num)
+
+    # get sprint start time and end time
+    sprint = get_sprint_time(team_id)
+    start_time = sprint[sprint_num * 2]
+    end_time = sprint[sprint_num * 2 + 1]
+    print(start_time, end_time)
+
     res = {}
     total_number = 0
-    for c in channels:
-        channel_massage_num = 0
-        messages = get_channel_messages(client, c[0])
-        for m in messages:
-            if m['user'] == member['user']['id']:
-                channel_massage_num += 1
-        res[c[1]] = channel_massage_num
-        total_number += channel_massage_num
-    res["total-number"] = total_number
-    print(res)
-    print(member)
-    resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
-    resp['data'] = res
-    return HttpResponse(json.dumps(resp), content_type="application/json")
+    tmp = {}
+    if SlackMember.objects.filter(student_id=student_id, team_id=team_id, sprint_num=sprint_num).exists():
+        results = SlackMember.objects.filter(student_id=student_id, team_id=team_id, sprint_num=sprint_num)
+        start_time = results[0].time
+        # Ready for retrieving
+        if start_time > end_time:
+            for r in results:
+                res[r.channel_name] = r.message_num
+                total_number += r.message_num
+            res['total-number'] = total_number
+            print(res)
+            resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
+            resp['data'] = res
+            return HttpResponse(json.dumps(resp), content_type="application/json")
+        # Need update data
+        else:
+            # call Slack api to get all channel messages sent by the member during a specific sprint
+            for c in channels:
+                channel_massage_num = 0
+                messages = get_channel_messages(client, c[0], start_time, end_time)
+                for m in messages:
+                    if m['user'] == member['user']['id']:
+                        channel_massage_num += 1
+                print(c[1], len(messages))
+                tmp[c[1]] = channel_massage_num
+            for r in results:
+                r.message_num += tmp[r.channel_name]
+                tmp.pop(r.channel_name)
+                res[r.channel_name] = r.message_num
+                total_number += res[r.channel_name]
+                r.time = time.time()
+                r.save()
+            # save new created channels
+            print(tmp)
+            for (channel, num) in tmp.items():
+                print(channel, num)
+                res[channel] = num
+                total_number += num
+                slack_member = SlackMember(student_id=student_id, team_id=team_id, channel_name=channel, message_num=num
+                                           , sprint_num=sprint_num, time=time.time())
+                slack_member.save()
+            res["total-number"] = total_number
+            print(res)
+            resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
+            resp['data'] = res
+            return HttpResponse(json.dumps(resp), content_type="application/json")
+    else:
+        # call Slack api to get all channel messages sent by the student during a specific sprint
+        for c in channels:
+            channel_massage_num = 0
+            messages = get_channel_messages(client, c[0], start_time, end_time)
+            for m in messages:
+                if m['user'] == member['user']['id']:
+                    channel_massage_num += 1
+            res[c[1]] = channel_massage_num
+            total_number += channel_massage_num
+            slack_member = SlackMember(student_id=student_id, team_id=team_id, channel_name=c[1], message_num=res[c[1]],
+                                       sprint_num=sprint_num, time=time.time())
+            slack_member.save()
+        res["total-number"] = total_number
+        print(res)
+        resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
+        resp['data'] = res
+        return HttpResponse(json.dumps(resp), content_type="application/json")
