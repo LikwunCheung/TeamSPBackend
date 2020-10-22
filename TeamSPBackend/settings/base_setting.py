@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'TeamSPBackend.invitation',
     'TeamSPBackend.team',
     'TeamSPBackend.api',
+    'TeamSPBackend.slack',
 ]
 
 MIDDLEWARE = [
