@@ -25,3 +25,4 @@ atlassian-python-api==1.16.1
 jira-metrics-extract
 xsmtplib==1.0.1.dev0
 slackclient==2.8.2
+PyYAML~=5.3.1

@@ -167,6 +167,21 @@ def get_team_data(request, team_id: int):
         resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
         resp['data'] = res
         return HttpResponse(json.dumps(resp), content_type="application/json")
+    # retrieve sprint time from team table
+    try:
+        team = Team.objects.get(team_id=team_id)
+    except ObjectDoesNotExist:
+        resp = init_http_response(RespCode.invalid_op.value.key, RespCode.invalid_op.value.msg)
+        resp['data'] = "Invalid team_id"
+        return HttpResponse(json.dumps(resp), content_type="application/json")
+
+    # retrieve sprint time from team table
+    sprint = [team.sprint_start_0, team.sprint_end_0, team.sprint_start_1, team.sprint_end_1, team.sprint_start_2,
+              team.sprint_end_2, team.sprint_start_3, team.sprint_end_3, team.sprint_start_4, team.sprint_end_4]
+    return sprint
+
+
+
 
 
 def get_member_data(request, team_id: int, student_id: int):
