@@ -120,12 +120,12 @@ def get_team_data(request, *args, **kwargs):
 
     # get sprint number from request
     sprint_num = request.GET.get("sprint_num", None)
-    sprint_num = int(sprint_num) if sprint_num else sprint_num
+    sprint_num = int(sprint_num) if sprint_num is not None else -1
     logger.info('sprint_num: {}'.format(sprint_num))
 
     sprint_start = None
     sprint_end = None
-    if sprint_num:
+    if sprint_num >= 0:
         parameter_start = 'sprint_start_{}'.format(sprint_num)
         parameter_end = 'sprint_end_{}'.format(sprint_num)
         sprint_start = team.__getattribute__(parameter_start, None)
@@ -177,7 +177,6 @@ def get_team_data(request, *args, **kwargs):
             return make_json_response(resp=resp)
     else:
         # call Slack api to get all channel messages in a specific sprint
-        sprint_num = -1 if not sprint_num else sprint_num
         for channel in channels:
             messages = get_channel_messages(client, channel['id'], sprint_start, sprint_end)
 
@@ -232,12 +231,12 @@ def get_all_member_data(request, *args, **kwargs):
 
     # get sprint number from request
     sprint_num = request.GET.get("sprint_num", None)
-    sprint_num = int(sprint_num) if sprint_num else sprint_num
+    sprint_num = int(sprint_num) if sprint_num is not None else -1
     logger.info('sprint_num: {}'.format(sprint_num))
 
     sprint_start = None
     sprint_end = None
-    if sprint_num is not None:
+    if sprint_num >= 0:
         parameter_start = 'sprint_start_{}'.format(sprint_num)
         parameter_end = 'sprint_end_{}'.format(sprint_num)
         sprint_start = team.__getattribute__(parameter_start)
@@ -255,7 +254,6 @@ def get_all_member_data(request, *args, **kwargs):
             result[student_emails[key]['student_id']]['channel'][channel['name']] = 0
 
     total_number = 0
-    sprint_num = -1 if not sprint_num else sprint_num
     temp_result = deepcopy(result)
 
     if SlackMember.objects.filter(team_id=team_id, sprint_num=sprint_num).exists():
