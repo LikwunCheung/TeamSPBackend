@@ -160,7 +160,7 @@ def get_team_data(request, *args, **kwargs):
             for record in records:
                 record.message_num += temp_result[record.channel_name]
                 temp_result.pop(record.channel_name)
-                result[record.record_name] = record.message_num
+                result[record.channel_name] = record.message_num
                 total_number += result[record.channel_name]
                 record.time = mills_timestamp()
                 record.save()
