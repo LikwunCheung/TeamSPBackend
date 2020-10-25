@@ -360,7 +360,13 @@ def get_all_member_data(request, *args, **kwargs):
 def get_member_data(request, *args, **kwargs):
 
     team_id = kwargs['team_id']
-    student_id = kwargs['student_id']
+    student_id = int(kwargs['student_id'])
+
+    try:
+        team = Team.objects.get(team_id=team_id)
+    except ObjectDoesNotExist as e:
+        resp = init_http_response_my_enum(RespCode.invalid_parameter)
+        return make_json_response(resp=resp)
 
     client = check_oauth(team_id)
     if not client:
@@ -375,17 +381,13 @@ def get_member_data(request, *args, **kwargs):
     for uid in user_email:
         email_id[user_email[uid]] = uid
 
-    students = Student.objects.filter(email__in=user_email.values()).only('email', 'student_id')
-    student_emails = dict()
-    for student in students:
-        student_emails[student.email] = dict(
-            student_id=student.student_id,
-        )
-
-    for email in email_id.keys():
-        if email in student_emails:
-            student_emails[email]['id'] = email_id[email]
-            student_emails[email]['name'] = users[email_id[email]]
+    student = Student.objects.get(student_id=student_id).only('email', 'student_id')
+    student_uid = email_id[student.email]
+    student_info = dict(
+        email=student.email,
+        id=student_uid,
+        name=users[email_id[student.email]],
+    )
 
     # get sprint number from request
     sprint_num = request.GET.get("sprint_num", None)
@@ -401,29 +403,25 @@ def get_member_data(request, *args, **kwargs):
         sprint_end = team.__getattribute__(parameter_end)
         logger.info('sprint start {} end {}'.format(sprint_start, sprint_end))
 
-    result = dict()
-    for key in student_emails:
-        result[student_emails[key]['student_id']] = dict(
-            total_number=0,
-            name=student_emails[key]['name'],
-            channel=dict()
-        )
-        for channel in channels:
-            result[student_emails[key]['student_id']]['channel'][channel['name']] = 0
+    result = dict(
+        total_number=0,
+        name=student_info['name'],
+        channel=dict()
+    )
 
-    total_number = 0
+    for channel in channels:
+        result['channel'][channel['name']] = 0
+
     temp_result = deepcopy(result)
 
-    if SlackMember.objects.filter(team_id=team_id, sprint_num=sprint_num).exists():
-        records = SlackMember.objects.filter(team_id=team_id, sprint_num=sprint_num).order_by('time')
+    if SlackMember.objects.filter(team_id=team_id, student_id=student_id, sprint_num=sprint_num).exists():
+        records = SlackMember.objects.filter(team_id=team_id, student_id=student_id, sprint_num=sprint_num).order_by('time')
         start_time = records[0].time / 1000
 
         if sprint_end and start_time > sprint_end:
             for record in records:
-                result[record.student_id]['total_number'] += record.message_num
-                result[record.student_id]['channel'][record.channel_name] = record.message_num
-                total_number += record.message_num
-            result['total_number'] = total_number
+                result['total_number'] += record.message_num
+                result['channel'][record.channel_name] = record.message_num
             logger.info('result: {}'.format(result))
             resp = init_http_response_my_enum(RespCode.success, data=result)
             return make_json_response(resp=resp)
@@ -431,36 +429,27 @@ def get_member_data(request, *args, **kwargs):
             for channel in channels:
                 messages = get_channel_messages(client, channel['id'], start_time, sprint_end)
                 for message in messages:
-                    if message['user'] not in user_email:
+                    if message['user'] != student_info['id']:
                         continue
-                    email = user_email[message['user']]
-                    if email not in student_emails:
-                        continue
-                    student = temp_result[student_emails[email]['student_id']]
-                    student['total_number'] += 1
-                    student['channel'][channel['name']] += 1
-                    total_number += 1
+                    temp_result['total_number'] += 1
+                    temp_result['channel'][channel['name']] += 1
 
             for record in records:
-                record.message_num += temp_result[record.student_id]['channel'][record.channel_name]
-                temp_result[record.student_id]['channel'].pop(record.channel_name)
-                result[record.student_id]['channel'][record.channel_name] = record.message_num
-                result[record.student_id]['total_number'] += record.message_num
-                total_number += record.message_num
+                record.message_num += temp_result['channel'][record.channel_name]
+                temp_result['channel'].pop(record.channel_name)
+                result['channel'][record.channel_name] = record.message_num
+                result['total_number'] += record.message_num
                 record.time = mills_timestamp()
                 record.save()
 
             # save new created channels
             logger.info('temp result: {}'.format(temp_result))
-            for student_id in temp_result:
-                for k, v in temp_result[student_id]['channel'].items():
-                    result[student_id]['channel'][k] = v
-                    result[student_id]['total_number'] += v
-                    total_number += v
-                    slack_member = SlackMember(team_id=team_id, student_id=student_id, channel_name=k, message_num=v,
-                                               sprint_num=sprint_num, time=mills_timestamp())
-                    slack_member.save()
-            result["total_number"] = total_number
+            for k, v in temp_result['channel'].items():
+                result['channel'][k] = v
+                result['total_number'] += v
+                slack_member = SlackMember(team_id=team_id, student_id=student_id, channel_name=k, message_num=v,
+                                           sprint_num=sprint_num, time=mills_timestamp())
+                slack_member.save()
             logger.info('result: {}'.format(result))
             resp = init_http_response_my_enum(RespCode.success, data=result)
             return make_json_response(resp=resp)
@@ -468,24 +457,17 @@ def get_member_data(request, *args, **kwargs):
         for channel in channels:
             messages = get_channel_messages(client, channel['id'], sprint_start, sprint_end)
             for message in messages:
-                if message['user'] not in user_email:
+                if message['user'] != student_info['id']:
                     continue
-                email = user_email[message['user']]
-                if email not in student_emails:
-                    continue
-                student = result[student_emails[email]['student_id']]
-                student['total_number'] += 1
-                student['channel'][channel['name']] += 1
-                total_number += 1
+                result['total_number'] += 1
+                result['channel'][channel['name']] += 1
 
-            for student_id in result:
-                student = result[student_id]
-                slack_member = SlackMember(team_id=team_id, student_id=student_id, channel_name=channel['name'],
-                                           message_num=student['channel'][channel['name']], sprint_num=sprint_num,
+            for c in result['channel']:
+                slack_member = SlackMember(team_id=team_id, student_id=student_id, channel_name=c,
+                                           message_num=result['channel'][c], sprint_num=sprint_num,
                                            time=mills_timestamp())
                 slack_member.save()
 
-    result['total_number'] = total_number
     logger.info('result: {}'.format(result))
     resp = init_http_response_my_enum(RespCode.success, data=result)
     return make_json_response(resp=resp)
