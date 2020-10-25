@@ -144,7 +144,7 @@ def get_team_data(request, *args, **kwargs):
                 result[record.channel_name] = record.message_num
                 total_number += record.message_num
             result['total_number'] = total_number
-            logger.info('result: {}', result)
+            logger.info('result: {}'.format(result))
             resp = init_http_response_my_enum(RespCode.success, data=result)
             return make_json_response(resp=resp)
 
@@ -163,7 +163,7 @@ def get_team_data(request, *args, **kwargs):
                 channel.save()
 
             # save new created channels
-            logger.info('temp result: {}', temp_result)
+            logger.info('temp result: {}'.format(temp_result))
             for (channel, num) in temp_result.items():
                 print(channel, num)
                 result[channel] = num
@@ -172,7 +172,7 @@ def get_team_data(request, *args, **kwargs):
                                        time=mills_timestamp())
                 slack_team.save()
             result["total_number"] = total_number
-            logger.info('result: {}', result)
+            logger.info('result: {}'.format(result))
             resp = init_http_response_my_enum(RespCode.success, data=result)
             return make_json_response(resp=resp)
     else:
@@ -180,7 +180,7 @@ def get_team_data(request, *args, **kwargs):
         for channel in channels:
             messages = get_channel_messages(client, channel['id'], sprint_start, sprint_end)
 
-            logger.info(channel['name'], len(messages))
+            logger.info("{}: {}".format(channel['name'], len(messages)))
             result[channel['name']] = len(messages)
             total_number += len(messages)
             slack_team = SlackTeam(team_id=team_id, channel_name=channel['id'], message_num=result[channel['name']],
@@ -188,7 +188,7 @@ def get_team_data(request, *args, **kwargs):
             slack_team.save()
         result['total_number'] = total_number
 
-        logger.info('result: {}', result)
+        logger.info('result: {}'.format(result))
         resp = init_http_response_my_enum(RespCode.success, data=result)
         return make_json_response(resp=resp)
 
@@ -328,7 +328,7 @@ def get_all_member_data(request, *args, **kwargs):
                 slack_member.save()
 
     result['total_number'] = total_number
-    logger.info('result: {}', result)
+    logger.info('result: {}'.format(result))
     resp = init_http_response_my_enum(RespCode.success, data=result)
     return make_json_response(resp=resp)
 
