@@ -144,6 +144,10 @@ def get_team_data(request, *args, **kwargs):
                 result[record.channel_name] = record.message_num
                 total_number += record.message_num
             result['total_number'] = total_number
+            if sprint_start:
+                result['sprint_start'] = sprint_start * 1000
+            if sprint_end:
+                result['sprint_end'] = sprint_end * 1000
             logger.info('result: {}'.format(result))
             resp = init_http_response_my_enum(RespCode.success, data=result)
             return make_json_response(resp=resp)
@@ -171,6 +175,10 @@ def get_team_data(request, *args, **kwargs):
                                        time=mills_timestamp())
                 slack_team.save()
             result["total_number"] = total_number
+            if sprint_start:
+                result['sprint_start'] = sprint_start * 1000
+            if sprint_end:
+                result['sprint_end'] = sprint_end * 1000
             logger.info('result: {}'.format(result))
             resp = init_http_response_my_enum(RespCode.success, data=result)
             return make_json_response(resp=resp)
@@ -186,6 +194,10 @@ def get_team_data(request, *args, **kwargs):
                                    sprint_num=sprint_num, time=mills_timestamp())
             slack_team.save()
         result['total_number'] = total_number
+        if sprint_start:
+            result['sprint_start'] = sprint_start * 1000
+        if sprint_end:
+            result['sprint_end'] = sprint_end * 1000
 
         logger.info('result: {}'.format(result))
         resp = init_http_response_my_enum(RespCode.success, data=result)
@@ -265,6 +277,10 @@ def get_all_member_data(request, *args, **kwargs):
                 result[record.student_id]['channel'][record.channel_name] = record.message_num
                 total_number += record.message_num
             result['total_number'] = total_number
+            if sprint_start:
+                result['sprint_start'] = sprint_start * 1000
+            if sprint_end:
+                result['sprint_end'] = sprint_end * 1000
             logger.info('result: {}'.format(result))
             resp = init_http_response_my_enum(RespCode.success, data=result)
             return make_json_response(resp=resp)
@@ -302,6 +318,10 @@ def get_all_member_data(request, *args, **kwargs):
                                                sprint_num=sprint_num, time=mills_timestamp())
                     slack_member.save()
             result["total_number"] = total_number
+            if sprint_start:
+                result['sprint_start'] = sprint_start * 1000
+            if sprint_end:
+                result['sprint_end'] = sprint_end * 1000
             logger.info('result: {}'.format(result))
             resp = init_http_response_my_enum(RespCode.success, data=result)
             return make_json_response(resp=resp)
@@ -327,6 +347,10 @@ def get_all_member_data(request, *args, **kwargs):
                 slack_member.save()
 
     result['total_number'] = total_number
+    if sprint_start:
+        result['sprint_start'] = sprint_start * 1000
+    if sprint_end:
+        result['sprint_end'] = sprint_end * 1000
     logger.info('result: {}'.format(result))
     resp = init_http_response_my_enum(RespCode.success, data=result)
     return make_json_response(resp=resp)
