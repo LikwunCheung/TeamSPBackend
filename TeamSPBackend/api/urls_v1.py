@@ -9,8 +9,7 @@ from .views.invitation import invitation_router, invite_accept
 from .views.account import account_router, login, logout, update_account, delete, atl_login, supervisor_router
 from .views.subject import subject_router, update_subject, delete_subject
 from .views.team import team_router, get_team_members
-from .views.slack1.slack import get_member_data
-from .views.slack import get_team_data, get_all_member_data
+from .views.slack import get_team_data, get_all_member_data, get_member_data
 from .views.git import get_git_commits
 
 urlpatterns = [
