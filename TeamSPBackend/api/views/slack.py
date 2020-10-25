@@ -128,8 +128,8 @@ def get_team_data(request, *args, **kwargs):
     if sprint_num >= 0:
         parameter_start = 'sprint_start_{}'.format(sprint_num)
         parameter_end = 'sprint_end_{}'.format(sprint_num)
-        sprint_start = team.__getattribute__(parameter_start, None)
-        sprint_end = team.__getattribute__(parameter_end, None)
+        sprint_start = team.__getattribute__(parameter_start)
+        sprint_end = team.__getattribute__(parameter_end)
         logger.info('sprint start {} end {}'.format(sprint_start, sprint_end))
 
     result = dict()
