@@ -10,7 +10,7 @@ from .views.account import account_router, login, logout, update_account, delete
 from .views.subject import subject_router, update_subject, delete_subject
 from .views.team import team_router, get_team_members
 from .views.slack1.slack import get_member_data
-from .views.slack import get_team_data
+from .views.slack import get_team_data, get_all_member_data
 from .views.git import get_git_commits
 
 urlpatterns = [
@@ -71,6 +71,7 @@ urlpatterns = [
     # Slack Related API
     # path('slack', slack_router),
     path('slack/<int:id>', get_team_data),
+    path('slack/<int:id>/member', get_all_member_data),
     path('slack/<int:team_id>/member/<int:student_id>', get_member_data),
 ]
     
