@@ -152,7 +152,6 @@ def get_team_data(request, *args, **kwargs):
             # call Slack api to get all channel messages in a specific sprint
             for channel in channels:
                 messages = get_channel_messages(client, channel['id'], start_time, sprint_end)
-                logger.info(channel['name'], len(messages))
                 temp_result[channel['name']] = len(messages)
             for channel in records:
                 channel.message_num += temp_result[channel.channel_name]
