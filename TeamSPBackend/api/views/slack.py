@@ -381,7 +381,7 @@ def get_member_data(request, *args, **kwargs):
     for uid in user_email:
         email_id[user_email[uid]] = uid
 
-    student = Student.objects.get(student_id=student_id).only('email', 'student_id')
+    student = Student.objects.get(student_id=student_id)
     student_uid = email_id[student.email]
     student_info = dict(
         email=student.email,
