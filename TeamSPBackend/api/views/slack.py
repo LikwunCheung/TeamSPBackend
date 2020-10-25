@@ -388,6 +388,7 @@ def get_member_data(request, *args, **kwargs):
         id=student_uid,
         name=users[email_id[student.email]],
     )
+    print(student_info)
 
     # get sprint number from request
     sprint_num = request.GET.get("sprint_num", None)
@@ -408,7 +409,6 @@ def get_member_data(request, *args, **kwargs):
         name=student_info['name'],
         channel=dict()
     )
-
     for channel in channels:
         result['channel'][channel['name']] = 0
 
@@ -423,6 +423,10 @@ def get_member_data(request, *args, **kwargs):
                 result['total_number'] += record.message_num
                 result['channel'][record.channel_name] = record.message_num
             logger.info('result: {}'.format(result))
+            if sprint_start:
+                result['sprint_start'] = sprint_start * 1000
+            if sprint_end:
+                result['sprint_end'] = sprint_end * 1000
             resp = init_http_response_my_enum(RespCode.success, data=result)
             return make_json_response(resp=resp)
         else:
@@ -451,6 +455,10 @@ def get_member_data(request, *args, **kwargs):
                                            sprint_num=sprint_num, time=mills_timestamp())
                 slack_member.save()
             logger.info('result: {}'.format(result))
+            if sprint_start:
+                result['sprint_start'] = sprint_start * 1000
+            if sprint_end:
+                result['sprint_end'] = sprint_end * 1000
             resp = init_http_response_my_enum(RespCode.success, data=result)
             return make_json_response(resp=resp)
     else:
@@ -469,5 +477,9 @@ def get_member_data(request, *args, **kwargs):
                 slack_member.save()
 
     logger.info('result: {}'.format(result))
+    if sprint_start:
+        result['sprint_start'] = sprint_start * 1000
+    if sprint_end:
+        result['sprint_end'] = sprint_end * 1000
     resp = init_http_response_my_enum(RespCode.success, data=result)
     return make_json_response(resp=resp)
