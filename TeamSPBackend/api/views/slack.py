@@ -236,7 +236,7 @@ def get_all_member_data(request, *args, **kwargs):
     logger.info('sprint_num: {}'.format(sprint_num))
 
     sprint_start = None
-    sprint_end = Non
+    sprint_end = None
     if sprint_num is not None:
         parameter_start = 'sprint_start_{}'.format(sprint_num)
         parameter_end = 'sprint_end_{}'.format(sprint_num)
