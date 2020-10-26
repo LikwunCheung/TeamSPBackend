@@ -489,14 +489,7 @@ def get_team_members(request, *args, **kwargs):
         :return:
         """
 
-    team_id = None
-    for arg in args:
-        if isinstance(arg, dict):
-            team_id = arg.get('team_id', None)
-            print("FUN_get_team_members: ", team_id)
-    # Queryset list of team members
-    team_members = []
-    # Result list for members: supervisor, secondary_supervisor, and team members
+    team_id = int(kwargs['id'])
     members = []
     resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
     try:
