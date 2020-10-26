@@ -10,7 +10,7 @@ from .views.account import account_router, login, logout, update_account, delete
 from .views.subject import subject_router, update_subject, delete_subject
 from .views.team import team_router, get_team_members
 from .views.slack import get_team_data, get_all_member_data, get_member_data
-from .views.git import get_git_commits
+from .views.git import get_git_commits, get_git_pr
 
 urlpatterns = [
     # Invitation Related API
@@ -42,7 +42,7 @@ urlpatterns = [
 
     # Git Related API
     path('git/commit', get_git_commits),
-
+    path('git/pullrequest', get_git_pr),
     # Confluence Related API
     path('confluence/spaces/<space_key>', confluence.get_space),
     path('confluence/spaces/<space_key>/pages', confluence.get_pages_of_space),
