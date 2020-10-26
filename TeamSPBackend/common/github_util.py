@@ -16,6 +16,8 @@ GIT_CLONE_COMMAND = 'git clone {} {}'
 GIT_CHECKOUT_COMMAND = 'git -C {} checkout {}'
 GIT_UPDATE_COMMAND = 'git -C {} pull origin HEAD'
 GIT_LOG_COMMAND = 'git -C {} log --pretty=format:%H%n%an%n%at%n%s --shortstat --no-merges'
+GIT_LOG_PR_COMMAND = 'git -C {} log --pretty=format:%H%n%an%n%at%n%s --shortstat --merges'
+
 GIT_LOG_AUTHOR = ' --author={}'
 GIT_LOG_AFTER = ' --after={}'
 GIT_LOG_BEFORE = ' --before={}'
@@ -112,6 +114,51 @@ def get_commits(repo, author=None, branch=None, after=None, before=None):
         commits.append(commit)
     return commits
 
+
+def get_pull_request(repo, author=None, branch=None, after=None, before=None):
+    pull_repo(repo)
+
+    repo_path = REPO_PATH + convert(repo)
+    path = COMMIT_DIR + '/' + convert(repo) + '.log'
+
+    git_log = GIT_LOG_PR_COMMAND.format(repo_path)
+    if author:
+        git_log += GIT_LOG_AUTHOR.format(author)
+    if after:
+        git_log += GIT_LOG_AFTER.format(after)
+    if before:
+        git_log += GIT_LOG_BEFORE.format(before)
+    git_log += GIT_LOG_PATH.format(path)
+
+    if not branch:
+        branch = 'master'
+
+    os.system(GIT_CHECKOUT_COMMAND.format(repo_path, branch))
+
+    logger.info('[GIT] Path: {} Executing: {}'.format(path, git_log))
+    os.system(git_log)
+
+    with open(path, 'r', encoding='utf-8') as f:
+        lines = f.readlines()
+
+    if not lines:
+        raise Exception('git log error')
+
+    commits = list()
+    for i in range(0, len(lines), 4):
+        hash_code = lines[i].strip()
+        author = lines[i + 1].strip()
+        date = int(lines[i + 2].strip()) * 1000
+        description = lines[i + 3].strip()
+
+        commit = dict(
+            hash=hash_code,
+            author=author,
+            date=date,
+            description=description,
+        )
+        commits.append(commit)
+    return commits
 
 # if __name__ == '__main__':
 #     init_git()
