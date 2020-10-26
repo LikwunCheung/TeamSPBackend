@@ -1,7 +1,6 @@
 import ujson
 import logging
 
-from django.http.response import HttpResponseBadRequest
 from django.http import HttpResponse, HttpResponseNotAllowed
 from django.views.decorators.http import require_http_methods
 from django.db import transaction
@@ -502,9 +501,11 @@ def get_team_members(request, *args, **kwargs):
     resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
     try:
         team = Team.objects.get(team_id=team_id)
-        team_members.append(TeamMember.objects.filter(team_id=team_id))
-    except ObjectDoesNotExist:
-        return make_json_response(HttpResponseBadRequest, resp)
+        team_members = TeamMember.objects.filter(team_id=team_id)
+    except ObjectDoesNotExist as e:
+        logger.info(e)
+        resp = init_http_response_my_enum(RespCode.invalid_parameter)
+        return make_json_response(resp=resp)
     try:
         supervisor = User.objects.get(account_id=team.supervisor_id)
         if supervisor:
@@ -529,7 +530,7 @@ def get_team_members(request, *args, **kwargs):
             members.append(secondary_supervisor_data)
     except ObjectDoesNotExist:
         resp['secondary_supervisor'] = "secondary_supervisor not exist"
-    for member in team_members[0]:
+    for member in team_members:
         student = Student.objects.get(student_id=member.student_id)
         member_data = {
             'student_id': student.student_id,
