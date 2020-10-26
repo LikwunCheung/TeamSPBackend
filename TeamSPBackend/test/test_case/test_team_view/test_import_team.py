@@ -18,20 +18,21 @@ class ImportTeamTestCase(TestCase):
         session = self.client.session
         session["user"]["atl_username"] = "yho4"
         session["user"]["atl_password"] = "mil1maci"
-        session.save()
-
-    def test_import_team_success_team_is_saved(self):
-        """
-        Tests the function for the API: Post 'team'
-        """
-        # Set up team data to import
-        team_body = {
+        session["team_body"] = {
             "team": "swen90013-2020-ce",
             "subject": "swen90013",
             "year": "2020",
             "project": "ce"
         }
-        print(str(self.client.post('/api/v1/team', data=team_body, content_type="application/json").json()))
+
+        session.save()
+
+    def test_import_team_success_team_is_saved(self):
+        """
+        Tests whether the team object is successfully imported
+        for the function for the API: Post 'team'
+        """
+        print(str(self.client.post('/api/v1/team', data=self.client.session["team_body"], content_type="application/json").json()))
         teams = Team.objects.all()
         print(str(teams))
         imported_team = Team.objects.get(name="swen90013-2020-ce")
@@ -41,7 +42,14 @@ class ImportTeamTestCase(TestCase):
             "year": imported_team.year,
             "project": imported_team.project_name
         }
-        self.assertDictEqual(team_body, imported_team_dict, "Input body and imported team data is not equal.")
+        self.assertDictEqual(self.client.session["team_body"], imported_team_dict, "Input body and imported team data is not equal.")
+
+    #  def test_import_team_success_team_members_are_saved(self):
+        #  """
+        #  Tests whether the team members objects are successfully imported
+        #  for the function for the API: Post 'team'
+        #  """
+        #  print(str(self.client.post('/api/v1/team', data=self.client.session["team_body"], content_type="application/json").json()))
 
 
 if __name__ == '__main__':

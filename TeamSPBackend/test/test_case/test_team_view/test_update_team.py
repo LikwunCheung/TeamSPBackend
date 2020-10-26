@@ -7,6 +7,7 @@ from TeamSPBackend.team.models import Team
 from TeamSPBackend.api.views import team
 from TeamSPBackend.account.models import Account
 from TeamSPBackend.common.config import SALT
+from TeamSPBackend.test.utils import login_helpers, object_creation_helpers
 
 #  sys.path.append('/Users/keri/git/TeamSPBackend/TeamSPBackend' + '/..')
 
@@ -15,41 +16,61 @@ class UpdateTeamTestCase(TestCase):
 
     @classmethod
     def setUpTestData(cls):
+        object_creation_helpers.createGenericAdmin()
+
+    def setUp(self):
+        login_helpers.login(self.client)
         team_data = {
             "name": "test_swen90013_2020_sp",
-            "description": "this is a team created for testing",
-            "subject_id": 123,
+            "subject_code": '123',
             "supervisor_id": 2,
             "secondary_supervisor_id": 3,
             "year": "2020",
             "create_date": "01012020",
-            "expired": 2222,
-            "project_name": "sp"
+            "project_name": "sp",
+            "sprint_start_0": "123456",
+            "sprint_end_0": "123456",
+            "sprint_start_1": "123456",
+            "sprint_end_1": "123456",
+            "sprint_start_2": "123456",
+            "sprint_end_2": "123456",
+            "sprint_start_3": "123456",
+            "sprint_end_3": "123456",
+            "sprint_start_4": "123456",
+            "sprint_end_4": "123456",
         }
-        req = HttpRequest()
-        req.body = team_data
-        response = team.create_team(req)
+        team = Team(name=team_data["name"],
+                    subject_code=team_data["subject_code"],
+                    supervisor_id=team_data["supervisor_id"],
+                    secondary_supervisor_id=team_data["secondary_supervisor_id"],
+                    year=team_data["year"],
+                    create_date=team_data["create_date"],
+                    project_name=team_data["project_name"],
+                    sprint_start_0=team_data["sprint_start_0"],
+                    sprint_end_0=team_data["sprint_end_0"],
+                    sprint_start_1=team_data["sprint_start_1"],
+                    sprint_end_1=team_data["sprint_end_1"],
+                    sprint_start_2=team_data["sprint_start_2"],
+                    sprint_end_2=team_data["sprint_end_2"],
+                    sprint_start_3=team_data["sprint_start_3"],
+                    sprint_end_3=team_data["sprint_end_3"],
+                    sprint_start_4=team_data["sprint_start_4"],
+                    sprint_end_4=team_data["sprint_end_4"],
+                    )
+        team.save()
 
         self.team = Team.objects.get(name=team_data["name"])
 
     def test_update_team_description_supervisorid_secsupervisorid(self):
         new_team_data = {
-            "description": "new description",
             "supervisor_id": 5,
-            "secondary_supervisor_id": 6
+            "secondary_supervisor_id": 7,
         }
-        req = HttpRequest()
-        req.body = new_team_data
-        team.update_team(req, self.team["team_id"])
+        print(str(self.client.post('/api/v1/team/1', data=new_team_data, content_type="application/json").json()))
 
-        updated_team = Team.objects.get(name=self.team["name"])
-        self.assertEqual(
-            updated_team["name"], self.team_data["name"], "team names are not equal")
-        self.assertNotEqual(
-            updated_team["description"], "this is a team created for testing", "description is not updated")
-        self.assertEqual(
-            updated_team["description"], "new description", "description is still not updated")
-        self.assertEqual(updated_team["supervisor_id"],
-                         5, "supervisor_id not updated")
-        self.assertEqual(
-            updated_team["secondary_supervisor_id"], 6, "secondary_supervisor_id not updated")
+        updated_team = Team.objects.get(name=self.team.name)
+        updated_team_data = {
+            "supervisor_id": updated_team.supervisor_id,
+            "secondary_supervisor_id": updated_team.secondary_supervisor_id
+        }
+        self.assertDictEqual(new_team_data, updated_team_data, "team data is not updated or somehow not equal")
