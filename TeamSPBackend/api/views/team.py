@@ -527,7 +527,7 @@ def get_team_members(request, *args, **kwargs):
         student = Student.objects.get(student_id=member.student_id)
         member_data = {
             'student_id': student.student_id,
-            'fullname': student.name,
+            'fullname': student.fullname,
             'email': student.email
         }
         members.append(member_data)
