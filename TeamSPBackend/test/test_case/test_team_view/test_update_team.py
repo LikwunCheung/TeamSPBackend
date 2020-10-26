@@ -61,12 +61,16 @@ class UpdateTeamTestCase(TestCase):
 
         self.team = Team.objects.get(name=team_data["name"])
 
-    def test_update_team_description_supervisorid_secsupervisorid(self):
+    def test_update_team_success(self):
+        """
+        Tests the success scenario for function update_team
+        for the API: Post 'team/<int:id>'
+        """
         new_team_data = {
             "supervisor_id": 5,
             "secondary_supervisor_id": 7,
         }
-        print(str(self.client.post('/api/v1/team/1', data=new_team_data, content_type="application/json").json()))
+        self.client.post('/api/v1/team/1', data=new_team_data, content_type="application/json").json()
 
         updated_team = Team.objects.get(name=self.team.name)
         updated_team_data = {
@@ -74,3 +78,20 @@ class UpdateTeamTestCase(TestCase):
             "secondary_supervisor_id": updated_team.secondary_supervisor_id
         }
         self.assertDictEqual(new_team_data, updated_team_data, "team data is not updated or somehow not equal")
+
+    def test_update_team_failure(self):
+        """
+        Tests the failure scenario for function update_team
+        for the API: Post 'team/<int:id>'
+        """
+        new_team_data = {
+            "supervisor_id": 5,
+            "secondary_supervisor_id": 7,
+        }
+        self.client.post('/api/v1/team/2', data=new_team_data, content_type="application/json").json()
+        updated_team = Team.objects.get(name=self.team.name)
+        updated_team_data = {
+            "supervisor_id": updated_team.supervisor_id,
+            "secondary_supervisor_id": updated_team.secondary_supervisor_id
+        }
+        self.assertNotEqual(new_team_data, updated_team_data, "team data is somehow updated or equal despite wrong team id being inputted")
