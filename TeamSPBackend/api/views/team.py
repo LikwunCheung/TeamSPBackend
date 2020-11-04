@@ -21,7 +21,7 @@ logger = logging.getLogger('django')
 
 
 @require_http_methods(['POST', 'GET'])
-@check_user_login()
+#  @check_user_login()
 def team_router(request, *args, **kwargs):
     team_id = None
     if isinstance(kwargs, dict):
@@ -469,7 +469,6 @@ def update_team(request, body, *args, **kwargs):
     return make_json_response(resp=resp)
 
 
-
 """
 Get all team members of a team
 Method: Get
@@ -480,7 +479,7 @@ Request:
 
 
 @require_http_methods(['GET'])
-@check_user_login()
+#  @check_user_login()
 def get_team_members(request, *args, **kwargs):
     """
         Get certain team members

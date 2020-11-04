@@ -5,8 +5,6 @@ import hashlib
 
 from TeamSPBackend.team.models import Team
 from TeamSPBackend.api.views import team
-from TeamSPBackend.account.models import Account
-from TeamSPBackend.common.config import SALT
 from TeamSPBackend.test.utils import login_helpers, object_creation_helpers
 
 #  sys.path.append('/Users/keri/git/TeamSPBackend/TeamSPBackend' + '/..')
