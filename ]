@@ -167,4 +167,4 @@ class GetTeamTestCase(TestCase):
         """
         response = self.client.get('/api/v1/team/1')
         session = self.client.session
-        self.assertEqual(response.json()['data']['secondary_supervisor'], "secondary_supervisor not exist", "secondary supervisor exists or response data is incorrect")
+        self.assertEqual(response.json()['data']['secondary_supervisor'], "supervisor not exist", "supervisor exists or response data is incorrect")
