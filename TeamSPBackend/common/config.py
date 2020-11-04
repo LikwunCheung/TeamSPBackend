@@ -32,3 +32,5 @@ PROXY_HOST = 'proxy.unimelb.edu.au'
 PROXY_PORT = 8000
 
 INVITATION_TITLE = 'Supervisor Invitation Link'
+
+MESSAGES_PER_PAGE = 200

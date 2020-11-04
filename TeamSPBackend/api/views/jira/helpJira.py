@@ -208,6 +208,7 @@ def get_comment_count_one_student(request, team, student_id):
     resp['comments'] = count/16
     return HttpResponse(json.dumps(resp), content_type="application/json")
 
+
 @require_http_methods(['GET'])
 def get_sprints_dates(request, team):
     user = request.session.get('user')
@@ -215,13 +216,12 @@ def get_sprints_dates(request, team):
     password = user['atl_password']
 
     jira = Jira(
-    url='https://jira.cis.unimelb.edu.au:8444',
-    username=username,
-    password=password)
+        url='https://jira.cis.unimelb.edu.au:8444',
+        username=username,
+        password=password
+    )
 
-
-    resp = init_http_response(
-        RespCode.success.value.key, RespCode.success.value.msg)
+    resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
 
     issues = json.dumps(jira.get_all_project_issues(team, fields='*all'))
     pprint(issues)

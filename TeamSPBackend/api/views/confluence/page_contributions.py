@@ -20,19 +20,10 @@ def get_all_page_contributions(request, space_key):
     Request: space_key
     Return: a dictionary of {"username": [list of contributed page_ids]}
     """
-    #  user = request.session.get('user')
-    #  username = user['atl_username']
-    #  password = user['atl_password']
-    username = "yho4"
-    password = "mil1maci"
+    user = request.session.get('user')
+    username = user['atl_username']
+    password = user['atl_password']
     conf = confluence.log_into_confluence(username, password)
-
-    # Get all page ids
-    page_id_list = get_list_of_page_ids(space_key, conf)
-    if page_id_list == -1:
-        resp = init_http_response(
-            RespCode.confluence_api_error.value.key, RespCode.confluence_api_error.value.msg)
-        return make_json_response(HttpResponse, resp)
 
     # Read confluence config yaml file
     config_dict = read_confluence_config()
@@ -41,28 +32,28 @@ def get_all_page_contributions(request, space_key):
             RespCode.config_not_found.value.key, RespCode.config_not_found.value.msg)
         return make_json_response(HttpResponse, resp)
 
-    # Create a dictionary of team members and the number of contributions made to a confluence space
-    member_contributions = {}
     # Build query url
     host = config_dict["common"]["host"]
     port = config_dict["common"]["port"]
     base_path = config_dict["common"]["path"]
-    api_path = config_dict["api"]["get-page-contributors"]["path"]
-    query = config_dict["api"]["get-page-contributors"]["query"]
-    url = f"{host}:{port}{base_path}{api_path}?{query}"
+    api_path = config_dict["api"]["get-all-page-contributors"]["path"]
+    query_expand = config_dict["api"]["get-all-page-contributors"]["query"]["expand"]
+    query_limit = config_dict["api"]["get-all-page-contributors"]["query"]["limit"]
 
-    #  page_id = page_id_list[0]
-    for page_id in page_id_list:
+    base_url = f"{host}:{port}{base_path}{api_path}?expand={query_expand}&limit={query_limit}"
 
-        # Get list of contributors to a page
-        new_url = url.replace("{page_id}", str(page_id), 1)
-        conf_resp = requests.get(
-            new_url, auth=HTTPBasicAuth(username, password)).json()
-        users = conf_resp["contributors"]["publishers"]["users"]
-        #  print("users is " + str(len(users)))
-        #  print("fuck" + url)
+    # Get list of contributors to a page
+    url = base_url.replace("{space_key}", space_key, 1)
+    conf_resp = requests.get(
+        url, auth=HTTPBasicAuth(username, password)).json()
 
-        for user in users:
+    # Create a dictionary of team members and the number of contributions made to a confluence space
+    member_contributions = {}
+
+    # Loop through every page and store in a dictionary {"page": set of members}
+    for page in conf_resp["results"]:
+        page_contributors = page["history"]["contributors"]["publishers"]["users"]
+        for user in page_contributors:
             if not user["username"] in member_contributions:
                 member_contributions[user["username"]] = 0
             member_contributions[user["username"]] += 1
@@ -71,27 +62,6 @@ def get_all_page_contributions(request, space_key):
         RespCode.success.value.key, RespCode.success.value.msg)
     resp['data'] = member_contributions
     return make_json_response(HttpResponse, resp)
-
-
-def get_list_of_page_ids(space_key, confluence):
-    """
-    Helper funcction to retrieve a list of page ids for the space (by space_key)
-    """
-
-    try:
-        offset = 0
-        interval = 100
-        page_id_list = []
-        response = confluence.get_all_pages_from_space(
-            space_key, start=offset, limit=interval)
-        while (response):
-            page_id_list += [page['id'] for page in response]
-            offset += interval
-            response = confluence.get_all_pages_from_space(
-                space_key, start=offset, limit=interval)
-        return page_id_list
-    except HTTPError as e:
-        return -1
 
 
 def read_confluence_config():

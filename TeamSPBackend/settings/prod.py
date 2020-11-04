@@ -43,7 +43,7 @@ DATABASES = {
         'NAME': 'sp90013',
         'USER': 'sp90013',
         'PASSWORD': 'sp90013',
-        'HOST': '172.26.88.107',
+        'HOST': 'localhost',
         'PORT': 3306,
         'CHARSET': 'utf8mb4',
         'TEST': {

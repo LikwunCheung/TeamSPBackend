@@ -1,7 +1,6 @@
 import ujson
 import logging
 
-from django.http.response import HttpResponseBadRequest
 from django.http import HttpResponse, HttpResponseNotAllowed
 from django.views.decorators.http import require_http_methods
 from django.db import transaction
@@ -490,57 +489,51 @@ def get_team_members(request, *args, **kwargs):
         :return:
         """
 
-    team_id = None
-    for arg in args:
-        if isinstance(arg, dict):
-            team_id = arg.get('team_id', None)
-            print("FUN_get_team_members: ", team_id)
-    # Queryset list of team members
-    team_members = []
-    # Result list for members: supervisor, secondary_supervisor, and team members
+    team_id = int(kwargs['id'])
     members = []
-    resp = init_http_response(RespCode.success.value.key, RespCode.success.value.msg)
+    data = dict()
     try:
         team = Team.objects.get(team_id=team_id)
-        team_members.append(TeamMember.objects.filter(team_id=team_id))
-    except ObjectDoesNotExist:
-        return make_json_response(HttpResponseBadRequest, resp)
+        team_members = TeamMember.objects.filter(team_id=team_id)
+    except ObjectDoesNotExist as e:
+        logger.info(e)
+        resp = init_http_response_my_enum(RespCode.invalid_parameter)
+        return make_json_response(resp=resp)
+
     try:
         supervisor = User.objects.get(account_id=team.supervisor_id)
         if supervisor:
-            supervisor_data = {
+            data['supervisor'] = supervisor_data = {
                 'supervisor_id': supervisor.account_id,
                 'supervisor_first_name': supervisor.first_name,
                 'supervisor_last_name': supervisor.last_name,
                 'email': supervisor.email
             }
-            members.append(supervisor_data)
     except ObjectDoesNotExist:
-        resp['supervisor'] = "supervisor not exist"
+        data['supervisor'] = "supervisor not exist"
+
     try:
         secondary_supervisor = User.objects.get(account_id=team.secondary_supervisor_id)
         if secondary_supervisor:
-            secondary_supervisor_data = {
+            data['secondary_supervisor'] = secondary_supervisor_data = {
                 'secondary_supervisor_id': secondary_supervisor.account_id,
                 'secondary_supervisor_first_name': secondary_supervisor.first_name,
                 'secondary_supervisor_last_name': secondary_supervisor.last_name,
                 'email': secondary_supervisor.email,
             }
-            members.append(secondary_supervisor_data)
     except ObjectDoesNotExist:
-        resp['secondary_supervisor'] = "secondary_supervisor not exist"
-    for member in team_members[0]:
+        data['secondary_supervisor'] = "secondary_supervisor not exist"
+
+    for member in team_members:
         student = Student.objects.get(student_id=member.student_id)
         member_data = {
             'student_id': student.student_id,
-            'fullname': student.first_name,
+            'fullname': student.fullname,
             'email': student.email
         }
         members.append(member_data)
 
-    data = {
-        'team_members': members
-    }
+    data['team_members'] = members
+    resp = init_http_response_my_enum(RespCode.success, data)
+    return make_json_response(HttpResponse, resp)
 
-    resp['data'] = data
-    return make_json_response(HttpResponse, resp),

@@ -47,3 +47,14 @@ class TeamMember(models.Model):
     class Meta:
         db_table = 'team_member'
 
+
+class TeamConfiguration(models.Model):
+    id = models.AutoField(primary_key=True)
+    team_id = models.IntegerField()
+    slack_access = models.IntegerField()
+    slack_workspace = models.CharField(max_length=128)
+    slack_token = models.CharField(max_length=128)
+    # TODO: add more configuration attributes when needed
+
+    class Meta:
+        db_table = 'team_configuration'
