@@ -33,6 +33,7 @@ class ImportTeamTestCase(TestCase):
         for the function for the API: Post 'team'
         """
         print(str(self.client.post('/api/v1/team', data=self.client.session["team_body"], content_type="application/json").json()))
+        print("team body is " + str(self.client.session["team_body"]))
         teams = Team.objects.all()
         print(str(teams))
         imported_team = Team.objects.get(name="swen90013-2020-ce")

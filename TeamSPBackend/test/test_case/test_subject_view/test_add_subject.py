@@ -8,7 +8,7 @@ from django.http import HttpRequest
 import names
 
 
-class GetSubjectTestCase(TestCase):
+class AddSubjectTestCase(TestCase):
 
     @classmethod
     def setUpTestData(cls):

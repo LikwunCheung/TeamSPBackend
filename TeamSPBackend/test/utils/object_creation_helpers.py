@@ -6,6 +6,8 @@ from TeamSPBackend.subject.models import Subject
 from TeamSPBackend.account.models import Account, User
 from TeamSPBackend.test.utils import login_helpers
 
+import names
+
 
 def createGenericAdmin():
     admin_details = {
@@ -15,6 +17,12 @@ def createGenericAdmin():
 
 
 def createUser(role, user_details):
+    """
+    user_details:
+    - first_name
+    - last_name
+    - email
+    """
     # create account
     timestamp = mills_timestamp()
     username = user_details['first_name']
@@ -35,6 +43,26 @@ def createUser(role, user_details):
     user = User(account_id=account.account_id, username=username, first_name=first_name, last_name=last_name,
                 role=role, status=status, create_date=create_date, update_date=update_date, email=email)
     user.save()
+
+
+def generateUserDetails():
+    """
+    Generate first_name, last_name and email for a user.
+    Returns an object:
+    {
+        "first_name": first_name,
+        "last_name": last_name,
+        "email": email
+    }
+    """
+    first_name = names.get_first_name()
+    last_name = names.get_last_name()
+    email = first_name + last_name + "@gmail.com"
+    return {
+        "first_name": first_name,
+        "last_name": last_name,
+        "email": email
+    }
 
 
 def createSubject(subject_code, subject_name, coordinator_id):

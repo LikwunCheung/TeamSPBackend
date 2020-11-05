@@ -33,3 +33,21 @@ def login(client):
     session = client.session
     session['user'] = session_data
     session.save()
+
+
+def login_with_credentials(client, username, password):
+    credentials = {
+        'username': username,
+        'password': password
+    }
+    response = client.post('/api/v1/account/login', data=credentials, content_type="application/json")
+    user = User.objects.get(username=username)
+    session_data = dict(
+        id=user.user_id,
+        name=user.get_name(),
+        role=user.role,
+        is_login=True
+    )
+    session = client.session
+    session['user'] = session_data
+    session.save()
