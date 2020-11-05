@@ -32,10 +32,9 @@ class ImportTeamTestCase(TestCase):
         Tests whether the team object is successfully imported
         for the function for the API: Post 'team'
         """
-        print(str(self.client.post('/api/v1/team', data=self.client.session["team_body"], content_type="application/json").json()))
-        print("team body is " + str(self.client.session["team_body"]))
+        response = self.client.post('/api/v1/team', data=self.client.session["team_body"], content_type="application/json")
+
         teams = Team.objects.all()
-        print(str(teams))
         imported_team = Team.objects.get(name="swen90013-2020-ce")
         imported_team_dict = {
             "team": imported_team.name,
