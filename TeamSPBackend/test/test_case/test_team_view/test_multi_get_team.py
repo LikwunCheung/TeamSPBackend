@@ -210,15 +210,55 @@ class MultiGetTeamTestCase(TestCase):
         ]
 
         response = self.client.get('/api/v1/team')
-        print("fucking response is + " + str(response.json()["data"]["teams"]))
-        print("fucking expected is " + str(expected_teams_data))
         self.assertEqual(expected_teams_data, response.json()["data"]["teams"], "multi_get_teams for coordinator is busted")
 
-    #  def test_multi_get_team_as_supervisor_success(self):
-        #  """
-        #  Tests the success scenario for function multi_get_team() as a supervisor
-        #  for the API: Get 'team'
-        #  """
+    def test_multi_get_team_as_supervisor_success(self):
+        """
+        Tests the success scenario for function multi_get_team() as a supervisor
+        for the API: Get 'team'
+        """
+        # login as supervisor 1
+        supervisor_acc = Account.objects.get(account_id=3)
+        login_helpers.login_with_credentials(self.client, supervisor_acc.username, supervisor_acc.password)
+        supervisor = User.objects.get(user_id=3)
+        secondary_supervisor = User.objects.get(user_id=5)
+        expected_teams_data = [
+            {
+                "id": 1,
+                "name": "team_1",
+                "project_name": "test_project_1",
+                "year": 2020,
+                "supervisor": {
+                    "id": 3,
+                    "name": supervisor.get_name(),
+                    "email": supervisor.email
+                },
+                "secondary_supervisor": {
+                    "id": 5,
+                    "name": secondary_supervisor.get_name(),
+                    "email": secondary_supervisor.email
+                },
+            },
+            {
+                "id": 2,
+                "name": "team_2",
+                "project_name": "test_project_2",
+                "year": 2020,
+                "supervisor": {
+                    "id": 3,
+                    "name": supervisor.get_name(),
+                    "email": supervisor.email
+                },
+                "secondary_supervisor": {
+                    "id": 5,
+                    "name": secondary_supervisor.get_name(),
+                    "email": secondary_supervisor.email
+                },
+            },
+        ]
+
+        response = self.client.get('/api/v1/team')
+        self.assertEqual(expected_teams_data, response.json()["data"]["teams"], "multi_get_teams for supervisor is busted")
 
     #  def test_multi_get_team_as_admin_success(self):
         #  """
