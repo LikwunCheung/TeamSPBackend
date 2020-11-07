@@ -333,7 +333,8 @@ def get_supervisor(request, supervisor_id, *args, **kwargs):
     """
 
     try:
-        supervisor = User.objects.get(user_id=supervisor_id, role=Roles.supervisor.key, status=Status.valid.key)
+        supervisor = User.objects.get(user_id=supervisor_id, role__in=[Roles.supervisor.key, Roles.coordinator.key],
+                                      status=Status.valid.key)
     except ObjectDoesNotExist as e:
         resp = init_http_response_my_enum(RespCode.invalid_parameter)
         return make_json_response(resp=resp)
@@ -359,7 +360,7 @@ def multi_get_supervisor(request, *args, **kwargs):
     offset = int(request.GET.get('offset', 0))
     has_more = 0
 
-    supervisors = User.objects.filter(role=Roles.supervisor.key, status=Status.valid.key)\
+    supervisors = User.objects.filter(role__in=[Roles.supervisor.key, Roles.coordinator.key], status=Status.valid.key)\
         .only('user_id')[offset: offset + SINGLE_PAGE_LIMIT + 1]
     if len(supervisors) > SINGLE_PAGE_LIMIT:
         supervisors = supervisors[: SINGLE_PAGE_LIMIT]
