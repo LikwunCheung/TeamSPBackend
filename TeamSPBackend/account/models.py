@@ -32,6 +32,8 @@ class User(models.Model):
     status = models.IntegerField(blank=False, null=False)
     create_date = models.BigIntegerField(blank=False, null=False)
     update_date = models.BigIntegerField(blank=False, null=False)
+    git_username = models.CharField(max_length=128)
+    slack_email = models.CharField(max_length=128)
 
     class Meta:
         db_table = 'user'
