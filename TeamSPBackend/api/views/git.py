@@ -64,7 +64,8 @@ def get_git_pr(request, body, *args, **kwargs):
     commits = get_pull_request(git_dto.url, git_dto.author, git_dto.branch, git_dto.second_after, git_dto.second_before)
     total = len(commits)
     author = set()
-
+    for commit in commits:
+        author.add(commit['author'])
     data = dict(
         total=total,
         author=list(author),
