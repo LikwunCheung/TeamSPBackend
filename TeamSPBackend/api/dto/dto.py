@@ -148,6 +148,13 @@ class UpdateTeamDTO(object):
         self.secondary_supervisor_id = None
 
 
+class TeamMemberDTO(object):
+
+    def __init__(self):
+        self.git_name = None
+        self.slack_email = None
+
+
 class GitDTO(object):
 
     def __init__(self):

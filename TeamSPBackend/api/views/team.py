@@ -6,7 +6,7 @@ from django.views.decorators.http import require_http_methods
 from django.db import transaction
 from django.db.models import Q, ObjectDoesNotExist
 
-from TeamSPBackend.api.dto.dto import AddTeamDTO, UpdateTeamDTO
+from TeamSPBackend.api.dto.dto import AddTeamDTO, UpdateTeamDTO, TeamMemberDTO
 
 from TeamSPBackend.common.config import SINGLE_PAGE_LIMIT
 from TeamSPBackend.common.utils import check_user_login, make_json_response, init_http_response, check_body, body_extract, mills_timestamp, init_http_response_my_enum
@@ -537,3 +537,47 @@ def get_team_members(request, *args, **kwargs):
     resp = init_http_response_my_enum(RespCode.success, data)
     return make_json_response(HttpResponse, resp)
 
+
+@require_http_methods(['POST', 'GET'])
+@check_user_login()
+@check_body
+def team_member_configure(request, body, *args, **kwargs):
+    team_id = None
+    team_member_id = None
+    if isinstance(kwargs, dict):
+        team_id = kwargs.get('team_id', None)
+        team_member_id = kwargs.get('team_member_id', None)
+        print(team_id, team_member_id)
+    if team_id and team_member_id:
+        try:
+            team_member = TeamMember.objects.get(team_id=team_id, member_id=team_member_id)
+            print(team_member)
+        except ObjectDoesNotExist as e:
+            logger.info(e)
+            resp = init_http_response_my_enum(RespCode.invalid_parameter)
+            return make_json_response(resp=resp)
+        try:
+            student = Student.objects.get(student_id=team_member.student_id)
+            print(student)
+        except ObjectDoesNotExist as e:
+            logger.info(e)
+            resp = init_http_response_my_enum(RespCode.invalid_parameter)
+            return make_json_response(resp=resp)
+    else:
+        resp = init_http_response_my_enum(RespCode.invalid_parameter)
+        return make_json_response(resp=resp)
+    if request.method == 'POST':
+        team_member_dto = TeamMemberDTO()
+        body_extract(body, team_member_dto)
+        student.git_name = team_member_dto.git_name
+        student.slack_email = team_member_dto.slack_email
+        student.save()
+        resp = init_http_response_my_enum(RespCode.success)
+        return make_json_response(HttpResponse, resp)
+    elif request.method == 'GET':
+        data = dict()
+        data['git_name'] = student.git_name
+        data['slack_email'] = student.slack_email
+        resp = init_http_response_my_enum(RespCode.success, data)
+        return make_json_response(HttpResponse, resp)
+    return HttpResponseNotAllowed(['POST', 'GET'])
