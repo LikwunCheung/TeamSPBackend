@@ -8,7 +8,7 @@ from TeamSPBackend.api.views.jira import helpJira
 from .views.invitation import invitation_router, invite_accept
 from .views.account import account_router, login, logout, update_account, delete, atl_login, supervisor_router
 from .views.subject import subject_router, update_subject, delete_subject
-from .views.team import team_router, get_team_members
+from .views.team import team_router, get_team_members, team_member_configure
 from .views.slack import get_team_data, get_all_member_data, get_member_data
 from .views.git import get_git_commits, get_git_pr
 
@@ -39,6 +39,7 @@ urlpatterns = [
     path('team', team_router),
     path('team/<int:id>', team_router),
     path('team/<int:id>/members', get_team_members),
+    path('team/<int:team_id>/members/<int:team_member_id>', team_member_configure),
 
     # Git Related API
     path('git/commit', get_git_commits),
@@ -66,12 +67,12 @@ urlpatterns = [
     path('jira/<team>/sprintdates', helpJira.get_sprints_dates),
     path('jira/<team>/issuespersprint', helpJira.get_issues_per_sprint),
     path('jira/<team>/comments/<student_id>', helpJira.get_comment_count_one_student),
-  
+
     # Slack Related API
     # path('slack', slack_router),
     path('slack/<int:id>', get_team_data),
     path('slack/<int:id>/member', get_all_member_data),
     path('slack/<int:team_id>/member/<int:student_id>', get_member_data),
 ]
-    
+
 

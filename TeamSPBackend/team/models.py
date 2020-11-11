@@ -8,6 +8,8 @@ class Student(models.Model):
     # student_number = models.IntegerField()
     fullname = models.CharField(max_length=50, unique=True)
     email = models.EmailField(max_length=254, unique=True)
+    git_name = models.CharField(max_length=32, unique=True)
+    slack_email = models.EmailField(max_length=128, unique=True)
 
     class Meta:
         db_table = 'student'
