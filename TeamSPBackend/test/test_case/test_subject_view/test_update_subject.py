@@ -38,6 +38,7 @@ class UpdateSubjectTestCase(TestCase):
             "name": "newName"
         }
         response = self.client.post('/api/v1/subject/1/update', data=subjectData, content_type="application/json")
+        print("response is " + str(response.json()))
 
         updatedSub = Subject.objects.get(subject_id=1)
         self.assertEqual(updatedSub.name, "newName", "subject name is not updated")

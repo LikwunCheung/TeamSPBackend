@@ -142,7 +142,7 @@ def add_subject(request, body, *args, **kwargs):
     :return:
     """
     add_subject_dto = AddSubjectDTO()
-    body_extract(body, add_subject)
+    body_extract(body, add_subject_dto)
 
     # if the parameter is not sufficient
     if not add_subject_dto.not_empty():
@@ -179,10 +179,7 @@ def update_subject(request, body, *args, **kwargs):
     :param kwargs:
     :return:
     """
-    subject_id = None
-    for arg in args:
-        if isinstance(arg, dict):
-            subject_id = arg.get('id', None)
+    subject_id = kwargs.get('id')
 
     if not subject_id:
         resp = init_http_response(RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
@@ -219,18 +216,17 @@ def delete_subject(request, *args, **kwargs):
     :param kwargs:
     :return:
     """
-    subject_id = None
-    for arg in args:
-        if isinstance(arg, dict):
-            subject_id = arg.get('id', None)
+    subject_id = kwargs.get('id')
 
     if not subject_id:
+        print("fuck")
         resp = init_http_response(RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
         return make_json_response(HttpResponse, resp)
 
     try:
         subject = Subject.objects.get(subject_id=subject_id)
     except ObjectDoesNotExist as e:
+        print("fuck two")
         resp = init_http_response(RespCode.invalid_parameter.value.key, RespCode.invalid_parameter.value.msg)
         return make_json_response(HttpResponse, resp)
 

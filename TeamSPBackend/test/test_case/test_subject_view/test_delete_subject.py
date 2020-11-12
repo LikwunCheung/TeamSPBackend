@@ -35,6 +35,7 @@ class DeleteSubjecTestCase(TestCase):
         Tests the function for the API: Post '/subject/<int:id>/delete'
         """
         response = self.client.post('/api/v1/subject/1/delete')
+        print("response is " + str(response.json()))
 
         sub = Subject.objects.get(subject_id=1)
         self.assertEqual(sub.status, Status.invalid.value.key, "subject not deleted")

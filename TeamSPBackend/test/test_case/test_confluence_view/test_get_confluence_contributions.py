@@ -8,8 +8,8 @@ class GetConfluenceContributionsTestCase(TestCase):
         # Set atl credentials
         session = self.client.session
         session["user"] = {
-            "atl_username": "",
-            "atl_password": ""
+            "atl_username": "yho4",
+            "atl_password": "mil1maci"
         }
         session.save()
 
