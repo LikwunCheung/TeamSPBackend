@@ -17,8 +17,6 @@ def get_all_groups(request):
     user = request.session.get('user')
     username = user['atl_username']
     password = user['atl_password']
-    print(username)
-    print(password)
     try:
         confluence = log_into_confluence(username, password)
         conf_resp = confluence.get_all_groups()
@@ -47,7 +45,6 @@ def get_space(request, space_key):
     username = user['atl_username']
     password = user['atl_password']
     try:
-        print('session looks like ' + str(request.session.items()))
         confluence = log_into_confluence(username, password)
         conf_resp = confluence.get_space(
             space_key, expand='homepage')
@@ -266,13 +263,11 @@ def log_into_confluence(username, password):
 
 def get_members(request, group):
     try:
-        # print(request)
         user = request.session.get('user')
         username = user['atl_username']
         password = user['atl_password']
         confluence = log_into_confluence(username, password)
         conf_resp = confluence.get_group_members(group)
-        # print(conf_resp)
         data = []
         for user in conf_resp:
             data.append({

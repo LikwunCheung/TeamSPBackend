@@ -79,16 +79,24 @@ class GetTeamTestCase(TestCase):
 
         student_1_data = {
             "fullname": "student1",
-            "email": "student1@gmail.com"
+            "email": "student1@gmail.com",
+            "git_name": "student1",
+            "slack_email": "student1@gmail.com"
         }
         student_2_data = {
             "fullname": "student2",
-            "email": "student2@gmail.com"
+            "email": "student2@gmail.com",
+            "git_name": "student2",
+            "slack_email": "student2@gmail.com"
         }
         student_1 = Student(fullname=student_1_data["fullname"],
-                            email=student_1_data["email"])
+                            email=student_1_data["email"],
+                            git_name=student_1_data["git_name"],
+                            slack_email=student_1_data["slack_email"])
         student_2 = Student(fullname=student_2_data["fullname"],
-                            email=student_2_data["email"])
+                            email=student_2_data["email"],
+                            git_name=student_2_data["git_name"],
+                            slack_email=student_2_data["slack_email"])
         student_1.save()
         student_2.save()
 
