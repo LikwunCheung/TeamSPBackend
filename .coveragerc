@@ -10,9 +10,11 @@
 [report]
  omit =
   manage.py
-  asgi.py
-  wsgi.py
-  settings/*
-  test/run_suites_and_write_report.py
-  test/HTMLTestRunner.py
+  */invitation.py
+  */slack.py
+  */dto.py
+  */asgi.py
+  */wsgi.py
+  */settings/*
+  */test/*
   */apps.py
