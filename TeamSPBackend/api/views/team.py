@@ -571,6 +571,7 @@ def team_member_configure(request, body, *args, **kwargs):
         body_extract(body, team_member_dto)
         student.git_name = team_member_dto.git_name
         student.slack_email = team_member_dto.slack_email
+        student.atl_account = team_member_dto.atl_account
         student.save()
         resp = init_http_response_my_enum(RespCode.success)
         return make_json_response(HttpResponse, resp)
@@ -578,6 +579,7 @@ def team_member_configure(request, body, *args, **kwargs):
         data = dict()
         data['git_name'] = student.git_name
         data['slack_email'] = student.slack_email
+        data['atl_account'] = student.atl_account
         resp = init_http_response_my_enum(RespCode.success, data)
         return make_json_response(HttpResponse, resp)
     return HttpResponseNotAllowed(['POST', 'GET'])

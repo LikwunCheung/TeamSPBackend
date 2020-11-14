@@ -153,6 +153,7 @@ class TeamMemberDTO(object):
     def __init__(self):
         self.git_name = None
         self.slack_email = None
+        self.atl_account = None
 
 
 class GitDTO(object):

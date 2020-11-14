@@ -10,6 +10,7 @@ class Student(models.Model):
     email = models.EmailField(max_length=254, unique=True)
     git_name = models.CharField(max_length=32, unique=True)
     slack_email = models.EmailField(max_length=128, unique=True)
+    atl_account = models.CharField(max_length=32, unique=True)
 
     class Meta:
         db_table = 'student'
