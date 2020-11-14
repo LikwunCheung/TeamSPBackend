@@ -539,7 +539,7 @@ def get_team_members(request, *args, **kwargs):
 
 @require_http_methods(['POST', 'GET'])
 @check_user_login()
-def team_member_configure(request, body, *args, **kwargs):
+def team_member_configure(request, *args, **kwargs):
     team_id = None
     team_member_id = None
     if isinstance(kwargs, dict):
@@ -565,6 +565,7 @@ def team_member_configure(request, body, *args, **kwargs):
         resp = init_http_response_my_enum(RespCode.invalid_parameter)
         return make_json_response(resp=resp)
     if request.method == 'POST':
+        body = dict(ujson.loads(request.body))
         team_member_dto = TeamMemberDTO()
         body_extract(body, team_member_dto)
         student.git_name = team_member_dto.git_name
