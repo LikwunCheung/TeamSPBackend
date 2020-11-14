@@ -539,7 +539,6 @@ def get_team_members(request, *args, **kwargs):
 
 @require_http_methods(['POST', 'GET'])
 @check_user_login()
-@check_body
 def team_member_configure(request, body, *args, **kwargs):
     team_id = None
     team_member_id = None
