@@ -156,6 +156,15 @@ class TeamMemberDTO(object):
         self.atl_account = None
 
 
+class TeamConfigurationDTO(object):
+
+    def __init__(self):
+        self.slack_workspace = None
+        self.confluence_workspace = None
+        self.jira_workspace = None
+        self.git_repository = None
+
+
 class GitDTO(object):
 
     def __init__(self):

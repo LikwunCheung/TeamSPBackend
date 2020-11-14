@@ -58,6 +58,9 @@ class TeamConfiguration(models.Model):
     slack_workspace = models.CharField(max_length=128)
     slack_token = models.CharField(max_length=128)
     # TODO: add more configuration attributes when needed
+    confluence_workspace = models.CharField(max_length=128)
+    jira_workspace = models.CharField(max_length=128)
+    git_repository = models.CharField(max_length=128)
 
     class Meta:
         db_table = 'team_configuration'

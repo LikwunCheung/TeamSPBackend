@@ -6,14 +6,14 @@ from django.views.decorators.http import require_http_methods
 from django.db import transaction
 from django.db.models import Q, ObjectDoesNotExist
 
-from TeamSPBackend.api.dto.dto import AddTeamDTO, UpdateTeamDTO, TeamMemberDTO
+from TeamSPBackend.api.dto.dto import AddTeamDTO, UpdateTeamDTO, TeamMemberDTO, TeamConfigurationDTO
 
 from TeamSPBackend.common.config import SINGLE_PAGE_LIMIT
 from TeamSPBackend.common.utils import check_user_login, make_json_response, init_http_response, check_body, body_extract, mills_timestamp, init_http_response_my_enum
 from TeamSPBackend.common.choices import RespCode, Roles, get_keys
 from TeamSPBackend.account.models import Account
 from TeamSPBackend.api.views.confluence.confluence import get_members
-from TeamSPBackend.team.models import Team, Student, TeamMember
+from TeamSPBackend.team.models import Team, Student, TeamMember, TeamConfiguration
 from TeamSPBackend.subject.models import Subject
 from TeamSPBackend.account.models import User
 
@@ -580,6 +580,44 @@ def team_member_configure(request, body, *args, **kwargs):
         data['git_name'] = student.git_name
         data['slack_email'] = student.slack_email
         data['atl_account'] = student.atl_account
+        resp = init_http_response_my_enum(RespCode.success, data)
+        return make_json_response(HttpResponse, resp)
+    return HttpResponseNotAllowed(['POST', 'GET'])
+
+
+@require_http_methods(['POST', 'GET'])
+@check_user_login()
+@check_body
+def team_configure(request, body, *args, **kwargs):
+    team_id = None
+    if isinstance(kwargs, dict):
+        team_id = kwargs.get('team_id', None)
+    if team_id:
+        try:
+            team_configuration = TeamConfiguration.objects.get(team_id=team_id)
+        except ObjectDoesNotExist as e:
+            logger.info(e)
+            resp = init_http_response_my_enum(RespCode.invalid_parameter)
+            return make_json_response(resp=resp)
+    else:
+        resp = init_http_response_my_enum(RespCode.invalid_parameter)
+        return make_json_response(resp=resp)
+    if request.method == 'POST':
+        team_configuration_dto = TeamConfigurationDTO()
+        body_extract(body, team_configuration_dto)
+        team_configuration.slack_workspace = team_configuration_dto.slack_workspace
+        team_configuration.confluence_workspace = team_configuration_dto.confluence_workspace
+        team_configuration.jira_workspace = team_configuration_dto.jira_workspace
+        team_configuration.git_repository = team_configuration_dto.git_repository
+        team_configuration.save()
+        resp = init_http_response_my_enum(RespCode.success)
+        return make_json_response(HttpResponse, resp)
+    elif request.method == 'GET':
+        data = dict()
+        data['slack_workspace'] = team_configuration.slack_workspace
+        data['confluence_workspace'] = team_configuration.confluence_workspace
+        data['jira_workspace'] = team_configuration.jira_workspace
+        data['git_repository'] = team_configuration.git_repository
         resp = init_http_response_my_enum(RespCode.success, data)
         return make_json_response(HttpResponse, resp)
     return HttpResponseNotAllowed(['POST', 'GET'])

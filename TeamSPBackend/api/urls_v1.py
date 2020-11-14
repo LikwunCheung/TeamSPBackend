@@ -8,7 +8,7 @@ from TeamSPBackend.api.views.jira import helpJira
 from .views.invitation import invitation_router, invite_accept
 from .views.account import account_router, login, logout, update_account, delete, atl_login, supervisor_router
 from .views.subject import subject_router, update_subject, delete_subject
-from .views.team import team_router, get_team_members, team_member_configure
+from .views.team import team_router, get_team_members, team_member_configure, team_configure
 from .views.slack import get_team_data, get_all_member_data, get_member_data
 from .views.git import get_git_commits, get_git_pr
 
@@ -40,6 +40,7 @@ urlpatterns = [
     path('team/<int:id>', team_router),
     path('team/<int:id>/members', get_team_members),
     path('team/<int:team_id>/members/<int:team_member_id>', team_member_configure),
+    path('team/<int:team_id>/configuration', team_configure),
 
     # Git Related API
     path('git/commit', get_git_commits),
