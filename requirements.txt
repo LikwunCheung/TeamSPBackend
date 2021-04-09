@@ -3,7 +3,7 @@ atlassian-python-api==1.16.1
 certifi==2020.4.5.1
 cffi==1.14.1
 chardet==3.0.4
-cryptography==3.0
+cryptography==3.2
 Django==3.0.6
 django-cors-headers==3.5.0
 idna==2.9
